@@ -1,12 +1,14 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
 file (GLOB_RECURSE src_files ${CMAKE_CURRENT_LIST_DIR}/src/*.[ch]pp)
+
 file (GLOB_RECURSE game_files ${CMAKE_CURRENT_LIST_DIR}/game/*.[ch]pp)
 
 get_filename_component (solution_name ${CMAKE_CURRENT_LIST_DIR} NAME)
 project (${solution_name})
 
 include_directories ("src" "game")
+
 include ("dependencies/CMakeLists.txt")
 
 add_executable ( ${solution_name} 
