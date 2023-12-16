@@ -30,10 +30,10 @@ file (GLOB_RECURSE src_files_stb
 	${CMAKE_CURRENT_LIST_DIR}/stb/*.[ch]
 )
 
-file (GLOB_RECURSE src_files_slm 
-	${CMAKE_CURRENT_LIST_DIR}/slm/*.[ch]pp 
-	${CMAKE_CURRENT_LIST_DIR}/slm/*.[ch] 
-	${CMAKE_CURRENT_LIST_DIR}/slm/*.inl
+file (GLOB_RECURSE src_files_glm 
+	${CMAKE_CURRENT_LIST_DIR}/glm/*.[ch]pp 
+	${CMAKE_CURRENT_LIST_DIR}/glm/*.[ch] 
+	#${CMAKE_CURRENT_LIST_DIR}/glm/*.inl
 )
 
 include_directories (
@@ -41,5 +41,5 @@ include_directories (
 	${src_files_vulcan} 
 	${src_files_opengl} 
 	${src_files_stb}
-	${src_files_slm}
+	${src_files_glm}
 )

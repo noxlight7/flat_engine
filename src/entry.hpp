@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <thread>
 
-#include <slm/slmath.h>
+#include <glm/glm.hpp>
 #include <glfw/src/glfw3.h>
 
 #include "factory/engine.hpp"
@@ -23,4 +23,4 @@
 #include "entity/base_entity.hpp"
 #include "entity/base_effect.hpp"
 
-#pragma once (lib, "glfw3dll.lib")
+#pragma comment (lib, "glfw3dll.lib")
