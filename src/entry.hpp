@@ -20,6 +20,8 @@
 #include <glm/glm.hpp>
 #include <glfw/src/glfw3.h>
 
+#include "factory/definitions.hpp"
+
 #include "factory/engine.hpp"
 
 #pragma comment (lib, "glfw3dll.lib")

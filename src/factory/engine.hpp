@@ -35,11 +35,11 @@ public:
 	bool isKeyPressed(int scancode);
 
 protected:
-	uint32_t m_width, m_height;
-	bool m_pressed_buttons[ScanCode::KEYS_AMOUNT];
+	uint32_t	m_width, m_height;
+	bool		m_button_state[KEYS_AMOUNT];
 
 private:
-	GLFWwindow* m_window;
+	GLFWwindow*	m_window;
 
 	void initWindow(const char* title);
 	void mainLoop();

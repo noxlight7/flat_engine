@@ -8,7 +8,7 @@ Engine::Engine(const char* title, uint32_t width, uint32_t height)
 	: m_width(width), m_height(height)
 {
 	initWindow(title);
-	memset(m_pressed_buttons, 0, sizeof(bool) * ScanCode::KEYS_AMOUNT);
+	memset(m_button_state, 0, sizeof(bool) * ScanCode::KEYS_AMOUNT);
 }
 
 void Engine::initWindow(const char* title) {
@@ -38,11 +38,11 @@ void Engine::keyCallback(GLFWwindow* window, int key, int scancode, int action, 
 	switch (action)
 	{
 	case GLFW_PRESS:
-		app->m_pressed_buttons[key] = true;
+		app->m_button_state[key] = true;
 		app->onKeyDown(key, scancode, action, mods);
 		break;
 	case GLFW_RELEASE:
-		app->m_pressed_buttons[key] = false;
+		app->m_button_state[key] = false;
 		app->onKeyUp(key, scancode, action, mods);
 		break;
 	}
@@ -73,5 +73,5 @@ void Engine::run() {
 }
 
 bool Engine::isKeyPressed(int scancode) {
-	return m_pressed_buttons[scancode];
+	return m_button_state[scancode];
 }
