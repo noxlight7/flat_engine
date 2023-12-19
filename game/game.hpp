@@ -4,8 +4,8 @@
 #include "factory/engine.hpp"
 
 class Game : public Engine {
-	//Game(const char* title, uint32_t width, uint32_t height)
-	//	: Engine(title, width, height) {}
+public:
+	Game(const char* title, uint32_t width = 1024, uint32_t height = 768);
 	void onInit();
 	void onRender();
 };

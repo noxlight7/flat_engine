@@ -13,27 +13,30 @@ public:
 	void run();
 
 	// Выполняется перед запуском цикла обработки сообщений
-	void onInit() {}
-	void onDraw() {}
-	void onClose() {}
+	virtual void onInit() {}
+	virtual void onDraw() {}
+	virtual void onClose() {}
 	// Выполняется при каждой прорисовке
-	void onRender() {}
-	void onDestroy() {}
-	void onMouseMove() {}
-	void onMouseDown() {}
-	void onMouseUp() {}
+	virtual void onRender() {}
+	virtual void onDestroy() {}
+	virtual void onMouseMove() {}
+	virtual void onMouseDown() {}
+	virtual void onMouseUp() {}
 	// Выполняется при нажатии клавиши
-	void onKeyDown(int key, int scancode, int action, int mods) {}
+	virtual void onKeyDown(int key, int scancode, int action, int mods) {}
 	// Выполняется при отжатии клавиши
-	void onKeyUp(int key, int scancode, int action, int mods) {}
+	virtual void onKeyUp(int key, int scancode, int action, int mods) {}
 	// Выполняется при изменении размера окна
-	void onResize(int width, int height) {}
+	virtual void onResize(int width, int height) {}
 	// Рендерер
 	// Renderer* renderer;
 
+	// Возвращает true, если клавиша scancode нажата
+	bool isKeyPressed(int scancode);
+
 protected:
 	uint32_t m_width, m_height;
-	bool pressedButtons[ScanCode::KEYS_AMOUNT];
+	bool m_pressed_buttons[ScanCode::KEYS_AMOUNT];
 
 private:
 	GLFWwindow* m_window;
