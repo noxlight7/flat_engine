@@ -1,5 +1,5 @@
 #include <entry.hpp>
 
 int main( ) {
-	g_engine->StartUp( );
+	g_game->run();
 }

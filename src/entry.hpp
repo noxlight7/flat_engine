@@ -18,7 +18,7 @@
 #include <glm/glm.hpp>
 #include <glfw/src/glfw3.h>
 
-#include "factory/engine.hpp"
+#include "game.hpp"
 
 #include "entity/base_entity.hpp"
 #include "entity/base_effect.hpp"
