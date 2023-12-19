@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #define STB_IMAGE_IMPLEMENTATION
+#define NOMINMAX
 
 #if defined (_MSC_VER)
 #define ALWAYS_INLINE __forceinline
@@ -14,13 +15,11 @@
 #include <chrono>
 #include <unordered_map>
 #include <thread>
+#include <memory>
 
 #include <glm/glm.hpp>
 #include <glfw/src/glfw3.h>
 
-#include "game.hpp"
-
-#include "entity/base_entity.hpp"
-#include "entity/base_effect.hpp"
+#include "factory/engine.hpp"
 
 #pragma comment (lib, "glfw3dll.lib")

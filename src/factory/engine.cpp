@@ -1,5 +1,4 @@
 #include "engine.hpp"
-#include <memory>
 
 //void Engine::StartUp( ) {
 //	printf( "hello" );
@@ -23,21 +22,18 @@ void Engine::initWindow(const char* title) {
 
 }
 
-void Engine::setCallbacks()
-{
+void Engine::setCallbacks() {
 	glfwSetFramebufferSizeCallback(m_window, windowResizeCallback);
 	glfwSetKeyCallback(m_window, keyCallback);
 }
 
-Engine::~Engine()
-{
+Engine::~Engine() {
 	//delete renderer;
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 }
 
-void Engine::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+void Engine::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	auto app = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
 	switch (action)
 	{
@@ -70,8 +66,7 @@ void Engine::mainLoop() {
 	}
 }
 
-void Engine::run()
-{
+void Engine::run() {
 	onInit();
 
 	mainLoop();

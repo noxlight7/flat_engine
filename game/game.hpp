@@ -1,7 +1,6 @@
 #pragma once
 
-#include <entry.hpp>
-#include "factory/engine.hpp"
+#include "main.hpp"
 
 class Game : public Engine {
 public:

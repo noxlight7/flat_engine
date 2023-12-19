@@ -1,8 +1,8 @@
 #pragma once
 
-//#include "../entry.hpp"
-#include <glfw/src/glfw3.h>
-#include "../IO/IOKeys.h"
+#include "../entry.hpp"
+
+#include "../input/input.hpp"
 
 class Engine {
 public:
@@ -29,7 +29,7 @@ public:
 	// Выполняется при изменении размера окна
 	virtual void onResize(int width, int height) {}
 	// Рендерер
-	// Renderer* renderer;
+	// Renderer* m_renderer;
 
 	// Возвращает true, если клавиша scancode нажата
 	bool isKeyPressed(int scancode);
