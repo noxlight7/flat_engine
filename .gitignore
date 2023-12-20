@@ -82,4 +82,4 @@ _ReSharper*/
 *.dotCover
 
 # Executables
-*.dll
+# *.dll
