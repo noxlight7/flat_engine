@@ -144,6 +144,9 @@ public:
 	void move(float dt);					// Перемещает объект в состояние через dt мс
 	virtual void load(const FILE* f);		// Загружает объект из файла
 	virtual void save(const FILE* f);		// Сохраняет объект в файл
+	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
+	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
+	Vector getPosition();					// Возвращает вектор позиции
 protected:
 
 	float m_current_speed;						// Текущая скорость объекта

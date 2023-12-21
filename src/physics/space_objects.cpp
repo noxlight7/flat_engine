@@ -148,13 +148,13 @@ MoveableObject::MoveableObject(const District* district, ObjectForm&& form,
 	float max_speed, float acceleration)
 	: SpaceObject(district, std::move(form), std::move(position), 
 		scale, rotation, rotation_speed, max_rotation_speed), m_speed_direction(speed_direction),
-	m_current_speed(current_speed), m_max_speed (max_speed), m_acceleration(acceleration)
+	m_current_speed (current_speed), m_max_speed (max_speed), m_acceleration(acceleration)
 {
 
 }
 void MoveableObject::move(float dt)
 {
-	m_position += dt * m_current_speed;
+	m_position += dt * m_current_speed * m_speed_direction;
 }
 
 void MoveableObject::load(const FILE* f)
@@ -165,4 +165,27 @@ void MoveableObject::load(const FILE* f)
 void MoveableObject::save(const FILE* f)
 {
 
+}
+
+void MoveableObject::setSpeedDirection(Vector& speed_direction)
+{
+	if (speed_direction.x == 0 && speed_direction.y == 0)
+		return;
+
+	m_speed_direction = speed_direction;
+
+	glm::normalize(m_speed_direction);
+}
+
+void MoveableObject::setCurrentSpeed(float current_speed)
+{
+	if (m_current_speed > m_max_speed)
+		m_current_speed = m_max_speed;
+
+	m_current_speed = current_speed;
+}
+
+Vector MoveableObject::getPosition()
+{
+	return m_position;
 }
