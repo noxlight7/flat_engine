@@ -18,10 +18,13 @@
 #include <memory>
 
 #include <glm/glm.hpp>
+#include <opengl/src/glew.h>
 #include <glfw/src/glfw3.h>
 
 #include "factory/definitions.hpp"
 
 #include "factory/engine.hpp"
-
+#pragma comment (lib, "opengl32.lib")
+//#pragma comment (lib, "glew32.lib")
+//#pragma comment (lib, "glew32s.lib")
 #pragma comment (lib, "glfw3dll.lib")

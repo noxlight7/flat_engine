@@ -10,7 +10,6 @@ project (${solution_name})
 include_directories ("src" "game")
 
 include ("dependencies/CMakeLists.txt")
-
 add_executable ( ${solution_name} 
 	${src_files} 
 	${src_files_glfw} 
@@ -26,6 +25,8 @@ target_link_libraries ( ${solution_name}
 	${lib_files_opengl}
 )
 
+message (STATUS ${lib_files_opengl})
+
 add_custom_target (dlls_glfw COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_glfw} ${CMAKE_BINARY_DIR})
 add_dependencies (${solution_name} dlls_glfw)
 
@@ -33,7 +34,7 @@ add_dependencies (${solution_name} dlls_glfw)
 #add_custom_target (dlls_vulcan COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_vulcan} ${CMAKE_BINARY_DIR})
 #add_dependencies (${solution_name} dlls_vulcan)
 
-#add_custom_target (dlls_opengl COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_glfw} ${CMAKE_BINARY_DIR})
-#add_dependencies (${solution_name} dlls_opengl)
+add_custom_target (dlls_opengl COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_opengl} ${CMAKE_BINARY_DIR})
+add_dependencies (${solution_name} dlls_opengl)
 
 set_property (TARGET ${solution_name} PROPERTY CXX_STANDARD 20)

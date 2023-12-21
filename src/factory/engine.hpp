@@ -4,6 +4,8 @@
 
 #include "../input/input.hpp"
 
+#include "display/renderer.hpp"
+
 class Engine {
 public:
 	//void StartUp( );
