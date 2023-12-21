@@ -1,5 +1,32 @@
 #pragma once
 
+#include "input/input.hpp"
+#include <fstream>
+#include <glm/glm.hpp>
+
+using namespace std;
+
+
+void saveVec2Text();
+void loadVectorText();
+
+
+class NotesGrid
+{
+
+};
+
+class TextGrid
+{
+
+};
+
+class InputDevice
+{
+
+};
+
+
 enum ScanCode
 {
 	KEY_UNKNOWN = -1,
