@@ -1,8 +1,8 @@
 #include "Physics.hpp"
 #include "collisions.hpp"
 
-District::District(DistrictNet* net)
-	: m_net(net)
+District::District(DistrictNet* net, int col_index, int row_index)
+	: m_net(net), m_row_index(row_index), m_col_index(col_index)
 {
 	uint32_t n = net->m_cells_partition;
 
@@ -14,6 +14,45 @@ District::District(DistrictNet* net)
 		for (uint32_t j = 0; j < n; j++)
 			m_cells[i][j].m_owner_district = this;
 	}
+
+	for (uint32_t i = 0; i < n; i++) {
+		for (uint32_t j = 0; j < n; j++) {
+			if (i > 0 || (col_index > 0 &&
+				m_net->getDistrict(m_col_index - 1, m_row_index)))
+				m_cells[i][j].m_left = &m_cells[i - 1][j];
+			
+			if (i < n || (col_index < m_net->m_width &&
+				m_net->getDistrict(m_col_index + 1, m_row_index)))
+				m_cells[i][j].m_right = &m_cells[i + 1][j];
+
+			if (j > 0 || (row_index > 0 &&
+				m_net->getDistrict(m_col_index, m_row_index - 1)))
+				m_cells[i][j].m_bottom = &m_cells[i][j - 1];
+
+			if (j < n || (row_index < m_net->m_height &&
+				m_net->getDistrict(m_col_index, m_row_index + 1)))
+				m_cells[i][j].m_top = &m_cells[i][j + 1];
+		}
+	}
+
+	District* district;
+	int m = n - 1;
+
+	if (district = m_net->getDistrict(m_col_index - 1, m_row_index))
+		for (int j = 0; j < n; j++)
+			district->m_cells[m][j].m_right = &m_cells[0][j];
+
+	if (district = m_net->getDistrict(m_col_index + 1, m_row_index))
+		for (int j = 0; j < n; j++)
+			district->m_cells[0][j].m_left = &m_cells[n][j];
+
+	if (district = m_net->getDistrict(m_col_index, m_row_index - 1))
+		for (int i = 0; i < n; i++)
+			district->m_cells[i][m].m_top = &m_cells[i][0];
+
+	if (district = m_net->getDistrict(m_col_index, m_row_index + 1))
+		for (int i = 0; i < n; i++)
+			district->m_cells[i][0].m_bottom = &m_cells[i][n];
 }
 
 District::~District() {
@@ -72,13 +111,16 @@ District* DistrictNet::addDistrict(uint32_t x, uint32_t y) {
 	}
 
 	if (m_districts[x][y] == nullptr)
-		m_districts[x][y] = new District(this);
+		m_districts[x][y] = new District(this, y, x);
 
 	return getDistrict(x, y);
 }
 
 District* DistrictNet::getDistrict(uint32_t x, uint32_t y) {
-	return m_districts[x][y];
+	if (x < 0 || x >= m_width || y < 0 || y >= m_height)
+		return nullptr;
+	else
+		return m_districts[x][y];
 }
 
 void DistrictNet::moveObjects(float dt) {

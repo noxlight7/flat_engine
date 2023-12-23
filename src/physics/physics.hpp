@@ -142,7 +142,6 @@ public:
 	// Создаёт локальный объект с указанными параметрами
 	SpaceObject(
 		ObjectForm&& form = ObjectForm(0.5),
-		float scale = 1.f, 
 		float rotation = 0.f, 
 		float rotation_speed = 0.f, 
 		float max_rotation_speed = 0.f);
@@ -178,12 +177,11 @@ protected:
 	Vector m_position;					// Позиция объекта
 	float m_rotation_speed;				// Скорость поворота, используется только для круглого объекта
 	float m_max_rotation_speed;			// Максимальная скорость поворота
-	float m_scale;						// Масштаб объекта
 	ObjectForm m_form;					// Данные о форме объекта
 
 	ListPElementInfo<SpaceObject> m_cell_info;
 	ListPElementInfo<SpaceObject> m_district_info;
-	ListElementMatrix<SpaceObject>* m_matrix_info;
+	// ListElementMatrix<SpaceObject>* m_matrix_info;
 	// Хранит информацию о том, где и в каких списках находится
 	// объект для удаления из них в случае необходимости
 	// Необходимо написать аллокатор указателя на объект,
@@ -198,7 +196,6 @@ class MoveableObject : public SpaceObject
 public:
 	MoveableObject(
 		ObjectForm&& form = ObjectForm(0.5),
-		float scale = 1.f, 
 		float rotation = 0.f, 
 		float rotation_speed = 0.f, 
 		float max_rotation_speed = 0.f,
@@ -226,8 +223,7 @@ protected:
 class Actor : MoveableObject, IDownloadable
 {
 public:
-	Actor(float scale, 
-		ObjectForm&& form,
+	Actor(ObjectForm&& form,
 		float max_speed = 1.0f, 
 		glm::vec2&& speed_direction = glm::vec2(0, 0),
 		float acceleration = 0, 
@@ -255,15 +251,19 @@ class DistrictCell
 {
 	friend District;
 public:
-	// DistrictCell();
+	DistrictCell() = default;
 private:
 	// Область, в которой содержится ячейка
 	District* m_owner_district;
 
+	DistrictCell* m_left;
+	DistrictCell* m_right;
+	DistrictCell* m_top;
+	DistrictCell* m_bottom;
 	//District* m_bind_district;	// Область, в которую можно перейти из этой ячейки
 	
 	// Список содержащихся в ячейке объектов
-	std::list<SpaceObject*> m_objects;	
+	std::list<SpaceObject*> m_objects;
 };
 
 /*	Область(может подгружаться и выгружаться из / в файл по необходимости для игрока
@@ -275,7 +275,7 @@ class District
 	friend MoveableObject;
 public:
 	// Конструктор. Создаёт область, принадлежащую локации location
-	District(DistrictNet* net);
+	District(DistrictNet* net, int col_index, int row_index);
 	~District();
 
 	//void addObject(SpaceObject* obj, float x, float y);
@@ -297,6 +297,9 @@ private:
 		
 	DistrictCell** m_cells;				// Ячейки хранятся по (x, y)
 	DistrictNet* m_net;					// Указатель на сеть-владельца
+
+	int m_row_index;	// Индекс строки в сети областей
+	int m_col_index;	// Индекс столбца в сети областей
 
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;		// Имена сетей, в которые возможно перейти из текущей области 

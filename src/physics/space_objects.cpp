@@ -126,12 +126,11 @@ ObjectForm::~ObjectForm()
 // Создаёт локальный объект с указанными параметрами
 SpaceObject::SpaceObject(
 	ObjectForm&& form,
-	float scale, 
 	float rotation, 
 	float rotation_speed, 
 	float max_rotation_speed)
 	: m_current_district(nullptr), m_position(), m_form(form), 
-	m_scale(scale),	m_rotation(rotation), 
+	m_rotation(rotation), 
 	m_rotation_speed(rotation_speed), 
 	m_max_rotation_speed(max_rotation_speed)
 {
@@ -143,8 +142,11 @@ SpaceObject::SpaceObject(FILE* f)
 }
 // Копирующий конструктор
 SpaceObject::SpaceObject(SpaceObject& lo)
-	: m_current_district(lo.m_current_district), m_position(lo.m_position), m_scale(lo.m_scale), m_form(lo.m_form),
-	m_rotation(lo.m_rotation), m_rotation_speed(lo.m_rotation_speed), m_max_rotation_speed(lo.m_max_rotation_speed)
+	: m_current_district(lo.m_current_district), 
+	m_position(lo.m_position), m_form(lo.m_form),
+	m_rotation(lo.m_rotation), 
+	m_rotation_speed(lo.m_rotation_speed), 
+	m_max_rotation_speed(lo.m_max_rotation_speed)
 {
 		
 }
@@ -167,8 +169,8 @@ void SpaceObject::moveTo(float x, float y)
 void SpaceObject::initInNewDistrictNet()
 {
 	// Сюда добавить код создания матрицы информации о списках
-	m_matrix_info = new ListElementMatrix<SpaceObject>(10, 10);
-	m_matrix_info->shiftLeft();
+	// m_matrix_info = new ListElementMatrix<SpaceObject>(10, 10);
+	// m_matrix_info->shiftLeft();
 }
 
 void SpaceObject::moveTo(const District* district, float x, float y)
@@ -322,13 +324,12 @@ Type* ListPElementInfo<Type>::getElement()
 
 MoveableObject::MoveableObject(
 	ObjectForm&& form, 
-	float scale, 
 	float rotation, 
 	float rotation_speed, 
 	float max_rotation_speed, 
 	glm::vec3&& speed_direction, 
 	float max_speed, float acceleration)
-	: SpaceObject(std::move(form), scale, rotation, 
+	: SpaceObject(std::move(form), rotation, 
 		rotation_speed, max_rotation_speed), 
 	m_speed_direction(speed_direction),
 	m_current_speed (0), 

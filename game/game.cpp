@@ -4,11 +4,10 @@
 #include "physics/collisions.hpp"
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
-	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), 
+	: Engine(title, width, height), m_district_net(10, 10, 10000, 20), 
 	m_test_obj(ObjectForm(160)),
 	m_test_obj2(ObjectForm(120)),
 	m_test_static_obj(ObjectForm(80)) {
-
 }
 
 void Game::onInit() {
