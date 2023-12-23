@@ -11,9 +11,11 @@ public:
 	void onInit();
 	void onRender();
 	Vector&& getPlayerKeyboardSpeedDirection();
+	Vector&& getPlayer2KeyboardSpeedDirection();
 
 protected:
 	MoveableObject m_test_obj;
+	MoveableObject m_test_obj2;
 	SpaceObject m_test_static_obj;
 	DistrictNet m_district_net;
 };

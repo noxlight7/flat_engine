@@ -241,11 +241,17 @@ ListElementMatrix<Type>::~ListElementMatrix()
 template <typename Type>
 void ListElementMatrix<Type>::shiftLeft()
 {
-	int column = m_column_amount - 1;
+	int n = m_column_amount - 1;
 	for (int i = 0; i < m_row_amount; i++)
-		m_buffer[i][column]->remove();
+		m_buffer[i][0]->remove();
 
-	// Дописать функцию
+	for (int i = 0; i < m_row_amount; i++)
+		for (int j = 0; j < n; j++)
+			m_buffer[i][j] = m_buffer[i][j + 1];
+
+	for (int i = 0; i < m_row_amount; i++)
+		m_buffer[i][n] = nullptr;
+
 }
 
 template <typename Type>

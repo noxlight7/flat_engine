@@ -1,4 +1,5 @@
 #include "Physics.hpp"
+#include "collisions.hpp"
 
 District::District(DistrictNet* net)
 	: m_net(net)
@@ -47,7 +48,10 @@ DistrictNet::DistrictNet(
 	uint32_t cells_partion)
 	: m_width(width), m_height(height),
 	m_district_size(district_size), 
-	m_cells_partition(cells_partion) {
+	m_cells_partition(cells_partion),
+	m_districts_amount(0),
+	m_min_load_index(),
+	m_max_load_index() {
 
 	m_cells_size = district_size / cells_partion;
 
@@ -62,6 +66,11 @@ DistrictNet::DistrictNet(
 }
 
 District* DistrictNet::addDistrict(uint32_t x, uint32_t y) {
+	if (!m_districts_amount) {
+		m_max_load_index.x = m_min_load_index.x = x;
+		m_max_load_index.y = m_min_load_index.y = y;
+	}
+
 	if (m_districts[x][y] == nullptr)
 		m_districts[x][y] = new District(this);
 
@@ -70,6 +79,34 @@ District* DistrictNet::addDistrict(uint32_t x, uint32_t y) {
 
 District* DistrictNet::getDistrict(uint32_t x, uint32_t y) {
 	return m_districts[x][y];
+}
+
+void DistrictNet::moveObjects(float dt) {
+	for (int i = m_min_load_index.x;
+		i <= m_max_load_index.x; i++)
+		for (int j = m_min_load_index.y;
+			j <= m_max_load_index.y; j++) {
+		District* district = m_districts[i][j];
+		float col_time;
+
+		if (district) {
+			for (MoveableObject* m : district->m_moveable_objeсts) {
+				// Нужно изменить логику и коллизить не все
+				// объекты, а только те, которые находятся в 
+				// соседних ячейках
+				bool move_possible = true;
+				for (SpaceObject* s : district->m_space_objects)
+					if (m != s)
+						if (Collisions::Collision(m, s, dt, &col_time)) {
+							move_possible = false;
+							break;
+						}
+				
+				if (move_possible)
+					m->move(dt);
+			}
+		}
+	}
 }
 
 DistrictNet::~DistrictNet() {

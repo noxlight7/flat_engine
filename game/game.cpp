@@ -4,8 +4,10 @@
 #include "physics/collisions.hpp"
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
-	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), m_test_obj(ObjectForm(100)),
-	m_test_static_obj(ObjectForm(100)) {
+	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), 
+	m_test_obj(ObjectForm(160)),
+	m_test_obj2(ObjectForm(120)),
+	m_test_static_obj(ObjectForm(80)) {
 
 }
 
@@ -18,6 +20,7 @@ void Game::onInit() {
 	delete mo;
 
 	m_test_obj.moveTo(district, 500, 500);
+	m_test_obj2.moveTo(district, -300, -300);
 	m_test_static_obj.moveTo(district, 100, 100);
 }
 
@@ -35,9 +38,14 @@ void Game::onRender() {
 	Vector v = getPlayerKeyboardSpeedDirection();
 
 	m_test_obj.setSpeedDirection(v);
-	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 500: 0);
+	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 200: 0);
 
-	m_test_obj.move(dt);
+	Vector v2 = getPlayer2KeyboardSpeedDirection();
+
+	m_test_obj2.setSpeedDirection(v2);
+	m_test_obj2.setCurrentSpeed(v2.x != 0 || v2.y != 0 ? 200 : 0);
+
+	//m_test_obj.move(dt);
 
 	auto position = m_test_obj.getRenderOrigin();
 	glm::vec2 mins = { -160, -160 };
@@ -45,8 +53,14 @@ void Game::onRender() {
 
 	g_vertex_buffer->addRect( mins + position, maxs + position, { 1.0,1.0,1.0,1.0 }, HASH( "test" ) );
 
+	auto position2 = m_test_obj2.getRenderOrigin();
+	glm::vec2 mins2 = { -120, -120 };
+	glm::vec2 maxs2 = -mins;
+
+	g_vertex_buffer->addRect(mins2 + position2, maxs2 + position2, { 1.0,1.0,1.0,1.0 }, HASH("test"));
+
 	auto position1 = m_test_static_obj.getRenderOrigin();
-	glm::vec2 mins1 = { -160, -160 };
+	glm::vec2 mins1 = { -80, -80 };
 	glm::vec2 maxs1 = -mins1;
 
 	g_vertex_buffer->addRect(mins1 + position1, maxs1 + position1, { 1.0,1.0,1.0,1.0 }, HASH("test2"));
@@ -58,14 +72,12 @@ void Game::onRender() {
 		( current_time - output_time ).count( ) ) > 1 ) {
 		output_time = current_time;
 		// input debug here (every second).
-		printf( "%f %lf\n", dt, dt2 );
+		printf( "%f %f\n", 
+			m_test_obj.getPosition().x, 
+			m_test_obj.getPosition().y);
 	}
 
-	//float colTime;
-	//if (!Collisions::Collision(&m_test_obj, &m_test_static_obj, dt, &colTime))
-		//m_test_obj.move(dt);
-	//else
-		//m_test_obj.move(colTime);
+	m_district_net.moveObjects(dt);
 }
 
 Vector&& Game::getPlayerKeyboardSpeedDirection() {
@@ -78,6 +90,21 @@ Vector&& Game::getPlayerKeyboardSpeedDirection() {
 	if (isKeyPressed(ScanCode::KEY_D))
 		v_direct.x = 1;
 	if (isKeyPressed(ScanCode::KEY_A))
+		v_direct.x = -1;
+
+	return std::move(v_direct);
+}
+
+Vector&& Game::getPlayer2KeyboardSpeedDirection() {
+	Vector v_direct{};
+
+	if (isKeyPressed(ScanCode::KEY_UP))
+		v_direct.y = 1;
+	if (isKeyPressed(ScanCode::KEY_DOWN))
+		v_direct.y = -1;
+	if (isKeyPressed(ScanCode::KEY_RIGHT))
+		v_direct.x = 1;
+	if (isKeyPressed(ScanCode::KEY_LEFT))
 		v_direct.x = -1;
 
 	return std::move(v_direct);

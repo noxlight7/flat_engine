@@ -315,6 +315,8 @@ public:
 
 	DistrictNet(FILE* f);
 
+	void moveObjects(float dt);
+
 	~DistrictNet();
 
 	// ƒобавл€ет новую область в сеть
@@ -331,6 +333,14 @@ private:
 	District*** m_districts;	
 	uint32_t m_width, m_height;	// Ўирина и высота сети (в област€х)
 	float m_district_size;		// –азмер области сети
+
+	// ¬сего загружено областей
+	uint32_t m_districts_amount;
+	
+	// Ћевый и нижний индексы загруженных областей
+	vec2 m_min_load_index;
+	// ¬ерхней и правый индексы загруженных областей
+	vec2 m_max_load_index;	
 
 	// „исло €чеек, на которые кажда€ область 
 	// разбиваетс€ по длине и по ширине
