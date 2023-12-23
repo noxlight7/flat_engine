@@ -51,19 +51,19 @@ void Game::onRender() {
 	glm::vec2 mins = { -160, -160 };
 	glm::vec2 maxs = -mins;
 
-	g_vertex_buffer->addRect( mins + position, maxs + position, { 1.0,1.0,1.0,1.0 }, HASH( "test" ) );
+	g_renderer->drawRectTex( mins + position, maxs + position, HASH( "test" ) );
 
 	auto position2 = m_test_obj2.getRenderOrigin();
 	glm::vec2 mins2 = { -120, -120 };
 	glm::vec2 maxs2 = -mins;
 
-	g_vertex_buffer->addRect(mins2 + position2, maxs2 + position2, { 1.0,1.0,1.0,1.0 }, HASH("test"));
+	g_renderer->drawRectTex(mins2 + position2, maxs2 + position2, HASH("test"));
 
 	auto position1 = m_test_static_obj.getRenderOrigin();
 	glm::vec2 mins1 = { -80, -80 };
 	glm::vec2 maxs1 = -mins1;
 
-	g_vertex_buffer->addRect(mins1 + position1, maxs1 + position1, { 1.0,1.0,1.0,1.0 }, HASH("test2"));
+	g_renderer->drawRectTex(mins1 + position1, maxs1 + position1, HASH("test2"));
 
 	double dt2 = glfwGetTime( );
 	glfwSetTime( 0 );

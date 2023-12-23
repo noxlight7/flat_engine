@@ -16,6 +16,10 @@ void Renderer::createTextures( ) {
 	loadTexture( HASH( "test2" ), "assets/test2.png" );
 }
 
+void Renderer::drawRectTex(glm::vec2 mins, glm::vec2 maxs, const fnv_edited::value_type tex_entry) {
+	g_vertex_buffer->addRect(mins, maxs, { 1.0,1.0,1.0,1.0 }, tex_entry);
+}
+
 void Renderer::loadTexture( const fnv_edited::value_type entry, const char *path ) {
 	Texture texture = Texture( path );
 

@@ -3,6 +3,7 @@
 #include "main.hpp"
 #include "input/input.hpp"
 #include "physics/physics.hpp"
+#include "factory/engine.hpp"
 
 
 class Game : public Engine {

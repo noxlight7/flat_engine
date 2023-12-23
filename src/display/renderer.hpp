@@ -20,6 +20,8 @@ class Renderer : public IRenderer {
 public:
 	void init( GLFWwindow *window );
 	void destroy( );
+
+	void drawRectTex(glm::vec2 mins, glm::vec2 maxs, const fnv_edited::value_type tex_entry);
 	
 	void drawFrame( );
 	void resizeFrameBuffer( GLFWwindow *window, int width, int height );
@@ -30,6 +32,7 @@ protected:
 	void loadTexture( const fnv_edited::value_type entry, const char *path );
 protected:
 	double m_aspect_ratio;
+	Texture m_tex; // Проблема решена
 };
 
 inline const auto g_renderer 
