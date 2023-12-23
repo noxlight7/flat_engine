@@ -19,3 +19,10 @@ bool Shader::compile( const char *shader, GLenum type ) {
 
 	return m_compiled;
 }
+
+void Shader::attach( GLuint shader_program ) {
+	if ( !m_shader )
+		PUSH_EXCEPTION( "tried to attach shader w/o init.\n" );
+
+	glAttachShader( shader_program, m_shader );
+}

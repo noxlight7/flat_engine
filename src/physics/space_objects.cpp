@@ -11,11 +11,11 @@ ObjectForm::ObjectForm(ObjectForm& form)
 	m_type = form.m_type;
 	switch (m_type)
 	{
-	case m_form_circle:
+	case FORM_CIRCLE:
 		m_data.m_circle = new CircleFormData();
 		m_data.m_circle->m_radius = form.m_data.m_circle->m_radius;
 		break;
-	case form_rectangle:
+	case FORM_RECTANGLE:
 		m_data.m_rectangle = new RectangleFormData();
 		m_data.m_rectangle->m_width = form.m_data.m_rectangle->m_width;
 		m_data.m_rectangle->m_height = form.m_data.m_rectangle->m_height;
@@ -27,13 +27,13 @@ ObjectForm::ObjectForm(ObjectForm& form)
 
 ObjectForm::ObjectForm(float radius)
 {
-	m_type = ObjectFormType::m_form_circle;
+	m_type = ObjectFormType::FORM_CIRCLE;
 	m_data.m_circle = new CircleFormData();
 	m_data.m_circle->m_radius = radius;
 }
 ObjectForm::ObjectForm(float width, float height)
 {
-	m_type = ObjectFormType::form_rectangle;
+	m_type = ObjectFormType::FORM_RECTANGLE;
 	m_data.m_rectangle = new RectangleFormData();
 	m_data.m_rectangle->m_width = width;
 	m_data.m_rectangle->m_height = height;
@@ -41,15 +41,15 @@ ObjectForm::ObjectForm(float width, float height)
 ObjectForm::ObjectForm()
 {
 	m_data.m_circle = nullptr;
-	m_type = ObjectFormType::m_form_circle;
+	m_type = ObjectFormType::FORM_CIRCLE;
 }
 
 void ObjectForm::setData(float radius)
 {
-	if (m_type == form_rectangle)
+	if (m_type == FORM_RECTANGLE)
 	{
 		releaseData();
-		m_type = ObjectFormType::m_form_circle;
+		m_type = ObjectFormType::FORM_CIRCLE;
 		m_data.m_circle = new CircleFormData();
 	}
 	m_data.m_circle->m_radius = radius;
@@ -57,7 +57,7 @@ void ObjectForm::setData(float radius)
 
 void ObjectForm::setData(float width, float height)
 {
-	if (m_type == m_form_circle)
+	if (m_type == FORM_CIRCLE)
 	{
 		releaseData();
 		m_data.m_rectangle = new RectangleFormData();
@@ -70,11 +70,11 @@ void ObjectForm::releaseData()
 {
 	switch (m_type)
 	{
-	case m_form_circle:
+	case FORM_CIRCLE:
 		if (m_data.m_circle != nullptr)
 			delete m_data.m_circle;
 		break;
-	case form_rectangle:
+	case FORM_RECTANGLE:
 		if (m_data.m_rectangle != nullptr)
 			delete m_data.m_rectangle;
 		break;
@@ -82,22 +82,62 @@ void ObjectForm::releaseData()
 		break;
 	}
 }
+
+vec2&& ObjectForm::getSize(float angle)
+{
+	vec2 size{};
+	switch (m_type)
+	{
+		case ObjectFormType::FORM_CIRCLE:
+			size.x = size.y = m_data.m_circle->m_radius * 2;
+			break;
+		case ObjectFormType::FORM_RECTANGLE:
+			float x = m_data.m_rectangle->m_width;
+			float y = m_data.m_rectangle->m_height;
+			size.x = x * cos(angle) + y * sin(angle);
+			size.y = y * cos(angle) + x * sin(angle);
+			break;
+	}
+	return move(size);
+}
+
+float ObjectForm::getMaxSize()
+{
+	float res = 0;
+	switch (m_type)
+	{
+	case ObjectFormType::FORM_CIRCLE:
+		res = m_data.m_circle->m_radius * 2;
+		break;
+	case ObjectFormType::FORM_RECTANGLE:
+		float x = m_data.m_rectangle->m_width;
+		float y = m_data.m_rectangle->m_height;
+		res = sqrt(x * x + y * y);
+		break;
+	}
+	return res;
+}
+
 ObjectForm::~ObjectForm()
 {
 	releaseData();
 }
 
 // Создаёт локальный объект с указанными параметрами
-SpaceObject::SpaceObject(const District* current_district, ObjectForm&& form, Vector&& position,
-	float scale, float rotation, float rotation_speed, float max_rotation_speed)
-	: m_current_district(current_district), m_position(position), m_form(form), m_scale(scale),
-	m_rotation(rotation), m_rotation_speed(rotation_speed), m_max_rotation_speed(max_rotation_speed)
+SpaceObject::SpaceObject(
+	ObjectForm&& form,
+	float scale, 
+	float rotation, 
+	float rotation_speed, 
+	float max_rotation_speed)
+	: m_current_district(nullptr), m_position(), m_form(form), 
+	m_scale(scale),	m_rotation(rotation), 
+	m_rotation_speed(rotation_speed), 
+	m_max_rotation_speed(max_rotation_speed)
 {
-		
 }
 // Создаёт локальный объект, загружая его из файла
-SpaceObject::SpaceObject(const District* currentDistrict, FILE* f)
-	: m_current_district(currentDistrict)
+SpaceObject::SpaceObject(FILE* f)
 {
 	load(f);
 }
@@ -117,21 +157,34 @@ void SpaceObject::rotate(float da)
 	else if (m_rotation < 0)
 		m_rotation -= (trunc(m_rotation / g_pi2) - 1) * g_pi2;
 }
+
 void SpaceObject::moveTo(float x, float y)
 {
 	m_position.x = x;
 	m_position.y = y;
 }
-void SpaceObject::moveTo(float x, float y, float level)
+
+void SpaceObject::initInNewDistrictNet()
 {
-	m_position.x = x;
-	m_position.y = y;
-	m_position.z = level;
+	// Сюда добавить код создания матрицы информации о списках
+	m_matrix_info = new ListElementMatrix<SpaceObject>(10, 10);
+	m_matrix_info->shiftLeft();
 }
-void SpaceObject::moveTo(const District* district, float x, float y, float level)
+
+void SpaceObject::moveTo(const District* district, float x, float y)
 {
-	this->m_current_district = district;
+	if (m_current_district == nullptr ||
+		m_current_district->m_net != district->m_net) {
+		m_current_district = district;
+		initInNewDistrictNet();
+	}
+	else
+		m_current_district = district;
+	
+	moveTo(x, y);
+	insertToDistrictList();
 }
+
 void SpaceObject::load(FILE* f)
 {
 	
@@ -142,13 +195,139 @@ void SpaceObject::save(FILE* f)
 	
 }
 
-MoveableObject::MoveableObject(const District* district, ObjectForm&& form, 
-	Vector&& position, float scale, float rotation, float rotation_speed, 
-	float max_rotation_speed,	glm::vec3&& speed_direction, float current_speed, 
+void SpaceObject::insertToDistrictList()
+{
+	m_district_info.insert(
+		const_cast<list<SpaceObject*>*>
+		(&m_current_district->m_space_objects), this);
+}
+
+void SpaceObject::removeFromDistrictList() {
+	m_district_info.remove();
+}
+
+template <typename Type>
+ListElementMatrix<Type>::ListElementMatrix(int row_amount, int column_amount)
+	: m_row_amount(row_amount), m_column_amount(column_amount)
+{
+	m_buffer = new ListPElementInfo<Type>**[row_amount];
+
+	for (int i = 0; i < row_amount; i++)
+	{
+		m_buffer[i] = new ListPElementInfo<Type>*[column_amount];
+
+		for (int j = 0; j < column_amount; j++)
+			m_buffer[i][j] = new ListPElementInfo<Type>();
+	}
+}
+
+template <typename Type>
+ListElementMatrix<Type>::~ListElementMatrix()
+{
+	for (int i = 0; i < m_row_amount; i++)
+	{
+		for (int j = 0; j < m_column_amount; j++)
+		{
+			m_buffer[i][j]->remove();
+			delete[] m_buffer[i][j];
+		}
+
+		delete[] m_buffer[i];
+	}
+
+	delete[] m_buffer;
+}
+
+template <typename Type>
+void ListElementMatrix<Type>::shiftLeft()
+{
+	int column = m_column_amount - 1;
+	for (int i = 0; i < m_row_amount; i++)
+		m_buffer[i][column]->remove();
+
+	// Дописать функцию
+}
+
+template <typename Type>
+void ListElementMatrix<Type>::shiftRight()
+{
+
+}
+
+template <typename Type>
+void ListElementMatrix<Type>::shiftTop()
+{
+
+}
+
+template <typename Type>
+void ListElementMatrix<Type>::shiftBottom()
+{
+
+}
+
+template <typename Type>
+ListPElementInfo<Type>*
+ListElementMatrix<Type>::getInfo(int row, int column)
+{
+
+}
+
+template <typename Type>
+ListPElementInfo<Type>::ListPElementInfo() 
+	: m_plist(nullptr)
+{
+}
+
+template <typename Type>
+ListPElementInfo<Type>::~ListPElementInfo()
+{
+	remove();
+}
+
+template <typename Type>
+void ListPElementInfo<Type>::insert(list<Type*>* plist, Type* pval)
+{
+	if (m_plist != nullptr)
+		remove();
+
+	m_plist = plist;
+	m_iterator = plist->insert(plist->end(), pval);
+}
+
+template <typename Type>
+void ListPElementInfo<Type>::remove()
+{
+	if (m_plist != nullptr)
+	{
+		m_plist->erase(m_iterator);
+		m_plist = nullptr;
+	}
+}
+
+template <typename Type>
+Type* ListPElementInfo<Type>::getElement()
+{
+	if (m_plist == nullptr)
+		return nullptr;
+
+	return *m_iterator;
+}
+
+MoveableObject::MoveableObject(
+	ObjectForm&& form, 
+	float scale, 
+	float rotation, 
+	float rotation_speed, 
+	float max_rotation_speed, 
+	glm::vec3&& speed_direction, 
 	float max_speed, float acceleration)
-	: SpaceObject(district, std::move(form), std::move(position), 
-		scale, rotation, rotation_speed, max_rotation_speed), m_speed_direction(speed_direction),
-	m_current_speed (current_speed), m_max_speed (max_speed), m_acceleration(acceleration)
+	: SpaceObject(std::move(form), scale, rotation, 
+		rotation_speed, max_rotation_speed), 
+	m_speed_direction(speed_direction),
+	m_current_speed (0), 
+	m_max_speed (max_speed), 
+	m_acceleration(acceleration)
 {
 
 }
@@ -185,7 +364,27 @@ void MoveableObject::setCurrentSpeed(float current_speed)
 	m_current_speed = current_speed;
 }
 
-Vector MoveableObject::getPosition()
+glm::vec2 SpaceObject::getRenderOrigin( ) {
+	return glm::vec2( m_position.x, -m_position.y );
+}
+
+Vector SpaceObject::getPosition()
 {
 	return m_position;
+}
+
+void MoveableObject::insertToDistrictList()
+{
+	SpaceObject::insertToDistrictList();
+
+	m_district_moveable_info.insert(
+		const_cast<list<MoveableObject*>*>
+		(&m_current_district->m_moveable_objeсts), this);
+}
+
+void MoveableObject::removeFromDistrictList()
+{
+	SpaceObject::removeFromDistrictList();
+
+	m_district_moveable_info.remove();
 }

@@ -10,6 +10,7 @@
 //#include "QuestEvents.h"
 
 using namespace std;
+using namespace glm;
 
 // Здесь хранятся классы и структуры для организации 
 
@@ -25,16 +26,16 @@ using Vector = glm::vec3;
 // Форма объектов, участвующих в столкновении
 enum CollisionType
 {
-	m_col_line,					// Линия
-	m_col_circle,					// Круг
-	m_col_rectangle,				// Прямоугольник
+	COL_LINE,					// Линия
+	COL_CIRCLE,					// Круг
+	COL_RECTANGLE,				// Прямоугольник
 };
 
 // Форма объекта
 enum ObjectFormType
 {
-	m_form_circle = m_col_circle,		// Круг
-	form_rectangle = m_col_rectangle// Прямоугольник
+	FORM_CIRCLE = COL_CIRCLE,		// Круг
+	FORM_RECTANGLE = COL_RECTANGLE// Прямоугольник
 };
 
 struct CircleFormData
@@ -67,6 +68,9 @@ public:
 	void setData(float width, float height);
 	void releaseData();
 
+	vec2&& getSize(float angle);
+	float getMaxSize();
+
 	ObjectFormData m_data;
 	ObjectFormType m_type;
 };
@@ -85,20 +89,65 @@ struct RectangleArea
 	glm::vec2 m_point2;
 };
 
+// Представляет собой пару из указателя на список и
+// итератора, указывающего на конкретный элемент списка
+template <typename Type>
+class ListPElementInfo
+{
+public:
+	ListPElementInfo();
+	// Вставляет указатель на элемент pval в список m_plist. 
+	// Если функция ранее вставила другой элемент в другой
+	// список, она предварительно удаляет этот указатель на 
+	// элемент из предыдущего списка 
+	void insert(list<Type*>* plist, Type *pval);
+	// Удаляет указатель на элемент из списка, в который тот 
+	// был вставлен функцией insert
+	void remove();
+	// Возвращает адрес вставленного функцией insert элемента
+	Type* getElement();
+	virtual ~ListPElementInfo();
+
+private:
+	list<Type*>* m_plist;
+	list<Type*>::iterator m_iterator;
+};
+
+template <typename Type>
+class ListElementMatrix {
+public:
+	ListElementMatrix(int row_amount, int column_amount);
+	~ListElementMatrix();
+	
+	void shiftLeft();
+	void shiftRight();
+	void shiftTop();
+	void shiftBottom();
+
+	ListPElementInfo<Type>* getInfo(int row, int column);
+
+private:
+	ListPElementInfo<Type>*** m_buffer;
+	int m_column_amount;
+	int m_row_amount;
+};
+
 // Объект локации, имеет x, y координаты и размер
 class SpaceObject
 {
 	friend class Collisions;
 	friend class MoveableObject;
+	friend class District;
 public:
 	// Создаёт локальный объект с указанными параметрами
-	SpaceObject(const District* current_district, 
+	SpaceObject(
 		ObjectForm&& form = ObjectForm(0.5),
-		Vector&& position = Vector(0, 0, 0), float scale = 1.f, 
-		float rotation = 0.f, float rotation_speed = 0.f, 
+		float scale = 1.f, 
+		float rotation = 0.f, 
+		float rotation_speed = 0.f, 
 		float max_rotation_speed = 0.f);
 	// Создаёт локальный объект, загружая его из файла
-	SpaceObject(const District* currentDistrict, FILE* f);
+	SpaceObject(FILE* f);
 	// Копирующий конструктор
 	SpaceObject(SpaceObject& lo);
 	// Move-конструктор
@@ -106,21 +155,35 @@ public:
 
 	void rotate(float da);				// Вращает объект на da радиан (против чс?)
 	void moveTo(float x, float y);
-	void moveTo(float x, float y, float level);
-	void moveTo(const District* district, float x, float y, float level);
+	void moveTo(const District* district, float x, float y);
 		
 	virtual void load(FILE* f);				// Загружает объект из файла
 	virtual void save(FILE* f);				// Сохраняет объект в файл
 
+	Vector getPosition();					// Возвращает вектор позиции
+	glm::vec2 getRenderOrigin( );
+
+	// Добавляет объект в списки объектов локации
+	// Если объект ранее находился в другой локации,
+	// предварительно удаляет его из её списков 
+	virtual void insertToDistrictList();
+	// Удаляет объект из списков объектов локации
+	virtual void removeFromDistrictList();
+
 protected:
+	void initInNewDistrictNet();
+
 	const District* m_current_district;	// Область, в которой находится объект
-	float m_rotation;						// Угол поворота
+	float m_rotation;					// Угол поворота
 	Vector m_position;					// Позиция объекта
 	float m_rotation_speed;				// Скорость поворота, используется только для круглого объекта
-	float m_max_rotation_speed;				// Максимальная скорость поворота
+	float m_max_rotation_speed;			// Максимальная скорость поворота
 	float m_scale;						// Масштаб объекта
 	ObjectForm m_form;					// Данные о форме объекта
-	
+
+	ListPElementInfo<SpaceObject> m_cell_info;
+	ListPElementInfo<SpaceObject> m_district_info;
+	ListElementMatrix<SpaceObject>* m_matrix_info;
 	// Хранит информацию о том, где и в каких списках находится
 	// объект для удаления из них в случае необходимости
 	// Необходимо написать аллокатор указателя на объект,
@@ -133,34 +196,41 @@ class MoveableObject : public SpaceObject
 {
 	friend class Collisions;
 public:
-	MoveableObject(const District* district, 
+	MoveableObject(
 		ObjectForm&& form = ObjectForm(0.5),
-		Vector&& position = Vector(0., 0., 0.),
-		float scale = 1.f, float rotation = 0.f, 
-		float rotation_speed = 0.f, float max_rotation_speed = 0.f,
-		Vector&& speed_direction = Vector(0., 0., 0.), 
-		float current_speed = 0,
-		float max_speed = 1.0f, float acceleration = 0);
+		float scale = 1.f, 
+		float rotation = 0.f, 
+		float rotation_speed = 0.f, 
+		float max_rotation_speed = 0.f,
+		Vector&& speed_direction = Vector(1., 0., 0.), 
+		float max_speed = 1.0f, 
+		float acceleration = 0);
 	void move(float dt);					// Перемещает объект в состояние через dt мс
 	virtual void load(const FILE* f);		// Загружает объект из файла
 	virtual void save(const FILE* f);		// Сохраняет объект в файл
 	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
 	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
-	Vector getPosition();					// Возвращает вектор позиции
+
+	virtual void insertToDistrictList() override;
+	virtual void removeFromDistrictList() override;
 protected:
 
 	float m_current_speed;						// Текущая скорость объекта
 	Vector m_speed_direction;					// Текущее направление скорости объекта
 	float m_max_speed;							// Максимальная скорость
 	float m_acceleration;						// Ускорение объекта (скорость набора скорости)
+	ListPElementInfo<MoveableObject> m_district_moveable_info;
 };
 
 class Actor : MoveableObject, IDownloadable
 {
 public:
-	Actor(const District* district, Vector&& position, float scale, ObjectForm&& form,
-		float max_speed = 1.0f, glm::vec2&& speed_direction = glm::vec2(0, 0),
-		float current_speed = 0, float acceleration = 0, bool global = false);
+	Actor(float scale, 
+		ObjectForm&& form,
+		float max_speed = 1.0f, 
+		glm::vec2&& speed_direction = glm::vec2(0, 0),
+		float acceleration = 0, 
+		bool global = false);
 	void load(FILE* f);	// Загружает объект из файла
 	void save(FILE* f);	// Сохраняет объект в файл
 
@@ -201,23 +271,24 @@ class District
 {
 	friend DistrictNet;
 	friend SpaceObject;
+	friend MoveableObject;
 public:
 	// Конструктор. Создаёт область, принадлежащую локации location
 	District(DistrictNet* net);
 	~District();
 
-	void addSpaceObject(SpaceObject* obj, float x, float y);
-	void addMoveableObject(MoveableObject* obj, float x, float y);
+	//void addObject(SpaceObject* obj, float x, float y);
 		
 	void load(FILE* f);					// Загружает область из файла
 	void save(FILE* f);					// Сохраняет область в файл
 
 	// Возвращает ячейку, содержащую точку с координатами (x; y)
 	DistrictCell& getCell(float x, float y);
+	// Возвращает индекс [i, j] ячейки, содержащей
+	// точку с координатами (x; y)
+	ivec2&& getCellIndex(float x, float y);
 
 private:	
-	
-
 	// Хранит ссылки на все пространственные объекты
 	list<SpaceObject*> m_space_objects; 
 	// Хранит ссылки на все способные двигаться объекты

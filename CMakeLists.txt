@@ -25,8 +25,6 @@ target_link_libraries ( ${solution_name}
 	${lib_files_opengl}
 )
 
-message (STATUS ${lib_files_opengl})
-
 add_custom_target (dlls_glfw COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_glfw} ${CMAKE_BINARY_DIR})
 add_dependencies (${solution_name} dlls_glfw)
 

@@ -11,6 +11,17 @@
 #define ALWAYS_INLINE inline
 #endif
 
+#ifdef _DEBUG
+#define PUSH_EXCEPTION(err,...) \
+	{\
+		printf(err, __VA_ARGS__);\
+		return;\
+	}
+#else
+#define PUSH_EXCEPTION(err,...) \
+	return;
+#endif
+
 #include <iostream>
 #include <chrono>
 #include <unordered_map>
@@ -23,8 +34,9 @@
 
 #include "factory/definitions.hpp"
 
+#include "utils/hash.hpp"
+
 #include "factory/engine.hpp"
+
 #pragma comment (lib, "opengl32.lib")
-//#pragma comment (lib, "glew32.lib")
-//#pragma comment (lib, "glew32s.lib")
 #pragma comment (lib, "glfw3dll.lib")

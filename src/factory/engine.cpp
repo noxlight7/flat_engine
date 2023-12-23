@@ -19,6 +19,7 @@ void Engine::initWindow(const char* title) {
 	glfwMakeContextCurrent( m_window );
 
 	g_renderer->init( m_window );
+	g_renderer->resizeFrameBuffer( m_window, m_width, m_height );
 
 	glfwSetWindowUserPointer(m_window, this);
 	setCallbacks();
@@ -64,9 +65,9 @@ void Engine::windowResizeCallback(GLFWwindow* window, int width, int height) {
 
 void Engine::mainLoop() {
 	while (!glfwWindowShouldClose(m_window)) {
-		glfwPollEvents();
 		onRender();
 		g_renderer->drawFrame();
+		glfwPollEvents( );
 	}
 }
 

@@ -1,14 +1,20 @@
 #include "game.hpp"
 #include "chrono"
-
+#include "utils/hash.hpp"
 Game::Game(const char* title, uint32_t width, uint32_t height)
-	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), m_test_obj(nullptr) {
+	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), m_test_obj() {
 
 }
 
 void Game::onInit() {
 	// —юда добавить код при инициализации
-	
+	District* district = m_district_net.addDistrict(0, 0);
+
+	MoveableObject* mo = new MoveableObject();
+	mo->moveTo(district, 50, 50);
+	delete mo;
+
+	m_test_obj.moveTo(district, 500, 500);
 }
 
 void Game::onRender() {
@@ -25,18 +31,23 @@ void Game::onRender() {
 	Vector v = getPlayerKeyboardSpeedDirection();
 
 	m_test_obj.setSpeedDirection(v);
-	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 10: 0);
+	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 500: 0);
 
 	m_test_obj.move(dt);
 
-	auto position = m_test_obj.getPosition();
+	auto position = m_test_obj.getRenderOrigin();
+	glm::vec2 mins = { -160, -160 };
+	glm::vec2 maxs = -mins;
 
-	static auto m_output_time = start_time;
-	if ((std::chrono::duration<float, std::chrono::seconds::period>
-		(current_time - m_output_time).count()) > 1) {
-		m_output_time = current_time;
-
-		printf("Current position = (%f;%f), dt = %f\n", position.x, position.y, dt);
+	g_vertex_buffer->addRect( mins + position, maxs + position, { 1.0,1.0,1.0,1.0 }, HASH( "test" ) );
+	double dt2 = glfwGetTime( );
+	glfwSetTime( 0 );
+	static auto output_time = start_time;
+	if ( ( std::chrono::duration<float, std::chrono::seconds::period>
+		( current_time - output_time ).count( ) ) > 1 ) {
+		output_time = current_time;
+		// input debug here (every second).
+		printf( "%f %lf\n", dt, dt2 );
 	}
 }
 

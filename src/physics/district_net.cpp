@@ -22,20 +22,22 @@ District::~District() {
 		delete[] m_cells[i];
 
 	delete[] m_cells;
+
+	for (int i = m_space_objects.size(); i; i--)
+		(*m_space_objects.begin())->removeFromDistrictList();
+
+	for (int i = m_moveable_objeñts.size(); i; i--)
+		(*m_moveable_objeñts.begin())->removeFromDistrictList();
 }
 
 DistrictCell& District::getCell(float x, float y) {
-	float m_size = m_net->m_cells_size;
-	return m_cells[(int) (x / m_size)][(int)(y / m_size)];
+	ivec2 ind = getCellIndex(x, y);
+	return m_cells[ind.x][ind.y];
 }
 
-void District::addSpaceObject(SpaceObject *obj, float x, float y) {
-	obj->moveTo(x, y);
-	m_space_objects.push_back(obj);
-	getCell(x, y).m_objects.push_back(obj);
-
-	if (typeid(*obj) == typeid(MoveableObject))
-		m_moveable_objeñts.push_back((MoveableObject*)obj);
+ivec2&& District::getCellIndex(float x, float y) {
+	float m_size = m_net->m_cells_size;
+	return ivec2(trunc(x / m_size), trunc(y / m_size));
 }
 
 DistrictNet::DistrictNet(
