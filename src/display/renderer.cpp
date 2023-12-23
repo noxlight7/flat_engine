@@ -13,6 +13,7 @@ void Renderer::init( GLFWwindow *window ) {
 
 void Renderer::createTextures( ) {
 	loadTexture( HASH( "test" ), "assets/test.png" );
+	loadTexture( HASH( "test2" ), "assets/test2.png" );
 }
 
 void Renderer::loadTexture( const fnv_edited::value_type entry, const char *path ) {

@@ -1,8 +1,11 @@
 #include "game.hpp"
 #include "chrono"
 #include "utils/hash.hpp"
+#include "physics/collisions.hpp"
+
 Game::Game(const char* title, uint32_t width, uint32_t height)
-	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), m_test_obj() {
+	: Engine(title, width, height), m_district_net(10, 10, 1000, 100), m_test_obj(ObjectForm(100)),
+	m_test_static_obj(ObjectForm(100)) {
 
 }
 
@@ -15,6 +18,7 @@ void Game::onInit() {
 	delete mo;
 
 	m_test_obj.moveTo(district, 500, 500);
+	m_test_static_obj.moveTo(district, 100, 100);
 }
 
 void Game::onRender() {
@@ -40,6 +44,13 @@ void Game::onRender() {
 	glm::vec2 maxs = -mins;
 
 	g_vertex_buffer->addRect( mins + position, maxs + position, { 1.0,1.0,1.0,1.0 }, HASH( "test" ) );
+
+	auto position1 = m_test_static_obj.getRenderOrigin();
+	glm::vec2 mins1 = { -160, -160 };
+	glm::vec2 maxs1 = -mins1;
+
+	g_vertex_buffer->addRect(mins1 + position1, maxs1 + position1, { 1.0,1.0,1.0,1.0 }, HASH("test2"));
+
 	double dt2 = glfwGetTime( );
 	glfwSetTime( 0 );
 	static auto output_time = start_time;
@@ -49,6 +60,12 @@ void Game::onRender() {
 		// input debug here (every second).
 		printf( "%f %lf\n", dt, dt2 );
 	}
+
+	//float colTime;
+	//if (!Collisions::Collision(&m_test_obj, &m_test_static_obj, dt, &colTime))
+		//m_test_obj.move(dt);
+	//else
+		//m_test_obj.move(colTime);
 }
 
 Vector&& Game::getPlayerKeyboardSpeedDirection() {

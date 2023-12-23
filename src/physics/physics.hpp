@@ -202,7 +202,7 @@ public:
 		float rotation = 0.f, 
 		float rotation_speed = 0.f, 
 		float max_rotation_speed = 0.f,
-		Vector&& speed_direction = Vector(1., 0., 0.), 
+		Vector&& speed_direction = Vector(1.f, 0.f, 0.f), 
 		float max_speed = 1.0f, 
 		float acceleration = 0);
 	void move(float dt);					// Перемещает объект в состояние через dt мс
@@ -210,6 +210,7 @@ public:
 	virtual void save(const FILE* f);		// Сохраняет объект в файл
 	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
 	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
+	Vector getFuturePosition(float dt); // Возвращает положение объекта через время dt
 
 	virtual void insertToDistrictList() override;
 	virtual void removeFromDistrictList() override;

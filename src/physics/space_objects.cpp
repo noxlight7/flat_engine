@@ -353,7 +353,7 @@ void MoveableObject::setSpeedDirection(Vector& speed_direction)
 
 	m_speed_direction = speed_direction;
 
-	glm::normalize(m_speed_direction);
+	m_speed_direction = glm::normalize(m_speed_direction);
 }
 
 void MoveableObject::setCurrentSpeed(float current_speed)
@@ -387,4 +387,9 @@ void MoveableObject::removeFromDistrictList()
 	SpaceObject::removeFromDistrictList();
 
 	m_district_moveable_info.remove();
+}
+
+Vector MoveableObject::getFuturePosition(float dt)
+{
+	return m_position + dt * m_current_speed * m_speed_direction;
 }

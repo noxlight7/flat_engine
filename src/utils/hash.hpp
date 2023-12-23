@@ -13,6 +13,7 @@ namespace fnv_edited {
 	constexpr auto k_seed = 0x45c3ull;
 	constexpr auto k_prime = 0x1193ull;
 
+	// run time
 	ALWAYS_INLINE value_type rt( const char *txt ) {
 		auto entry = k_seed;
 
@@ -24,6 +25,7 @@ namespace fnv_edited {
 		return entry;
 	}
 
+	// compiled time
 	ALWAYS_INLINE constexpr value_type ct( const char *txt, value_type entry = k_seed ) {
 		return !*txt ? entry 
 			: ct( txt + 1, 

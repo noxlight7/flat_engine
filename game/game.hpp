@@ -14,6 +14,7 @@ public:
 
 protected:
 	MoveableObject m_test_obj;
+	SpaceObject m_test_static_obj;
 	DistrictNet m_district_net;
 };
 
