@@ -8,7 +8,8 @@ Game::Game(const char* title, uint32_t width, uint32_t height)
 	m_test_obj(true, ObjectForm(160)),
 	m_test_obj2(true, ObjectForm(240, 240)),
 	m_test_static_obj(false, ObjectForm(160, 160)), 
-	m_test_static_obj2(false, ObjectForm(80)) 
+	m_test_static_obj2(false, ObjectForm(80)), 
+	m_test_fly(true, ObjectForm(120)) 
 {
 }
 
@@ -20,6 +21,7 @@ void Game::onInit() {
 	m_test_obj2.moveTo(district, -300, -300);
 	m_test_static_obj.moveTo(district, 0, 0);
 	m_test_static_obj2.moveTo(district, 200, 200);
+	m_test_fly.moveTo(district, -200, 200);
 }
 
 void Game::onRender() {
@@ -33,6 +35,9 @@ void Game::onRender() {
 		(current_time - undo_time).count();
 	undo_time = current_time;
 
+	float ct = std::chrono::duration<float, std::chrono::seconds::period>
+		(start_time - current_time).count();
+
 	Vector v = getPlayerKeyboardSpeedDirection();
 
 	m_test_obj.setSpeedDirection(v);
@@ -42,6 +47,11 @@ void Game::onRender() {
 
 	m_test_obj2.setSpeedDirection(v2);
 	m_test_obj2.setCurrentSpeed(v2.x != 0 || v2.y != 0 ? 200 : 0);
+
+	Vector v3 = Vector(cos(ct), sin(ct), 0);
+
+	m_test_fly.setSpeedDirection(v3);
+	m_test_fly.setCurrentSpeed(100);
 
 	//m_test_obj.move(dt);
 
@@ -68,6 +78,12 @@ void Game::onRender() {
 	glm::vec2 maxs3 = -mins3;
 
 	g_renderer->drawRectTex(mins3 + position3, maxs3 + position3, HASH("circle_static"));
+
+	auto position4 = m_test_fly.getRenderOrigin();
+	glm::vec2 mins4 = { -120, -120 };
+	glm::vec2 maxs4 = -mins4;
+
+	g_renderer->drawRectTex(mins4 + position4, maxs4 + position4, HASH("circle_move"));
 
 	static auto output_time = start_time;
 	if ( ( std::chrono::duration<float, std::chrono::seconds::period>
