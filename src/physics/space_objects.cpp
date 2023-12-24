@@ -190,13 +190,11 @@ bool SpaceObject::isMoveable() {
 void SpaceObject::moveTo(const District* district, float x, float y)
 {
 	if (m_current_district == nullptr ||
-		m_current_district->m_net != district->m_net) {
-		m_current_district = district;
+		m_current_district->m_net != district->m_net) 
 		initInNewDistrictNet();
-	}
-	else
-		m_current_district = district;
 	
+	m_current_district = district;
+
 	moveTo(x, y);
 	insertToDistrictList();
 }
@@ -211,20 +209,30 @@ void SpaceObject::save(FILE* f)
 	
 }
 
+void SpaceObject::initInCell(DistrictCell* cell) {
+	m_cell_info.remove();
+	m_cell_info.insert(&cell->m_objects, this);
+}
+
 void SpaceObject::insertToDistrictList()
 {
+	District* v_district =
+		const_cast<District*>(m_current_district);
+
 	m_district_info.insert(
-		const_cast<list<SpaceObject*>*>
-		(&m_current_district->m_space_objects), this);
+		&v_district->m_space_objects, this);
+
+	initInCell(&v_district->getCell(m_position.x, m_position.y));
 
 	if (m_is_moveable)
 		m_district_moveable_info.insert(
-			const_cast<list<SpaceObject*>*>
-			(&m_current_district->m_moveable_objeñts), this);
+			&v_district->m_moveable_objeñts, this);
 }
 
 void SpaceObject::removeFromDistrictList() {
 	m_district_info.remove();
+
+	m_cell_info.remove();
 
 	if (m_is_moveable)
 		m_district_moveable_info.remove();

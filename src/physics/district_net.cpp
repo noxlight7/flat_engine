@@ -15,59 +15,197 @@ District::District(DistrictNet* net, int col_index, int row_index)
 			m_cells[i][j].m_owner_district = this;
 	}
 
-	for (uint32_t i = 0; i < n; i++) {
-		for (uint32_t j = 0; j < n; j++) {
-			if (i > 0 || (col_index > 0 &&
-				m_net->getDistrict(m_col_index - 1, m_row_index)))
-				m_cells[i][j].m_left = &m_cells[i - 1][j];
-			
-			if (i < n || (col_index < m_net->m_width &&
-				m_net->getDistrict(m_col_index + 1, m_row_index)))
-				m_cells[i][j].m_right = &m_cells[i + 1][j];
+	uint32_t m = n - 1;
+	for (uint32_t i = 1; i < m; i++) {
+		for (uint32_t j = 1; j < m; j++) {
+			m_cells[i][j].m_left = &m_cells[i - 1][j];
+			m_cells[i][j].m_right = &m_cells[i + 1][j];
+			m_cells[i][j].m_bottom = &m_cells[i][j - 1];
+			m_cells[i][j].m_top = &m_cells[i][j + 1];
 
-			if (j > 0 || (row_index > 0 &&
-				m_net->getDistrict(m_col_index, m_row_index - 1)))
-				m_cells[i][j].m_bottom = &m_cells[i][j - 1];
-
-			if (j < n || (row_index < m_net->m_height &&
-				m_net->getDistrict(m_col_index, m_row_index + 1)))
-				m_cells[i][j].m_top = &m_cells[i][j + 1];
+			m_cells[i][j].m_left_top = &m_cells[i - 1][j + 1];
+			m_cells[i][j].m_left_bottom = &m_cells[i - 1][j - 1];
+			m_cells[i][j].m_right_top = &m_cells[i + 1][j + 1];
+			m_cells[i][j].m_right_bottom = &m_cells[i + 1][j - 1];
 		}
 	}
 
 	District* district;
-	int m = n - 1;
+	
+	district = m_net->getDistrict(m_col_index - 1, m_row_index);
+	for (int j = 1; j < m; j++) {
+		m_cells[0][j].m_right = &m_cells[1][j];
+		m_cells[0][j].m_bottom = &m_cells[0][j - 1];
+		m_cells[0][j].m_top = &m_cells[0][j + 1];
 
-	if (district = m_net->getDistrict(m_col_index - 1, m_row_index))
-		for (int j = 0; j < n; j++)
+		m_cells[0][j].m_right_top = &m_cells[1][j + 1];
+		m_cells[0][j].m_right_bottom = &m_cells[1][j - 1];
+
+		if (district) {
 			district->m_cells[m][j].m_right = &m_cells[0][j];
+			m_cells[0][j].m_left = &district->m_cells[m][j];
 
-	if (district = m_net->getDistrict(m_col_index + 1, m_row_index))
-		for (int j = 0; j < n; j++)
-			district->m_cells[0][j].m_left = &m_cells[n][j];
+			m_cells[0][j].m_left_top = &district->m_cells[m][j + 1];
+			m_cells[0][j].m_left_bottom = &district->m_cells[m][j - 1];
 
-	if (district = m_net->getDistrict(m_col_index, m_row_index - 1))
-		for (int i = 0; i < n; i++)
+			district->m_cells[m][j].m_right_top = &m_cells[0][j + 1];
+			district->m_cells[m][j].m_right_bottom = &m_cells[0][j - 1];
+		}
+	}
+
+	district = m_net->getDistrict(m_col_index + 1, m_row_index);
+	for (int j = 1; j < m; j++) {
+		m_cells[m][j].m_left = &m_cells[m - 1][j];
+		m_cells[m][j].m_bottom = &m_cells[m][j - 1];
+		m_cells[m][j].m_top = &m_cells[m][j + 1];
+
+		m_cells[m][j].m_left_top = &m_cells[m - 1][j + 1];
+		m_cells[m][j].m_left_bottom = &m_cells[m - 1][j - 1];
+
+		if (district) {
+			district->m_cells[0][j].m_left = &m_cells[m][j];
+			m_cells[m][j].m_right = &district->m_cells[0][j];
+
+			m_cells[m][j].m_right_top = &district->m_cells[0][j + 1];
+			m_cells[m][j].m_right_bottom = &district->m_cells[0][j - 1];
+
+			district->m_cells[0][j].m_left_top = &m_cells[m][j + 1];
+			district->m_cells[0][j].m_left_bottom = &m_cells[m][j - 1];
+		}
+	}
+
+	district = m_net->getDistrict(m_col_index, m_row_index - 1);
+	for (int i = 1; i < m; i++) {
+		m_cells[i][0].m_left = &m_cells[i - 1][0];
+		m_cells[i][0].m_right = &m_cells[i + 1][0];
+		m_cells[i][0].m_top = &m_cells[i][1];
+
+		m_cells[i][0].m_left_top = &m_cells[i - 1][1];
+		m_cells[i][0].m_right_top = &m_cells[i + 1][1];
+		
+		if (district) {
 			district->m_cells[i][m].m_top = &m_cells[i][0];
+			m_cells[i][0].m_bottom = &district->m_cells[i][m];
 
-	if (district = m_net->getDistrict(m_col_index, m_row_index + 1))
-		for (int i = 0; i < n; i++)
+			m_cells[i][0].m_left_bottom = &district->m_cells[i - 1][m];
+			m_cells[i][0].m_right_bottom = &district->m_cells[i + 1][m];
+
+			district->m_cells[i][m].m_left_top = &m_cells[i - 1][0];
+			district->m_cells[i][m].m_right_top = &m_cells[i + 1][0];
+		}
+	}
+
+	district = m_net->getDistrict(m_col_index, m_row_index + 1);
+	for (int i = 1; i < m; i++) {
+		m_cells[i][m].m_left = &m_cells[i - 1][m];
+		m_cells[i][m].m_right = &m_cells[i + 1][m];
+		m_cells[i][m].m_bottom = &m_cells[i][m - 1];
+
+		m_cells[i][m].m_left_bottom = &m_cells[i - 1][m - 1];
+		m_cells[i][m].m_right_bottom = &m_cells[i + 1][m - 1];
+
+		if (district) {
 			district->m_cells[i][0].m_bottom = &m_cells[i][n];
+
+			m_cells[i][m].m_left_top = &district->m_cells[i - 1][0];
+			m_cells[i][m].m_right_top = &district->m_cells[i + 1][0];
+
+			district->m_cells[i][0].m_left_bottom = &m_cells[i - 1][m];
+			district->m_cells[i][0].m_right_bottom = &m_cells[i + 1][m];
+		}
+	}
+
+	// (0;0)
+	m_cells[0][0].m_right = &m_cells[1][0];
+	m_cells[0][0].m_top = &m_cells[0][1];
+	m_cells[0][0].m_right_top = &m_cells[1][1];
+	// (0;m)
+	m_cells[0][m].m_right = &m_cells[1][m];
+	m_cells[0][m].m_bottom = &m_cells[0][m - 1];
+	m_cells[0][m].m_right_bottom = &m_cells[1][m - 1];
+	// (m;0)
+	m_cells[m][0].m_left = &m_cells[m - 1][0];
+	m_cells[m][0].m_top = &m_cells[m][1];
+	m_cells[m][0].m_left_top = &m_cells[m - 1][1];
+	// (m;m)
+	m_cells[m][m].m_left = &m_cells[m - 1][m];
+	m_cells[m][m].m_bottom = &m_cells[m][m - 1];
+	m_cells[m][m].m_left_bottom = &m_cells[m - 1][m - 1];
+
+	district = m_net->getDistrict(m_col_index - 1, m_row_index);
+	if (district) {
+		m_cells[0][0].m_left = &district->m_cells[m][0];
+		district->m_cells[m][0].m_right = &m_cells[0][0];
+
+		m_cells[0][m].m_left = &district->m_cells[m][m];
+		district->m_cells[m][m].m_right = &m_cells[0][m];
+	}
+
+	district = m_net->getDistrict(m_col_index + 1, m_row_index);
+	if (district) {
+		m_cells[m][0].m_right = &district->m_cells[0][0];
+		district->m_cells[0][0].m_left = &m_cells[m][0];
+
+		m_cells[m][m].m_right = &district->m_cells[0][m];
+		district->m_cells[0][m].m_left = &m_cells[m][m];
+	}
+
+	district = m_net->getDistrict(m_col_index, m_row_index - 1);
+	if (district) {
+		m_cells[0][0].m_bottom = &district->m_cells[0][m];
+		district->m_cells[0][m].m_top = &m_cells[0][0];
+
+		m_cells[m][0].m_bottom = &district->m_cells[m][m];
+		district->m_cells[m][m].m_top = &m_cells[m][0];
+	}
+
+	district = m_net->getDistrict(m_col_index, m_row_index + 1);
+	if (district) {
+		m_cells[0][m].m_top = &district->m_cells[0][0];
+		district->m_cells[0][0].m_bottom = &m_cells[0][m];
+
+		m_cells[m][m].m_top = &district->m_cells[m][0];
+		district->m_cells[m][0].m_bottom = &m_cells[m][m];
+	}
+
+	district = m_net->getDistrict(m_col_index - 1, m_row_index - 1);
+	if (district) {
+		m_cells[0][0].m_left_bottom = &district->m_cells[m][m];
+		district->m_cells[m][m].m_right_top = &m_cells[0][0];
+	}
+
+	district = m_net->getDistrict(m_col_index - 1, m_row_index + 1);
+	if (district) {
+		m_cells[0][m].m_left_top = &district->m_cells[m][0];
+		district->m_cells[m][0].m_right_bottom = &m_cells[0][m];
+	}
+
+	district = m_net->getDistrict(m_col_index + 1, m_row_index - 1);
+	if (district) {
+		m_cells[m][0].m_right_bottom = &district->m_cells[0][m];
+		district->m_cells[0][m].m_left_top = &m_cells[m][0];
+	}
+
+	district = m_net->getDistrict(m_col_index + 1, m_row_index + 1);
+	if (district) {
+		m_cells[m][m].m_right_top = &district->m_cells[0][0];
+		district->m_cells[0][0].m_left_bottom = &m_cells[m][m];
+	}
 }
 
 District::~District() {
+	for (int i = m_space_objects.size(); i; i--)
+		(*m_space_objects.begin())->removeFromDistrictList();
+
+	for (int i = m_moveable_objeñts.size(); i; i--)
+		(*m_moveable_objeñts.begin())->removeFromDistrictList();
+
 	uint32_t n = m_net->m_cells_partition;
 
 	for (uint32_t i = 0; i < n; i++)
 		delete[] m_cells[i];
 
 	delete[] m_cells;
-
-	for (int i = m_space_objects.size(); i; i--)
-		(*m_space_objects.begin())->removeFromDistrictList();
-
-	for (int i = m_moveable_objeñts.size(); i; i--)
-		(*m_moveable_objeñts.begin())->removeFromDistrictList();
 }
 
 DistrictCell& District::getCell(float x, float y) {

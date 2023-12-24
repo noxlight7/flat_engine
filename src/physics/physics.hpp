@@ -18,6 +18,7 @@ class SpaceObject;
 class District;
 class Collisions;
 class DistrictNet;
+class DistrictCell;
 
 using Vector = glm::vec3;
 //#define Vector glm::vec3
@@ -157,6 +158,8 @@ public:
 	void rotate(float da);				// Вращает объект на da радиан (против чс?)
 	void moveTo(float x, float y);
 	void moveTo(const District* district, float x, float y);
+
+	void initInCell(DistrictCell* cell);
 		
 	virtual void load(FILE* f);				// Загружает объект из файла
 	virtual void save(FILE* f);				// Сохраняет объект в файл
@@ -237,7 +240,7 @@ class DistrictCell
 	friend District;
 public:
 	DistrictCell() = default;
-private:
+
 	// Область, в которой содержится ячейка
 	District* m_owner_district;
 
@@ -245,6 +248,11 @@ private:
 	DistrictCell* m_right;
 	DistrictCell* m_top;
 	DistrictCell* m_bottom;
+
+	DistrictCell* m_left_top;
+	DistrictCell* m_left_bottom;
+	DistrictCell* m_right_top;
+	DistrictCell* m_right_bottom;
 	//District* m_bind_district;	// Область, в которую можно перейти из этой ячейки
 	
 	// Список содержащихся в ячейке объектов
