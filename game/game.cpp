@@ -5,9 +5,9 @@
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
 	: Engine(title, width, height), m_district_net(10, 10, 10000, 20), 
-	m_test_obj(true, ObjectForm(160)),
-	m_test_obj2(true, ObjectForm(120)),
-	m_test_static_obj(false, ObjectForm(80)) {
+	m_test_obj(true, ObjectForm(160, 160)),
+	m_test_obj2(true, ObjectForm(120, 120)),
+	m_test_static_obj(false, ObjectForm(80, 80)) {
 }
 
 void Game::onInit() {
@@ -16,7 +16,7 @@ void Game::onInit() {
 
 	m_test_obj.moveTo(district, 500, 500);
 	m_test_obj2.moveTo(district, -300, -300);
-	m_test_static_obj.moveTo(district, 100, 100);
+	m_test_static_obj.moveTo(district, 0, 0);
 }
 
 void Game::onRender() {
@@ -60,8 +60,6 @@ void Game::onRender() {
 
 	g_renderer->drawRectTex(mins1 + position1, maxs1 + position1, HASH("test2"));
 
-	double dt2 = glfwGetTime( );
-	glfwSetTime( 0 );
 	static auto output_time = start_time;
 	if ( ( std::chrono::duration<float, std::chrono::seconds::period>
 		( current_time - output_time ).count( ) ) > 1 ) {

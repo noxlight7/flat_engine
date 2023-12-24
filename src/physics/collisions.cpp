@@ -127,5 +127,34 @@ bool Collisions::Rectangle2Circle1(SpaceObject* o1, SpaceObject* o2, float dt, f
 }
 bool Collisions::Rectangle2Rectangle2(SpaceObject* o1, SpaceObject* o2, float dt, float* colTime)
 {
-	return false;
+	//auto o1_coords = o1->getPosition();
+	//auto o2_coords = o2->getPosition();
+	auto o1_future_coords = o1->getFuturePosition(dt);
+	Vector o2_future_coords;
+	float height1 = o1->m_form.m_data.m_rectangle->m_height;
+	float width1 = o1->m_form.m_data.m_rectangle->m_width;
+	float height2 = o2->m_form.m_data.m_rectangle->m_height;
+	float width2 = o2->m_form.m_data.m_rectangle->m_width;
+
+	SpaceObject* o2_move = nullptr;
+	if (o2->isMoveable()) {
+		o2_move = o2;
+		o2_future_coords = o2_move->getFuturePosition(dt);
+	}
+	else {
+		o2_future_coords = o2->getPosition();
+	}
+
+	float x1 = o1_future_coords.x - width1 / 2;
+	float y1 = o1_future_coords.y - height1 / 2;
+	float x2 = o2_future_coords.x - width2 / 2;
+	float y2 = o2_future_coords.y - height2 / 2;
+
+	if (!(x1 + width1 >= x2 && x1 <= x2 + width2 &&
+		y1 + height1 >= y2 && y1 <= y2 + height2))
+		return false;
+	
+	*colTime = dt;
+
+	return true;
 }
