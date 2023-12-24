@@ -11,12 +11,12 @@ public:
 	Game(const char* title, uint32_t width = 1024, uint32_t height = 768);
 	void onInit();
 	void onRender();
-	Vector&& getPlayerKeyboardSpeedDirection();
-	Vector&& getPlayer2KeyboardSpeedDirection();
+	Vector getPlayerKeyboardSpeedDirection();
+	Vector getPlayer2KeyboardSpeedDirection();
 
 protected:
-	MoveableObject m_test_obj;
-	MoveableObject m_test_obj2;
+	SpaceObject m_test_obj;
+	SpaceObject m_test_obj2;
 	SpaceObject m_test_static_obj;
 	DistrictNet m_district_net;
 };

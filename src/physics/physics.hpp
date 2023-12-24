@@ -15,7 +15,6 @@ using namespace glm;
 // Здесь хранятся классы и структуры для организации 
 
 class SpaceObject;
-class MoveableObject;
 class District;
 class Collisions;
 class DistrictNet;
@@ -136,15 +135,18 @@ private:
 class SpaceObject
 {
 	friend class Collisions;
-	friend class MoveableObject;
 	friend class District;
 public:
 	// Создаёт локальный объект с указанными параметрами
 	SpaceObject(
+		bool is_moveable,
 		ObjectForm&& form = ObjectForm(0.5),
-		float rotation = 0.f, 
-		float rotation_speed = 0.f, 
-		float max_rotation_speed = 0.f);
+		float rotation = 0.f,
+		float rotation_speed = 0.f,
+		float max_rotation_speed = 0.f,
+		Vector&& speed_direction = Vector(1.f, 0.f, 0.f),
+		float max_speed = 1.0f,
+		float acceleration = 0);
 	// Создаёт локальный объект, загружая его из файла
 	SpaceObject(FILE* f);
 	// Копирующий конструктор
@@ -165,23 +167,36 @@ public:
 	// Добавляет объект в списки объектов локации
 	// Если объект ранее находился в другой локации,
 	// предварительно удаляет его из её списков 
-	virtual void insertToDistrictList();
+	void insertToDistrictList();
 	// Удаляет объект из списков объектов локации
-	virtual void removeFromDistrictList();
+	void removeFromDistrictList();
+
+	void move(float dt);					// Перемещает объект в состояние через dt мс
+	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
+	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
+	Vector getFuturePosition(float dt); // Возвращает положение объекта через время dt
+
+	bool isMoveable();
 
 protected:
 	void initInNewDistrictNet();
+
+	bool m_is_moveable;					// Является ли движущимся объектом
 
 	const District* m_current_district;	// Область, в которой находится объект
 	float m_rotation;					// Угол поворота
 	Vector m_position;					// Позиция объекта
 	float m_rotation_speed;				// Скорость поворота, используется только для круглого объекта
 	float m_max_rotation_speed;			// Максимальная скорость поворота
+	float m_current_speed;				// Текущая скорость объекта
+	Vector m_speed_direction;			// Текущее направление скорости объекта
+	float m_max_speed;					// Максимальная скорость
+	float m_acceleration;				// Ускорение объекта (скорость набора скорости)
 	ObjectForm m_form;					// Данные о форме объекта
 
 	ListPElementInfo<SpaceObject> m_cell_info;
 	ListPElementInfo<SpaceObject> m_district_info;
-	// ListElementMatrix<SpaceObject>* m_matrix_info;
+	ListPElementInfo<SpaceObject> m_district_moveable_info;
 	// Хранит информацию о том, где и в каких списках находится
 	// объект для удаления из них в случае необходимости
 	// Необходимо написать аллокатор указателя на объект,
@@ -190,37 +205,7 @@ protected:
 	// удалял.		
 };
 
-class MoveableObject : public SpaceObject
-{
-	friend class Collisions;
-public:
-	MoveableObject(
-		ObjectForm&& form = ObjectForm(0.5),
-		float rotation = 0.f, 
-		float rotation_speed = 0.f, 
-		float max_rotation_speed = 0.f,
-		Vector&& speed_direction = Vector(1.f, 0.f, 0.f), 
-		float max_speed = 1.0f, 
-		float acceleration = 0);
-	void move(float dt);					// Перемещает объект в состояние через dt мс
-	virtual void load(const FILE* f);		// Загружает объект из файла
-	virtual void save(const FILE* f);		// Сохраняет объект в файл
-	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
-	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
-	Vector getFuturePosition(float dt); // Возвращает положение объекта через время dt
-
-	virtual void insertToDistrictList() override;
-	virtual void removeFromDistrictList() override;
-protected:
-
-	float m_current_speed;						// Текущая скорость объекта
-	Vector m_speed_direction;					// Текущее направление скорости объекта
-	float m_max_speed;							// Максимальная скорость
-	float m_acceleration;						// Ускорение объекта (скорость набора скорости)
-	ListPElementInfo<MoveableObject> m_district_moveable_info;
-};
-
-class Actor : MoveableObject, IDownloadable
+class Actor : SpaceObject, IDownloadable
 {
 public:
 	Actor(ObjectForm&& form,
@@ -272,7 +257,6 @@ class District
 {
 	friend DistrictNet;
 	friend SpaceObject;
-	friend MoveableObject;
 public:
 	// Конструктор. Создаёт область, принадлежащую локации location
 	District(DistrictNet* net, int col_index, int row_index);
@@ -293,7 +277,7 @@ private:
 	// Хранит ссылки на все пространственные объекты
 	list<SpaceObject*> m_space_objects; 
 	// Хранит ссылки на все способные двигаться объекты
-	list<MoveableObject*> m_moveable_objeсts;
+	list<SpaceObject*> m_moveable_objeсts;
 		
 	DistrictCell** m_cells;				// Ячейки хранятся по (x, y)
 	DistrictNet* m_net;					// Указатель на сеть-владельца

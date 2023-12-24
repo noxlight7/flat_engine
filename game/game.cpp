@@ -5,18 +5,14 @@
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
 	: Engine(title, width, height), m_district_net(10, 10, 10000, 20), 
-	m_test_obj(ObjectForm(160)),
-	m_test_obj2(ObjectForm(120)),
-	m_test_static_obj(ObjectForm(80)) {
+	m_test_obj(true, ObjectForm(160)),
+	m_test_obj2(true, ObjectForm(120)),
+	m_test_static_obj(false, ObjectForm(80)) {
 }
 
 void Game::onInit() {
 	// —юда добавить код при инициализации
 	District* district = m_district_net.addDistrict(0, 0);
-
-	MoveableObject* mo = new MoveableObject();
-	mo->moveTo(district, 50, 50);
-	delete mo;
 
 	m_test_obj.moveTo(district, 500, 500);
 	m_test_obj2.moveTo(district, -300, -300);
@@ -54,7 +50,7 @@ void Game::onRender() {
 
 	auto position2 = m_test_obj2.getRenderOrigin();
 	glm::vec2 mins2 = { -120, -120 };
-	glm::vec2 maxs2 = -mins;
+	glm::vec2 maxs2 = -mins2;
 
 	g_renderer->drawRectTex(mins2 + position2, maxs2 + position2, HASH("test"));
 
@@ -79,7 +75,7 @@ void Game::onRender() {
 	m_district_net.moveObjects(dt);
 }
 
-Vector&& Game::getPlayerKeyboardSpeedDirection() {
+Vector Game::getPlayerKeyboardSpeedDirection() {
 	Vector v_direct{};
 
 	if (isKeyPressed(ScanCode::KEY_W))
@@ -91,10 +87,10 @@ Vector&& Game::getPlayerKeyboardSpeedDirection() {
 	if (isKeyPressed(ScanCode::KEY_A))
 		v_direct.x = -1;
 
-	return std::move(v_direct);
+	return v_direct;
 }
 
-Vector&& Game::getPlayer2KeyboardSpeedDirection() {
+Vector Game::getPlayer2KeyboardSpeedDirection() {
 	Vector v_direct{};
 
 	if (isKeyPressed(ScanCode::KEY_UP))
@@ -106,5 +102,5 @@ Vector&& Game::getPlayer2KeyboardSpeedDirection() {
 	if (isKeyPressed(ScanCode::KEY_LEFT))
 		v_direct.x = -1;
 
-	return std::move(v_direct);
+	return v_direct;
 }

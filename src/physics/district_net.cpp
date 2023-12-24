@@ -131,18 +131,26 @@ void DistrictNet::moveObjects(float dt) {
 		District* district = m_districts[i][j];
 		float col_time;
 
+		vector<bool> m_collision_members(
+			district->m_moveable_objeсts.size());
+		int moveable_object_index = 0;
+
 		if (district) {
-			for (MoveableObject* m : district->m_moveable_objeсts) {
+			for (SpaceObject* m : district->m_moveable_objeсts) {
 				// Нужно изменить логику и коллизить не все
 				// объекты, а только те, которые находятся в 
 				// соседних ячейках
 				bool move_possible = true;
 				for (SpaceObject* s : district->m_space_objects)
-					if (m != s)
+					if (m != s) {
 						if (Collisions::Collision(m, s, dt, &col_time)) {
 							move_possible = false;
+							m->setCurrentSpeed(0);
+							if (s->isMoveable())
+								s->setCurrentSpeed(0);
 							break;
 						}
+					}
 				
 				if (move_possible)
 					m->move(dt);

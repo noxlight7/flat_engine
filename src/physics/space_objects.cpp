@@ -125,14 +125,24 @@ ObjectForm::~ObjectForm()
 
 // Создаёт локальный объект с указанными параметрами
 SpaceObject::SpaceObject(
+	bool is_moveable,
 	ObjectForm&& form,
-	float rotation, 
-	float rotation_speed, 
-	float max_rotation_speed)
-	: m_current_district(nullptr), m_position(), m_form(form), 
+	float rotation,
+	float rotation_speed,
+	float max_rotation_speed,
+	glm::vec3&& speed_direction,
+	float max_speed, float acceleration)
+	: m_current_district(nullptr), 
+	m_position(), 
+	m_is_moveable(is_moveable),
+	m_form(form), 
 	m_rotation(rotation), 
 	m_rotation_speed(rotation_speed), 
-	m_max_rotation_speed(max_rotation_speed)
+	m_max_rotation_speed(max_rotation_speed),
+	m_speed_direction(speed_direction),
+	m_current_speed(0),
+	m_max_speed(max_speed),
+	m_acceleration(acceleration)
 {
 }
 // Создаёт локальный объект, загружая его из файла
@@ -173,6 +183,10 @@ void SpaceObject::initInNewDistrictNet()
 	// m_matrix_info->shiftLeft();
 }
 
+bool SpaceObject::isMoveable() {
+	return m_is_moveable;
+}
+
 void SpaceObject::moveTo(const District* district, float x, float y)
 {
 	if (m_current_district == nullptr ||
@@ -202,10 +216,18 @@ void SpaceObject::insertToDistrictList()
 	m_district_info.insert(
 		const_cast<list<SpaceObject*>*>
 		(&m_current_district->m_space_objects), this);
+
+	if (m_is_moveable)
+		m_district_moveable_info.insert(
+			const_cast<list<SpaceObject*>*>
+			(&m_current_district->m_moveable_objeсts), this);
 }
 
 void SpaceObject::removeFromDistrictList() {
 	m_district_info.remove();
+
+	if (m_is_moveable)
+		m_district_moveable_info.remove();
 }
 
 template <typename Type>
@@ -322,38 +344,12 @@ Type* ListPElementInfo<Type>::getElement()
 	return *m_iterator;
 }
 
-MoveableObject::MoveableObject(
-	ObjectForm&& form, 
-	float rotation, 
-	float rotation_speed, 
-	float max_rotation_speed, 
-	glm::vec3&& speed_direction, 
-	float max_speed, float acceleration)
-	: SpaceObject(std::move(form), rotation, 
-		rotation_speed, max_rotation_speed), 
-	m_speed_direction(speed_direction),
-	m_current_speed (0), 
-	m_max_speed (max_speed), 
-	m_acceleration(acceleration)
-{
-
-}
-void MoveableObject::move(float dt)
+void SpaceObject::move(float dt)
 {
 	m_position += dt * m_current_speed * m_speed_direction;
 }
 
-void MoveableObject::load(const FILE* f)
-{
-
-}
-
-void MoveableObject::save(const FILE* f)
-{
-
-}
-
-void MoveableObject::setSpeedDirection(Vector& speed_direction)
+void SpaceObject::setSpeedDirection(Vector& speed_direction)
 {
 	if (speed_direction.x == 0 && speed_direction.y == 0)
 		return;
@@ -363,7 +359,7 @@ void MoveableObject::setSpeedDirection(Vector& speed_direction)
 	m_speed_direction = glm::normalize(m_speed_direction);
 }
 
-void MoveableObject::setCurrentSpeed(float current_speed)
+void SpaceObject::setCurrentSpeed(float current_speed)
 {
 	if (m_current_speed > m_max_speed)
 		m_current_speed = m_max_speed;
@@ -380,23 +376,7 @@ Vector SpaceObject::getPosition()
 	return m_position;
 }
 
-void MoveableObject::insertToDistrictList()
-{
-	SpaceObject::insertToDistrictList();
-
-	m_district_moveable_info.insert(
-		const_cast<list<MoveableObject*>*>
-		(&m_current_district->m_moveable_objeсts), this);
-}
-
-void MoveableObject::removeFromDistrictList()
-{
-	SpaceObject::removeFromDistrictList();
-
-	m_district_moveable_info.remove();
-}
-
-Vector MoveableObject::getFuturePosition(float dt)
+Vector SpaceObject::getFuturePosition(float dt)
 {
 	return m_position + dt * m_current_speed * m_speed_direction;
 }
