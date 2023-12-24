@@ -85,8 +85,10 @@ struct CircleArea
 // Прямоугольная область
 struct RectangleArea
 {
-	glm::vec2 m_point1;
-	glm::vec2 m_point2;
+	float m_left;
+	float m_right;
+	float m_bottom;
+	float m_top;
 };
 
 // Представляет собой пару из указателя на список и
@@ -137,6 +139,7 @@ class SpaceObject
 {
 	friend class Collisions;
 	friend class District;
+	friend class DistrictNet;
 public:
 	// Создаёт локальный объект с указанными параметрами
 	SpaceObject(
@@ -160,6 +163,9 @@ public:
 	void moveTo(const District* district, float x, float y);
 
 	void initInCell(DistrictCell* cell);
+
+	// Вызывается, когда объект сталкивается с col_obj
+	virtual void onCollision(SpaceObject* col_obj) {};
 		
 	virtual void load(FILE* f);				// Загружает объект из файла
 	virtual void save(FILE* f);				// Сохраняет объект в файл
@@ -197,6 +203,7 @@ protected:
 	float m_acceleration;				// Ускорение объекта (скорость набора скорости)
 	ObjectForm m_form;					// Данные о форме объекта
 
+	DistrictCell* m_cell;
 	ListPElementInfo<SpaceObject> m_cell_info;
 	ListPElementInfo<SpaceObject> m_district_info;
 	ListPElementInfo<SpaceObject> m_district_moveable_info;
@@ -234,15 +241,8 @@ class Decoration : SpaceObject
 
 };
 
-// Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
-class DistrictCell
-{
-	friend District;
-public:
-	DistrictCell() = default;
-
-	// Область, в которой содержится ячейка
-	District* m_owner_district;
+struct CellNeighbors{
+	CellNeighbors() = default;
 
 	DistrictCell* m_left;
 	DistrictCell* m_right;
@@ -253,8 +253,39 @@ public:
 	DistrictCell* m_left_bottom;
 	DistrictCell* m_right_top;
 	DistrictCell* m_right_bottom;
-	//District* m_bind_district;	// Область, в которую можно перейти из этой ячейки
+		
+	DistrictCell* m_self;
+
+	DistrictCell* getCell(int index);
+};
+
+// Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
+class DistrictCell
+{
+	friend District;
+public:
+	DistrictCell() = default;
+
+	// Проводит инициализацию ячейки, стирает
+	// указатели на соседние ячейки, устанавливает
+	// границы в соответствии с положением ячейки
+	// в области (x; y)
+	void init(int x, int y);
+
+	// Очищает указатели на соседние ячейки и
+	// устанавливает m_is_border в false 
+	void clearBorders();
+
+	// Область, в которой содержится ячейка
+	District* m_owner_district;
+
+	// Указатели на соседние ячейки и на неё саму
+	CellNeighbors m_cells;	
+	// Является ли ячейка граничной с несуществующей
+	bool m_is_border;		
 	
+	RectangleArea m_borders;
+
 	// Список содержащихся в ячейке объектов
 	std::list<SpaceObject*> m_objects;
 };
@@ -263,6 +294,7 @@ public:
 	Хранит сеть входящих в неё ячеек */
 class District
 {
+	friend DistrictCell;
 	friend DistrictNet;
 	friend SpaceObject;
 public:
@@ -276,9 +308,10 @@ public:
 	void save(FILE* f);					// Сохраняет область в файл
 
 	// Возвращает ячейку, содержащую точку с координатами (x; y)
-	DistrictCell& getCell(float x, float y);
+	DistrictCell* getCell(float x, float y);
 	// Возвращает индекс [i, j] ячейки, содержащей
 	// точку с координатами (x; y)
+	// !!! Работает неправильно !!!
 	ivec2&& getCellIndex(float x, float y);
 
 private:	
@@ -293,6 +326,8 @@ private:
 	int m_row_index;	// Индекс строки в сети областей
 	int m_col_index;	// Индекс столбца в сети областей
 
+	RectangleArea m_borders;
+
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;		// Имена сетей, в которые возможно перейти из текущей области 
 };
@@ -301,6 +336,7 @@ private:
 class DistrictNet : TitledObject
 {
 	friend District;
+	friend DistrictCell;
 public:
 	DistrictNet(
 		uint32_t width,
@@ -309,6 +345,8 @@ public:
 		uint32_t cells_partion);
 
 	DistrictNet(FILE* f);
+
+	DistrictCell* getCell(float x, float y);
 
 	void moveObjects(float dt);
 

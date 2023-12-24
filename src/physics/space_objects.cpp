@@ -142,7 +142,8 @@ SpaceObject::SpaceObject(
 	m_speed_direction(speed_direction),
 	m_current_speed(0),
 	m_max_speed(max_speed),
-	m_acceleration(acceleration)
+	m_acceleration(acceleration),
+	m_cell(nullptr)
 {
 }
 // Создаёт локальный объект, загружая его из файла
@@ -212,6 +213,7 @@ void SpaceObject::save(FILE* f)
 void SpaceObject::initInCell(DistrictCell* cell) {
 	m_cell_info.remove();
 	m_cell_info.insert(&cell->m_objects, this);
+	m_cell = cell;
 }
 
 void SpaceObject::insertToDistrictList()
@@ -222,7 +224,7 @@ void SpaceObject::insertToDistrictList()
 	m_district_info.insert(
 		&v_district->m_space_objects, this);
 
-	initInCell(&v_district->getCell(m_position.x, m_position.y));
+	initInCell(v_district->getCell(m_position.x, m_position.y));
 
 	if (m_is_moveable)
 		m_district_moveable_info.insert(

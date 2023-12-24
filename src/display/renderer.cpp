@@ -14,6 +14,8 @@ void Renderer::init( GLFWwindow *window ) {
 void Renderer::createTextures( ) {
 	loadTexture( HASH( "test" ), "assets/test.png" );
 	loadTexture( HASH( "test2" ), "assets/test2.png" );
+	loadTexture(HASH("circle_move"), "assets/circle_move.png");
+	loadTexture(HASH("circle_static"), "assets/circle_static.png");
 }
 
 void Renderer::drawRectTex(glm::vec2 mins, glm::vec2 maxs, const fnv_edited::value_type tex_entry) {

@@ -15,7 +15,14 @@ CollisionFunc funcs[3][3] = {
 
 bool Collisions::Collision(SpaceObject* o1, SpaceObject* o2, float dt, float* colTime)
 {
-	return funcs[o1->m_form.m_type][o2->m_form.m_type](o1, o2, dt, colTime);
+	bool rv = funcs[o1->m_form.m_type][o2->m_form.m_type](o1, o2, dt, colTime);
+	
+	if (rv) {
+		o1->onCollision(o2);
+		o2->onCollision(o1);
+	}
+
+	return rv;
 }
 
 bool Collisions::Line0Line0(SpaceObject* o1, SpaceObject* o2, float dt, float* colTime)

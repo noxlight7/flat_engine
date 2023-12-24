@@ -5,9 +5,11 @@
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
 	: Engine(title, width, height), m_district_net(10, 10, 10000, 20), 
-	m_test_obj(true, ObjectForm(160, 160)),
-	m_test_obj2(true, ObjectForm(120, 120)),
-	m_test_static_obj(false, ObjectForm(80, 80)) {
+	m_test_obj(true, ObjectForm(160)),
+	m_test_obj2(true, ObjectForm(240, 240)),
+	m_test_static_obj(false, ObjectForm(160, 160)), 
+	m_test_static_obj2(false, ObjectForm(80)) 
+{
 }
 
 void Game::onInit() {
@@ -17,6 +19,7 @@ void Game::onInit() {
 	m_test_obj.moveTo(district, 500, 500);
 	m_test_obj2.moveTo(district, -300, -300);
 	m_test_static_obj.moveTo(district, 0, 0);
+	m_test_static_obj2.moveTo(district, 200, 200);
 }
 
 void Game::onRender() {
@@ -46,7 +49,7 @@ void Game::onRender() {
 	glm::vec2 mins = { -160, -160 };
 	glm::vec2 maxs = -mins;
 
-	g_renderer->drawRectTex( mins + position, maxs + position, HASH( "test" ) );
+	g_renderer->drawRectTex( mins + position, maxs + position, HASH( "circle_move" ) );
 
 	auto position2 = m_test_obj2.getRenderOrigin();
 	glm::vec2 mins2 = { -120, -120 };
@@ -59,6 +62,12 @@ void Game::onRender() {
 	glm::vec2 maxs1 = -mins1;
 
 	g_renderer->drawRectTex(mins1 + position1, maxs1 + position1, HASH("test2"));
+
+	auto position3 = m_test_static_obj2.getRenderOrigin();
+	glm::vec2 mins3 = { -80, -80 };
+	glm::vec2 maxs3 = -mins3;
+
+	g_renderer->drawRectTex(mins3 + position3, maxs3 + position3, HASH("circle_static"));
 
 	static auto output_time = start_time;
 	if ( ( std::chrono::duration<float, std::chrono::seconds::period>
