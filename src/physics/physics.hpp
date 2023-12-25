@@ -161,6 +161,7 @@ public:
 	void rotate(float da);				// Вращает объект на da радиан (против чс?)
 	void moveTo(float x, float y);
 	void moveTo(const District* district, float x, float y);
+	void moveTo(DistrictNet* net, float x, float y);
 
 	void initInCell(DistrictCell* cell);
 
@@ -186,6 +187,9 @@ public:
 	Vector getFuturePosition(float dt); // Возвращает положение объекта через время dt
 
 	bool isMoveable();
+
+	// Обновляет данные о текущей ячейке
+	void updateCell();
 
 protected:
 	void initInNewDistrictNet();
@@ -241,9 +245,7 @@ class Decoration : SpaceObject
 
 };
 
-struct CellNeighbors{
-	CellNeighbors() = default;
-
+struct CellNeighborsInfo {
 	DistrictCell* m_left;
 	DistrictCell* m_right;
 	DistrictCell* m_top;
@@ -255,14 +257,18 @@ struct CellNeighbors{
 	DistrictCell* m_right_bottom;
 		
 	DistrictCell* m_self;
+};
 
-	DistrictCell* getCell(int index);
+union CellNeighbors{
+	CellNeighborsInfo titles;
+	DistrictCell* buffer[9];
 };
 
 // Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
 class DistrictCell
 {
 	friend District;
+	friend DistrictNet;
 public:
 	DistrictCell() = default;
 
@@ -308,7 +314,8 @@ public:
 	void save(FILE* f);					// Сохраняет область в файл
 
 	// Возвращает ячейку, содержащую точку с координатами (x; y)
-	DistrictCell* getCell(float x, float y);
+	// Координаты заданы в пределах области
+	DistrictCell* getCell(float x_local, float y_local);
 	// Возвращает индекс [i, j] ячейки, содержащей
 	// точку с координатами (x; y)
 	// !!! Работает неправильно !!!
@@ -346,7 +353,9 @@ public:
 
 	DistrictNet(FILE* f);
 
-	DistrictCell* getCell(float x, float y);
+	// Возвращает координаты ячейки, содержащей точку (x;y)
+	// Координаты заданы в пределах сети областей
+	DistrictCell* getCell(float x_global, float y_global);
 
 	void moveObjects(float dt);
 

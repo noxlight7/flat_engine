@@ -175,6 +175,8 @@ void SpaceObject::moveTo(float x, float y)
 {
 	m_position.x = x;
 	m_position.y = y;
+
+	updateCell();
 }
 
 void SpaceObject::initInNewDistrictNet()
@@ -196,7 +198,23 @@ void SpaceObject::moveTo(const District* district, float x, float y)
 	
 	m_current_district = district;
 
-	moveTo(x, y);
+	m_position.x = x + district->m_borders.m_left;
+	m_position.y = y + district->m_borders.m_bottom;
+
+	insertToDistrictList();
+}
+
+void SpaceObject::moveTo(DistrictNet* net, float x, float y)
+{
+	if (m_current_district == nullptr ||
+		m_current_district->m_net != net)
+		initInNewDistrictNet();
+
+	m_current_district = net->getDistrict(x, y);
+
+	m_position.x = x;
+	m_position.y = y;
+
 	insertToDistrictList();
 }
 
@@ -389,4 +407,12 @@ Vector SpaceObject::getPosition()
 Vector SpaceObject::getFuturePosition(float dt)
 {
 	return m_position + dt * m_current_speed * m_speed_direction;
+}
+
+void SpaceObject::updateCell() {
+	DistrictCell* cell = m_current_district->m_net->getCell(
+		m_position.x, m_position.y);
+
+	if (m_cell != cell)
+		initInCell(cell);
 }
