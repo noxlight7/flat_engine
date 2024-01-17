@@ -61,7 +61,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 
 	District* district;
 	
-	district = m_net->getDistrict(m_col_index - 1, m_row_index);
+	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index);
 	for (int j = 1; j < m; j++) {
 		m_cells[0][j].m_cells.titles.m_right = &m_cells[1][j];
 		m_cells[0][j].m_cells.titles.m_bottom = &m_cells[0][j - 1];
@@ -82,7 +82,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		}
 	}
 
-	district = m_net->getDistrict(m_col_index + 1, m_row_index);
+	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index);
 	for (int j = 1; j < m; j++) {
 		m_cells[m][j].m_cells.titles.m_left = &m_cells[m - 1][j];
 		m_cells[m][j].m_cells.titles.m_bottom = &m_cells[m][j - 1];
@@ -103,7 +103,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		}
 	}
 
-	district = m_net->getDistrict(m_col_index, m_row_index - 1);
+	district = m_net->getDistrictByIndecies(m_col_index, m_row_index - 1);
 	for (int i = 1; i < m; i++) {
 		m_cells[i][0].m_cells.titles.m_left = &m_cells[i - 1][0];
 		m_cells[i][0].m_cells.titles.m_right = &m_cells[i + 1][0];
@@ -124,7 +124,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		}
 	}
 
-	district = m_net->getDistrict(m_col_index, m_row_index + 1);
+	district = m_net->getDistrictByIndecies(m_col_index, m_row_index + 1);
 	for (int i = 1; i < m; i++) {
 		m_cells[i][m].m_cells.titles.m_left = &m_cells[i - 1][m];
 		m_cells[i][m].m_cells.titles.m_right = &m_cells[i + 1][m];
@@ -161,7 +161,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 	m_cells[m][m].m_cells.titles.m_bottom = &m_cells[m][m - 1];
 	m_cells[m][m].m_cells.titles.m_left_bottom = &m_cells[m - 1][m - 1];
 
-	district = m_net->getDistrict(m_col_index - 1, m_row_index);
+	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index);
 	if (district) {
 		m_cells[0][0].m_cells.titles.m_left = &district->m_cells[m][0];
 		district->m_cells[m][0].m_cells.titles.m_right = &m_cells[0][0];
@@ -170,7 +170,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		district->m_cells[m][m].m_cells.titles.m_right = &m_cells[0][m];
 	}
 
-	district = m_net->getDistrict(m_col_index + 1, m_row_index);
+	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index);
 	if (district) {
 		m_cells[m][0].m_cells.titles.m_right = &district->m_cells[0][0];
 		district->m_cells[0][0].m_cells.titles.m_left = &m_cells[m][0];
@@ -179,7 +179,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		district->m_cells[0][m].m_cells.titles.m_left = &m_cells[m][m];
 	}
 
-	district = m_net->getDistrict(m_col_index, m_row_index - 1);
+	district = m_net->getDistrictByIndecies(m_col_index, m_row_index - 1);
 	if (district) {
 		m_cells[0][0].m_cells.titles.m_bottom = &district->m_cells[0][m];
 		district->m_cells[0][m].m_cells.titles.m_top = &m_cells[0][0];
@@ -188,7 +188,7 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		district->m_cells[m][m].m_cells.titles.m_top = &m_cells[m][0];
 	}
 
-	district = m_net->getDistrict(m_col_index, m_row_index + 1);
+	district = m_net->getDistrictByIndecies(m_col_index, m_row_index + 1);
 	if (district) {
 		m_cells[0][m].m_cells.titles.m_top = &district->m_cells[0][0];
 		district->m_cells[0][0].m_cells.titles.m_bottom = &m_cells[0][m];
@@ -197,25 +197,25 @@ District::District(DistrictNet* net, int col_index, int row_index)
 		district->m_cells[m][0].m_cells.titles.m_bottom = &m_cells[m][m];
 	}
 
-	district = m_net->getDistrict(m_col_index - 1, m_row_index - 1);
+	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index - 1);
 	if (district) {
 		m_cells[0][0].m_cells.titles.m_left_bottom = &district->m_cells[m][m];
 		district->m_cells[m][m].m_cells.titles.m_right_top = &m_cells[0][0];
 	}
 
-	district = m_net->getDistrict(m_col_index - 1, m_row_index + 1);
+	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index + 1);
 	if (district) {
 		m_cells[0][m].m_cells.titles.m_left_top = &district->m_cells[m][0];
 		district->m_cells[m][0].m_cells.titles.m_right_bottom = &m_cells[0][m];
 	}
 
-	district = m_net->getDistrict(m_col_index + 1, m_row_index - 1);
+	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index - 1);
 	if (district) {
 		m_cells[m][0].m_cells.titles.m_right_bottom = &district->m_cells[0][m];
 		district->m_cells[0][m].m_cells.titles.m_left_top = &m_cells[m][0];
 	}
 
-	district = m_net->getDistrict(m_col_index + 1, m_row_index + 1);
+	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index + 1);
 	if (district) {
 		m_cells[m][m].m_cells.titles.m_right_top = &district->m_cells[0][0];
 		district->m_cells[0][0].m_cells.titles.m_left_bottom = &m_cells[m][m];
@@ -256,10 +256,15 @@ DistrictCell* District::getCell(float x, float y) {
 	return &m_cells[x_index][y_index];
 }
 
-DistrictCell* DistrictNet::getCell(float x, float y) {
+District* DistrictNet::getDistrictByCoords(float x, float y) {
 	int district_x = floor(x / m_district_size);
 	int district_y = floor(y / m_district_size);
-	District* district = this->getDistrict(district_x, district_y);
+
+	return getDistrictByIndecies(district_x, district_y);
+}
+
+DistrictCell* DistrictNet::getCell(float x, float y) {
+	District* district = this->getDistrictByCoords(x, y);
 
 	if (district == nullptr)
 		return nullptr;
@@ -307,10 +312,10 @@ District* DistrictNet::addDistrict(uint32_t x, uint32_t y) {
 	if (m_districts[x][y] == nullptr)
 		m_districts[x][y] = new District(this, y, x);
 
-	return getDistrict(x, y);
+	return getDistrictByIndecies(x, y);
 }
 
-District* DistrictNet::getDistrict(uint32_t x, uint32_t y) {
+District* DistrictNet::getDistrictByIndecies(uint32_t x, uint32_t y) {
 	if (x < 0 || x >= m_width || y < 0 || y >= m_height)
 		return nullptr;
 	else

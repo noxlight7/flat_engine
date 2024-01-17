@@ -210,7 +210,7 @@ void SpaceObject::moveTo(DistrictNet* net, float x, float y)
 		m_current_district->m_net != net)
 		initInNewDistrictNet();
 
-	m_current_district = net->getDistrict(x, y);
+	m_current_district = net->getDistrictByCoords(x, y);
 
 	m_position.x = x;
 	m_position.y = y;

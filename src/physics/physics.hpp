@@ -363,7 +363,8 @@ public:
 
 	// Добавляет новую область в сеть
 	District* addDistrict(uint32_t x, uint32_t y);
-	District* getDistrict(uint32_t x, uint32_t y);
+	District* getDistrictByIndecies(uint32_t x, uint32_t y);
+	District* getDistrictByCoords(float x, float y);
 
 	void load(FILE* f);		// Загружает сеть локаций из файла
 	void save(FILE* f);		// Сохраняет сеть локаций в файл
