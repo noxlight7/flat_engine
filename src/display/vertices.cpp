@@ -38,7 +38,7 @@ void VertexBuffer::init( ) {
 
 void VertexBuffer::attach( float * vertices_data, const size_t vertices_count ) const {
 	glBindBuffer( GL_ARRAY_BUFFER, m_buffer_id );
-	glBufferData( GL_ARRAY_BUFFER, 4 * sizeof( GLfloat ) * vertices_count, vertices_data, GL_DYNAMIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, 5 * sizeof( GLfloat ) * vertices_count, vertices_data, GL_DYNAMIC_DRAW );
 }
 
 void VertexBuffer::detach( ) const {
@@ -64,9 +64,6 @@ void VertexBaseEntity::draw( ) {
 	// setup mvp matrix.
 	m_mvp_matrix = g_camera->worldToScreen( m_render_origin );
 
-	auto vec1 = glm::vec4(1, 0, 0, 1);
-	auto vec2 = m_mvp_matrix * vec1;
-
 	// force mvp matrix.
 	g_shader_program->setUniformMatrix4fv( "u_MvpMatrix", m_mvp_matrix );
 
@@ -77,10 +74,10 @@ void VertexBaseEntity::draw( ) {
 
 	glVertexAttribPointer(
 		0,
-		4,
+		3,
 		GL_FLOAT,
 		GL_FALSE,
-		0,
+		20,
 		( void * )0
 	);
 
