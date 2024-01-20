@@ -2,11 +2,14 @@
 #include "chrono"
 #include "utils/hash.hpp"
 #include "physics/collisions.hpp"
+#include "display/camera.hpp"
+
+#define PIXELS_TO_ORIGIN_CONST 22.F
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
 	: Engine(title, width, height), m_district_net(10, 10, 10000, 20), 
-	m_test_obj(true, ObjectForm(160)),
-	m_test_obj2(true, ObjectForm(240, 240)),
+	m_test_obj(true, ObjectForm(2, 2)),
+	m_test_obj2(false, ObjectForm(240, 240)),
 	m_test_static_obj(false, ObjectForm(160, 160)), 
 	m_test_static_obj2(false, ObjectForm(80)), 
 	m_test_fly(true, ObjectForm(120)) 
@@ -18,10 +21,10 @@ void Game::onInit() {
 	District* district = m_district_net.addDistrict(0, 0);
 
 	m_test_obj.moveTo(district, 900, 900);
-	m_test_obj2.moveTo(district, 100, 100);
-	m_test_static_obj.moveTo(district, 400, 400);
-	m_test_static_obj2.moveTo(district, 600, 600);
-	m_test_fly.moveTo(district, 200, 600);
+	m_test_obj2.moveTo(district, 900, 899);
+	//m_test_static_obj.moveTo(district, 400, 400);
+	//m_test_static_obj2.moveTo(district, 600, 600);
+	//m_test_fly.moveTo(district, 200, 600);
 }
 
 void Game::onRender() {
@@ -41,7 +44,7 @@ void Game::onRender() {
 	Vector v = getPlayerKeyboardSpeedDirection();
 
 	m_test_obj.setSpeedDirection(v);
-	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 200: 0);
+	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 10: 0);
 
 	Vector v2 = getPlayer2KeyboardSpeedDirection();
 
@@ -53,14 +56,26 @@ void Game::onRender() {
 	m_test_fly.setSpeedDirection(v3);
 	m_test_fly.setCurrentSpeed(100);
 
-	//m_test_obj.move(dt);
+	static bool flag = false;
+	if ( !flag ) {
+		g_renderer->g_test_entity2.m_render_origin = m_test_obj.getPosition( ) + glm::vec3( 2.0, 2.0, 0.0 );
+		flag = true;
+	}
 
+	m_test_obj.move( dt );
+	g_renderer->g_test_entity.m_render_origin = m_test_obj.getPosition( );
+	//g_renderer->g_test_entity.m_render_origin = m_test_obj.getPosition( );
+	//m_test_obj.move(dt);
+	/*
 	static glm::vec2 camera_shift{ 400, -400 };
 
 	if (isKeyPressed(ScanCode::KEY_C)) {
 		auto cam_pos = m_test_obj.getPosition();
 		camera_shift.x = cam_pos.x;
 		camera_shift.y = -cam_pos.y;
+		printf( "%lf %lf", cam_pos.x, cam_pos.y );
+		g_camera->setOrigin( cam_pos );
+		
 	}
 
 	auto position = m_test_obj.getRenderOrigin();
@@ -108,16 +123,22 @@ void Game::onRender() {
 		maxs4 + position4 - camera_shift, 
 		HASH("circle_move"));
 
+	g_renderer->g_test_entity2.m_render_origin = m_test_obj2.getPosition( );
+	static auto frames = 0;
+	++frames;
 	static auto output_time = start_time;
 	if ( ( std::chrono::duration<float, std::chrono::seconds::period>
 		( current_time - output_time ).count( ) ) > 1 ) {
+		printf( "fps: %d ", frames );
+		frames = 0;
 		output_time = current_time;
 		// input debug here (every second).
 		printf( "%f %f\n", 
-			m_test_obj.getPosition().x, 
-			m_test_obj.getPosition().y);
-	}
+			m_test_obj2.getPosition().x, 
+			m_test_obj2.getPosition().y);
 
+	}
+	*/
 	m_district_net.moveObjects(dt);
 }
 

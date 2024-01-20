@@ -39,7 +39,7 @@ public:
 protected:
 	uint32_t	m_width, m_height;
 	bool		m_button_state[KEYS_AMOUNT];
-
+	bool		m_vsync{ true };
 private:
 	GLFWwindow*	m_window;
 

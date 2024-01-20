@@ -1,5 +1,4 @@
 #include "engine.hpp"
-
 //void Engine::StartUp( ) {
 //	printf( "hello" );
 //}
@@ -17,6 +16,7 @@ void Engine::initWindow(const char* title) {
 
 	m_window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 	glfwMakeContextCurrent( m_window );
+	glfwSwapInterval( m_vsync ); // turns glfw vsync.
 
 	g_renderer->init( m_window );
 	g_renderer->resizeFrameBuffer( m_window, m_width, m_height );
@@ -65,8 +65,25 @@ void Engine::windowResizeCallback(GLFWwindow* window, int width, int height) {
 
 void Engine::mainLoop() {
 	while (!glfwWindowShouldClose(m_window)) {
+		// clear buffers.
+		glClearColor( 0.2, 0.0, 0.0, 1.0 );
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
 		onRender();
+
 		g_renderer->drawFrame();
+
+		static bool bx = false;
+		static bool by = false;
+		if ( isKeyPressed( ScanCode::KEY_W ) && !bx ) {
+			g_renderer->g_test_entity.m_render_origin.x += 1.0f;
+			bx = true;
+		}if ( isKeyPressed( ScanCode::KEY_S ) && !by ) {
+			g_renderer->g_test_entity.m_render_origin.x -= 1.0f;
+			by = true;
+		}
+
+		glfwSwapBuffers( m_window );
 		glfwPollEvents( );
 	}
 }

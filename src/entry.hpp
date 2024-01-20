@@ -27,6 +27,8 @@
 #include <unordered_map>
 #include <thread>
 #include <memory>
+#include <sstream>
+#include <fstream>
 
 #include <glm/glm.hpp>
 #include <opengl/src/glew.h>
