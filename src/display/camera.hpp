@@ -4,7 +4,7 @@
 
 class Camera {
 public:
-	Camera( ) : m_origin{ 900.f, 900.f, 6.f } {};
+	Camera( ) : m_origin{ 900.f, 900.f, 5.f } {};
 	~Camera( );
 
 	void think( );

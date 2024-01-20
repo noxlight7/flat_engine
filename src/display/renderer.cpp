@@ -27,10 +27,18 @@ void Renderer::createTextures( ) {
 void Renderer::setupVAO( ) {
 	constexpr auto k_scale = 1.0f;
 	static GLfloat g_test_vertices[ ] = {
-		-k_scale, -k_scale, 1.0, // 1st triangle
-		k_scale, -k_scale, 1.0,
-		k_scale,  k_scale, 1.0,
-		-k_scale,  k_scale, 1.0,
+		-k_scale, -k_scale, 0.0, 0.0, // 1st triangle
+		k_scale, -k_scale, 1.0, 0.0,
+		k_scale,  k_scale, 1.0, 1.0,
+		-k_scale,  k_scale, 0.0, 1.0
+	};
+
+	constexpr auto k_scale2 = 2.0f;
+	static GLfloat g_test_vertices2[] = {
+		-k_scale2, -k_scale2, 0.0, 0.0, // 1st triangle
+		k_scale2, -k_scale2, 1.0, 0.0,
+		k_scale2,  k_scale2, 1.0, 1.0,
+		-k_scale2,  k_scale2, 0.0, 1.0
 	};
 
 	Shader vertex, fragment;
@@ -45,7 +53,7 @@ void Renderer::setupVAO( ) {
 
 	// we should create entity once.
 	g_test_entity.createObject( g_test_vertices, 4u );
-	g_test_entity2.createObject( g_test_vertices, 4u );
+	g_test_entity2.createObject( g_test_vertices2, 4u );
 }
 
 void Renderer::drawRectTex( glm::vec2 mins, glm::vec2 maxs, const fnv_edited::value_type tex_entry ) {

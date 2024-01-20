@@ -363,7 +363,9 @@ public:
 
 	// Добавляет новую область в сеть
 	District* addDistrict(uint32_t x, uint32_t y);
+	// Возвращает область по её индексам в сети ячеек
 	District* getDistrictByIndecies(uint32_t x, uint32_t y);
+	// Возвращает область по её глобальным координатам в сети ячеек
 	District* getDistrictByCoords(float x, float y);
 
 	void load(FILE* f);		// Загружает сеть локаций из файла
