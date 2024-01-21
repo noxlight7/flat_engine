@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../entry.hpp"
+#include "texture_manager.hpp"
 
 class VertexArray {
 public:
@@ -20,12 +21,14 @@ private:
 	GLuint	m_array_id{};
 };
 
-class VertexBuffer {
+class RenderBuffer {
 public:
-	VertexBuffer( );
-	~VertexBuffer( );
+	using ValueType = std::vector< float >;
+
+	RenderBuffer( );
+	~RenderBuffer( );
 	void init( );
-	void attach( float * vertices_data, const size_t vertices_count ) const;
+	void attach( ValueType buffer, const size_t buffer_size ) const;
 	void detach( ) const;
 public:
 	ALWAYS_INLINE const auto id( ) const { return m_buffer_id; }
@@ -45,10 +48,22 @@ public:
 	VertexBaseEntity( );
 	~VertexBaseEntity( );
 
-	void createObject( float *vertices_data, const size_t vertices_count );
+	void createObject( 
+				RenderBuffer::ValueType vertices_data = { - 1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, },
+				RenderBuffer::ValueType tex_data = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,},
+				const size_t vertices_count = 4u, 
+				const size_t tex_count = 4u
+	);
+
 	void draw( );
 
-	VertexBuffer  m_buffer{};
+	void setTexture( const Texture *texture ) const;
+
+	void setScale( const glm::vec2 size ) const;
+
+	ALWAYS_INLINE void setOriginZ( const GLfloat originZ ) { m_render_origin.z = originZ / 2.0f; }
+public:
+	RenderBuffer  m_pos_buffer{}, m_tex_buffer{};
 	VertexArray   m_array{};
 	size_t		  m_vertices_count{};
 	glm::vec3	  m_render_origin{};

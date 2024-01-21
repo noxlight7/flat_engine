@@ -7,7 +7,7 @@ struct CompileTimeHolder {
 	constexpr static _ty m_value = _value;
 };
 
-namespace fnv_edited {
+namespace fnv1a {
 	using value_type = unsigned long long;
 
 	constexpr auto k_seed = 0x45c3ull;
@@ -35,4 +35,4 @@ namespace fnv_edited {
 	}
 }
 
-#define HASH( txt ) static_cast< decltype( fnv_edited::ct( txt ) ) >( CompileTimeHolder<decltype( fnv_edited::ct( txt ) ), fnv_edited::ct( txt )>::m_value )
+#define HASH( txt ) static_cast< decltype( fnv1a::ct( txt ) ) >( CompileTimeHolder<decltype( fnv1a::ct( txt ) ), fnv1a::ct( txt )>::m_value )

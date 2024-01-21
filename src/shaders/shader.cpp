@@ -71,6 +71,18 @@ void ShaderProgram::setUniform1i( const std::string_view &uniform, const GLint v
 	glUniform1i( location, value );
 }
 
+void ShaderProgram::setUniform1f( const std::string_view &uniform, const GLfloat value ) const {
+	const auto location = getUniformLocation( uniform );
+
+	glUniform1f( location, value );
+};
+
+void ShaderProgram::setUniform2f( const std::string_view &uniform, const glm::vec2 value ) const {
+	const auto location = getUniformLocation( uniform );
+
+	glUniform2f( location, value.x, value.y );
+}
+
 void ShaderProgram::setUniform4f( const std::string_view &uniform, const glm::vec4 value ) const {
 	const auto location = getUniformLocation( uniform );
 

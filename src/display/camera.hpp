@@ -13,14 +13,14 @@ public:
 
 	ALWAYS_INLINE const auto getOrigin( ) const { return m_origin; }
 	
-	ALWAYS_INLINE void setOrigin( const glm::vec3 origin ) { m_origin = origin; }
+	// @todo: remake it.
+	ALWAYS_INLINE void setOrigin( const glm::vec3 origin ) { m_origin = origin; m_origin.z = 5.f; }
 
 	void setProjection( float width, float height );
 private:
 	glm::vec3   m_origin{};
 	glm::mat4   m_proj_matrix{};
 	glm::mat4   m_view_matrix{};
-
 };
 
 inline const auto g_camera 

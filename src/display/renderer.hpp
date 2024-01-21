@@ -9,7 +9,7 @@
 class Texture;
 class Sprite {
 public:
-	Sprite( const fnv_edited::value_type texture_id );
+	Sprite( const fnv1a::value_type texture_id );
 	~Sprite( );
 
 	void create( );
@@ -31,6 +31,7 @@ protected:
 	GLFWwindow *m_window;
 };
 
+
 class Renderer : public IRenderer {
 public:
 	void init( GLFWwindow *window );
@@ -38,8 +39,6 @@ public:
 
 	void setupVAO( );
 
-	void drawRectTex(glm::vec2 mins, glm::vec2 maxs, const fnv_edited::value_type tex_entry);
-	
 	void drawFrame( );
 	void resizeFrameBuffer( GLFWwindow *window, int width, int height );
 
@@ -48,8 +47,8 @@ public:
 	VertexBaseEntity g_test_entity{};
 	VertexBaseEntity g_test_entity2{};
 protected:
-	void loadTexture( const fnv_edited::value_type entry, const char *path );
-protected:
+	void loadTexture( const fnv1a::value_type entry, const char *path );
+public:
 };
 
 inline const auto g_renderer 

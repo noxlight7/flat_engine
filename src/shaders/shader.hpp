@@ -28,6 +28,10 @@ public:
 
 	void setUniform1i( const std::string_view &uniform, const GLint value ) const;
 
+	void setUniform1f( const std::string_view &uniform, const GLfloat value ) const;
+
+	void setUniform2f( const std::string_view &uniform, const glm::vec2 value ) const;
+
 	void setUniform4f( const std::string_view &uniform, const glm::vec4 value ) const;
 	
 	void setUniformMatrix4fv( const std::string_view &uniform, const glm::mat4 value ) const;
