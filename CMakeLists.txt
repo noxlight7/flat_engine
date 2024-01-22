@@ -35,4 +35,9 @@ add_dependencies (${solution_name} dlls_glfw)
 add_custom_target (dlls_opengl COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_opengl} ${CMAKE_BINARY_DIR})
 add_dependencies (${solution_name} dlls_opengl)
 
+add_custom_target(copy_assets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/resources ${CMAKE_BINARY_DIR}/assets
+)
+add_dependencies (${solution_name} copy_assets)
+
 set_property (TARGET ${solution_name} PROPERTY CXX_STANDARD 20)

@@ -16,10 +16,10 @@ void Renderer::init( GLFWwindow *window ) {
 }
 
 void Renderer::createTextures( ) {
-	loadTexture( HASH( "test" ), "assets/test.png" );
-	loadTexture( HASH( "test2" ), "assets/test2.png" );
-	loadTexture( HASH( "circle_move" ), "assets/circle_move.png" );
-	loadTexture( HASH( "circle_static" ), "assets/circle_static.png" );
+	loadTexture( HASH( "test" ), "assets/sprites/test.png" );
+	loadTexture( HASH( "test2" ), "assets/sprites/test2.png" );
+	loadTexture( HASH( "circle_move" ), "assets/sprites/circle_move.png" );
+	loadTexture( HASH( "circle_static" ), "assets/sprites/circle_static.png" );
 }
 
 void Renderer::setupVAO( ) {
