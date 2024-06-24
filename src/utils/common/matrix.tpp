@@ -1,5 +1,4 @@
 #pragma once
-#include "../common.hpp"
 
 template <typename T>
 Matrix<T>::Matrix(int rows, int cols, const T& initial) : rows(rows), cols(cols) {

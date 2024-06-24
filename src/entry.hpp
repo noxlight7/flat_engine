@@ -22,6 +22,10 @@
 	return;
 #endif
 
+#ifndef _WIN64
+#error unsupported arch (use x64 win).
+#endif
+
 #include <iostream>
 #include <chrono>
 #include <unordered_map>

@@ -30,4 +30,4 @@ public:
     void resize(int newRows, int newCols, const T& initial = T());
 };
 
-#include "common/matrix.cpp"
+#include "common/matrix.tpp"

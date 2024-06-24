@@ -1,8 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.2)
 
-file (GLOB_RECURSE src_files ${CMAKE_CURRENT_LIST_DIR}/src/*.[ch]pp)
+file (GLOB_RECURSE src_files ${CMAKE_CURRENT_LIST_DIR}/src/*.[tch]pp)
 
-file (GLOB_RECURSE game_files ${CMAKE_CURRENT_LIST_DIR}/game/*.[ch]pp)
+file (GLOB_RECURSE game_files ${CMAKE_CURRENT_LIST_DIR}/game/*.[tch]pp)
 
 get_filename_component (solution_name ${CMAKE_CURRENT_LIST_DIR} NAME)
 project (${solution_name})
