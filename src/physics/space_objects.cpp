@@ -5,6 +5,40 @@
 using namespace std;
 using namespace math;
 
+void Position::normalizeCoords() {
+	int x_shift = (int)floorf(m_coords.x / g_cell_size);
+	int y_shift = (int)floorf(m_coords.y / g_cell_size);
+	m_coords.x -= x_shift * g_cell_size;
+	m_coords.y -= y_shift * g_cell_size;
+	m_index.x += x_shift;
+	m_index.y += y_shift;
+}
+
+DVector Position::getGlobalCoords() {
+	return DVector(
+		m_coords.x + m_index.x * g_cell_size,
+		m_coords.y + m_index.y * g_cell_size
+	);
+}
+
+void Position::setFromGlobalCoords(double x, double y) {
+	m_index.x = (int)floor(x / g_cell_size);
+	m_index.y = (int)floor(y / g_cell_size);
+
+	m_coords.x = x - m_index.x * g_cell_size;
+	m_coords.y = y - m_index.y * g_cell_size;
+
+}
+
+void Position::shiftToCoordsSystem(ivec2 cell_index) {
+	m_coords.x += (m_index.x - cell_index.x) * g_cell_size;
+	m_coords.y += (m_index.y - cell_index.y) * g_cell_size;
+	m_index = cell_index;
+}
+
+void Position::shiftToCoordsSystem(Position pos) {
+	shiftToCoordsSystem(pos.m_index);
+}
 
 ObjectForm::ObjectForm(ObjectForm& form)
 {
@@ -123,6 +157,15 @@ ObjectForm::~ObjectForm()
 	releaseData();
 }
 
+LocatableObject::LocatableObject(ObjectForm &&form)
+	: m_current_district(nullptr), m_form(form), m_rotation(0), m_position(){
+}
+
+LocatableObject::LocatableObject(LocatableObject &obj)
+	: m_current_district(obj.m_current_district), m_form(obj.m_form), 
+	m_rotation(obj.m_rotation), m_position(obj.m_position) {
+}
+
 // Создаёт локальный объект с указанными параметрами
 SpaceObject::SpaceObject(
 	bool is_moveable,
@@ -130,13 +173,10 @@ SpaceObject::SpaceObject(
 	float rotation,
 	float rotation_speed,
 	float max_rotation_speed,
-	glm::vec3&& speed_direction,
+	Vector&& speed_direction,
 	float max_speed, float acceleration)
-	: m_current_district(nullptr), 
-	m_position(), 
+	: LocatableObject(std::move(form)),
 	m_is_moveable(is_moveable),
-	m_form(form), 
-	m_rotation(rotation), 
 	m_rotation_speed(rotation_speed), 
 	m_max_rotation_speed(max_rotation_speed),
 	m_speed_direction(speed_direction),
@@ -153,13 +193,21 @@ SpaceObject::SpaceObject(FILE* f)
 }
 // Копирующий конструктор
 SpaceObject::SpaceObject(SpaceObject& lo)
-	: m_current_district(lo.m_current_district), 
-	m_position(lo.m_position), m_form(lo.m_form),
-	m_rotation(lo.m_rotation), 
+	: LocatableObject(lo),
 	m_rotation_speed(lo.m_rotation_speed), 
-	m_max_rotation_speed(lo.m_max_rotation_speed)
+	m_max_rotation_speed(lo.m_max_rotation_speed),
+	m_acceleration(lo.m_acceleration),
+	m_cell(nullptr),
+	m_current_speed(0),
+	m_is_moveable(lo.m_is_moveable),
+	m_max_speed(lo.m_max_speed),
+	m_speed_direction(Vector(1, 0))
 {
 		
+}
+
+SpaceObject::~SpaceObject() {
+	removeFromDistrictList();
 }
 
 void SpaceObject::rotate(float da)
@@ -171,15 +219,18 @@ void SpaceObject::rotate(float da)
 		m_rotation -= (trunc(m_rotation / g_pi2) - 1) * g_pi2;
 }
 
-void SpaceObject::moveTo(float x, float y)
+void SpaceObject::moveTo(double x, double y)
 {
-	m_position.x = x;
-	m_position.y = y;
+	m_position.m_index.x = (int) trunc(x / g_cell_size);
+	m_position.m_index.y = (int) trunc(y / g_cell_size);
+
+	m_position.m_coords.x = x - m_position.m_index.x * g_cell_size;
+	m_position.m_coords.y = y - m_position.m_index.y * g_cell_size;
 
 	updateCell();
 }
 
-void SpaceObject::initInNewDistrictNet()
+void SpaceObject::initInNewDistrict()
 {
 	// Сюда добавить код создания матрицы информации о списках
 	// m_matrix_info = new ListElementMatrix<SpaceObject>(10, 10);
@@ -190,30 +241,15 @@ bool SpaceObject::isMoveable() {
 	return m_is_moveable;
 }
 
-void SpaceObject::moveTo(const District* district, float x, float y)
+void SpaceObject::moveTo(District* district, double x, double y)
 {
 	if (m_current_district == nullptr ||
-		m_current_district->m_net != district->m_net) 
-		initInNewDistrictNet();
+		m_current_district != district) 
+		initInNewDistrict();
 	
 	m_current_district = district;
 
-	m_position.x = x + district->m_borders.m_left;
-	m_position.y = y + district->m_borders.m_bottom;
-
-	insertToDistrictList();
-}
-
-void SpaceObject::moveTo(DistrictNet* net, float x, float y)
-{
-	if (m_current_district == nullptr ||
-		m_current_district->m_net != net)
-		initInNewDistrictNet();
-
-	m_current_district = net->getDistrictByCoords(x, y);
-
-	m_position.x = x;
-	m_position.y = y;
+	m_position.setFromGlobalCoords(x, y);
 
 	insertToDistrictList();
 }
@@ -236,13 +272,12 @@ void SpaceObject::initInCell(DistrictCell* cell) {
 
 void SpaceObject::insertToDistrictList()
 {
-	District* v_district =
-		const_cast<District*>(m_current_district);
+	District* v_district = m_current_district;
 
 	m_district_info.insert(
 		&v_district->m_space_objects, this);
 
-	initInCell(v_district->getCell(m_position.x, m_position.y));
+	initInCell(v_district->getCell(m_position.m_index));
 
 	if (m_is_moveable)
 		m_district_moveable_info.insert(
@@ -328,7 +363,7 @@ template <typename Type>
 ListPElementInfo<Type>*
 ListElementMatrix<Type>::getInfo(int row, int column)
 {
-
+	return m_buffer[row][column];
 }
 
 template <typename Type>
@@ -374,7 +409,7 @@ Type* ListPElementInfo<Type>::getElement()
 
 void SpaceObject::move(float dt)
 {
-	m_position += dt * m_current_speed * m_speed_direction;
+	m_position.m_coords += dt * m_current_speed * m_speed_direction;
 }
 
 void SpaceObject::setSpeedDirection(Vector& speed_direction)
@@ -395,24 +430,30 @@ void SpaceObject::setCurrentSpeed(float current_speed)
 	m_current_speed = current_speed;
 }
 
-glm::vec2 SpaceObject::getRenderOrigin( ) {
-	return glm::vec2( m_position.x, -m_position.y );
+glm::vec3 SpaceObject::getRenderOrigin( ) {
+	return glm::vec3(m_position.getGlobalCoords(), 0);
 }
 
-Vector SpaceObject::getPosition()
+Position SpaceObject::getPosition()
 {
 	return m_position;
 }
 
-Vector SpaceObject::getFuturePosition(float dt)
+Vector SpaceObject::getFutureCoords(float dt)
 {
-	return m_position + dt * m_current_speed * m_speed_direction;
+	return m_position.m_coords + dt * m_current_speed * m_speed_direction;
+}
+
+Position SpaceObject::getFuturePosition(float dt) {
+	Position fpos = { getFutureCoords(dt), m_position.m_index };
+	return fpos;
 }
 
 void SpaceObject::updateCell() {
-	DistrictCell* cell = m_current_district->m_net->getCell(
-		m_position.x, m_position.y);
+	DistrictCell* cell = m_cell;
+	m_position.normalizeCoords();
 
-	if (m_cell != cell)
-		initInCell(cell);
+	if (m_cell->m_index_in_district != m_position.m_index)
+		initInCell(&m_current_district->m_cells(m_position.m_index.y,
+			m_position.m_index.x));
 }

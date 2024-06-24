@@ -43,9 +43,9 @@ bool Collisions::Circle1Line0(SpaceObject* o1, SpaceObject* o2, float dt, float*
 }
 bool Collisions::Circle1Circle1(SpaceObject* o1, SpaceObject* o2, float dt, float* colTime)
 {
-	auto o1_center = o1->getPosition();
-	auto o2_center = o2->getPosition();
-	auto o1_future_pos = o1->getFuturePosition(dt);
+	auto o1_center = o1->getPosition().m_coords;
+	auto o2_center = o2->getPosition().m_coords;
+	auto o1_future_pos = o1->getFutureCoords(dt);
 	Vector o2_future_pos;
 	float r1 = o1->m_form.m_data.m_circle->m_radius;
 	float r2 = o2->m_form.m_data.m_circle->m_radius;
@@ -55,12 +55,12 @@ bool Collisions::Circle1Circle1(SpaceObject* o1, SpaceObject* o2, float dt, floa
 	Vector v2;
 	if (o2->isMoveable()) {
 		o2_move = o2;
-		o2_future_pos = o2_move->getFuturePosition(dt);
+		o2_future_pos = o2_move->getFutureCoords(dt);
 		v2 = o2_move->m_speed_direction * o2_move->m_current_speed;
 	}
 	else {
 		o2_future_pos = o2_center;
-		v2 = Vector(0, 0, 0);
+		v2 = Vector(0, 0);
 	}
 
 	float r122 = r1 + r2;
@@ -81,12 +81,12 @@ bool Collisions::Circle1Circle1(SpaceObject* o1, SpaceObject* o2, float dt, floa
 	if (t > 0 && t < dt) {
 		Vector pos2;
 		if (o2_move)
-			pos2 = o2_move->getFuturePosition(t);
+			pos2 = o2_move->getFutureCoords(t);
 		else
 			pos2 = o2_center;
 
 		min_dist = glm::distance(
-			o1->getFuturePosition(t), pos2);
+			o1->getFutureCoords(t), pos2);
 	}
 	else if (t >= dt)
 		min_dist = glm::distance(
@@ -136,7 +136,7 @@ bool Collisions::Rectangle2Rectangle2(SpaceObject* o1, SpaceObject* o2, float dt
 {
 	//auto o1_coords = o1->getPosition();
 	//auto o2_coords = o2->getPosition();
-	auto o1_future_coords = o1->getFuturePosition(dt);
+	auto o1_future_coords = o1->getFutureCoords(dt);
 	Vector o2_future_coords;
 	float height1 = o1->m_form.m_data.m_rectangle->m_height;
 	float width1 = o1->m_form.m_data.m_rectangle->m_width;
@@ -146,10 +146,10 @@ bool Collisions::Rectangle2Rectangle2(SpaceObject* o1, SpaceObject* o2, float dt
 	SpaceObject* o2_move = nullptr;
 	if (o2->isMoveable()) {
 		o2_move = o2;
-		o2_future_coords = o2_move->getFuturePosition(dt);
+		o2_future_coords = o2_move->getFutureCoords(dt);
 	}
 	else {
-		o2_future_coords = o2->getPosition();
+		o2_future_coords = o2->getPosition().m_coords;
 	}
 
 	float x1 = o1_future_coords.x - width1 / 2;

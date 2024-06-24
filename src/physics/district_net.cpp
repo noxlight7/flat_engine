@@ -1,233 +1,36 @@
 #include "Physics.hpp"
 #include "collisions.hpp"
 
-void DistrictCell::init(int x, int y) {
-	clearBorders();
-	float cell_size = m_owner_district->m_net->m_cells_size;
-	
-	m_borders.m_left =
-		m_owner_district->m_borders.m_left + x * cell_size;
+DistrictCell::DistrictCell()
+	:m_is_border(false),
+	m_index_in_district(),
+	m_owner_district(nullptr),
+	m_objects() {}
 
-	m_borders.m_right = m_borders.m_left + cell_size;
-
-	m_borders.m_bottom =
-		m_owner_district->m_borders.m_bottom + y * cell_size;
-
-	m_borders.m_top = m_borders.m_bottom + cell_size;
-
+DistrictCell* District::getCell(int x, int y) {
+	return &m_cells(y, x);
 }
 
-void DistrictCell::clearBorders(){
-	this->m_is_border = false;
-	memset(&m_cells, 0, sizeof(CellNeighbors));
+DistrictCell* District::getCell(ivec2 index) {
+	return &m_cells(index.y, index.x);
 }
 
-District::District(DistrictNet* net, int col_index, int row_index)
-	: m_net(net), m_row_index(row_index), m_col_index(col_index)
+void DistrictCell::init(ivec2 index_in_district) {
+	m_index_in_district = index_in_district;
+	m_is_border = index_in_district.x == 0 || index_in_district.y == 0 ||
+		index_in_district.x == m_owner_district->m_cells.colCount() - 1 ||
+		index_in_district.y == m_owner_district->m_cells.rowCount() - 1;
+}
+
+District::District(int cells_x_amount, int cells_y_amount) 
+	: m_cells(cells_y_amount, cells_x_amount)
 {
-	uint32_t n = net->m_cells_partition;
-
-	m_borders.m_left = col_index * net->m_district_size;
-	m_borders.m_bottom = row_index * net->m_district_size;
-	m_borders.m_right = m_borders.m_left + net->m_district_size;
-	m_borders.m_top = m_borders.m_bottom + net->m_district_size;
-
-	m_cells = new DistrictCell * [n * n];
-
-	for (uint32_t i = 0; i < n; i++) {
-		m_cells[i] = new DistrictCell[n];
-
-		for (uint32_t j = 0; j < n; j++) {
-			m_cells[i][j].m_owner_district = this;
-			m_cells[i][j].init(i, j);
-			m_cells[i][j].m_cells.titles.m_self = &m_cells[i][j];
+	for (uint32_t y = 0; y < cells_y_amount; y++) {
+		for (uint32_t x = 0; x < cells_x_amount; x++) {
+			m_cells(y, x).m_owner_district = this;
+			m_cells(y, x).init(ivec2(y, x));
 		}
 	}
-
-	uint32_t m = n - 1;
-	for (uint32_t i = 1; i < m; i++) {
-		for (uint32_t j = 1; j < m; j++) {
-			m_cells[i][j].m_cells.titles.m_left = &m_cells[i - 1][j];
-			m_cells[i][j].m_cells.titles.m_right = &m_cells[i + 1][j];
-			m_cells[i][j].m_cells.titles.m_bottom = &m_cells[i][j - 1];
-			m_cells[i][j].m_cells.titles.m_top = &m_cells[i][j + 1];
-
-			m_cells[i][j].m_cells.titles.m_left_top = &m_cells[i - 1][j + 1];
-			m_cells[i][j].m_cells.titles.m_left_bottom = &m_cells[i - 1][j - 1];
-			m_cells[i][j].m_cells.titles.m_right_top = &m_cells[i + 1][j + 1];
-			m_cells[i][j].m_cells.titles.m_right_bottom = &m_cells[i + 1][j - 1];
-		}
-	}
-
-	District* district;
-	
-	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index);
-	for (int j = 1; j < m; j++) {
-		m_cells[0][j].m_cells.titles.m_right = &m_cells[1][j];
-		m_cells[0][j].m_cells.titles.m_bottom = &m_cells[0][j - 1];
-		m_cells[0][j].m_cells.titles.m_top = &m_cells[0][j + 1];
-
-		m_cells[0][j].m_cells.titles.m_right_top = &m_cells[1][j + 1];
-		m_cells[0][j].m_cells.titles.m_right_bottom = &m_cells[1][j - 1];
-
-		if (district) {
-			district->m_cells[m][j].m_cells.titles.m_right = &m_cells[0][j];
-			m_cells[0][j].m_cells.titles.m_left = &district->m_cells[m][j];
-
-			m_cells[0][j].m_cells.titles.m_left_top = &district->m_cells[m][j + 1];
-			m_cells[0][j].m_cells.titles.m_left_bottom = &district->m_cells[m][j - 1];
-
-			district->m_cells[m][j].m_cells.titles.m_right_top = &m_cells[0][j + 1];
-			district->m_cells[m][j].m_cells.titles.m_right_bottom = &m_cells[0][j - 1];
-		}
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index);
-	for (int j = 1; j < m; j++) {
-		m_cells[m][j].m_cells.titles.m_left = &m_cells[m - 1][j];
-		m_cells[m][j].m_cells.titles.m_bottom = &m_cells[m][j - 1];
-		m_cells[m][j].m_cells.titles.m_top = &m_cells[m][j + 1];
-
-		m_cells[m][j].m_cells.titles.m_left_top = &m_cells[m - 1][j + 1];
-		m_cells[m][j].m_cells.titles.m_left_bottom = &m_cells[m - 1][j - 1];
-
-		if (district) {
-			district->m_cells[0][j].m_cells.titles.m_left = &m_cells[m][j];
-			m_cells[m][j].m_cells.titles.m_right = &district->m_cells[0][j];
-
-			m_cells[m][j].m_cells.titles.m_right_top = &district->m_cells[0][j + 1];
-			m_cells[m][j].m_cells.titles.m_right_bottom = &district->m_cells[0][j - 1];
-
-			district->m_cells[0][j].m_cells.titles.m_left_top = &m_cells[m][j + 1];
-			district->m_cells[0][j].m_cells.titles.m_left_bottom = &m_cells[m][j - 1];
-		}
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index, m_row_index - 1);
-	for (int i = 1; i < m; i++) {
-		m_cells[i][0].m_cells.titles.m_left = &m_cells[i - 1][0];
-		m_cells[i][0].m_cells.titles.m_right = &m_cells[i + 1][0];
-		m_cells[i][0].m_cells.titles.m_top = &m_cells[i][1];
-
-		m_cells[i][0].m_cells.titles.m_left_top = &m_cells[i - 1][1];
-		m_cells[i][0].m_cells.titles.m_right_top = &m_cells[i + 1][1];
-		
-		if (district) {
-			district->m_cells[i][m].m_cells.titles.m_top = &m_cells[i][0];
-			m_cells[i][0].m_cells.titles.m_bottom = &district->m_cells[i][m];
-
-			m_cells[i][0].m_cells.titles.m_left_bottom = &district->m_cells[i - 1][m];
-			m_cells[i][0].m_cells.titles.m_right_bottom = &district->m_cells[i + 1][m];
-
-			district->m_cells[i][m].m_cells.titles.m_left_top = &m_cells[i - 1][0];
-			district->m_cells[i][m].m_cells.titles.m_right_top = &m_cells[i + 1][0];
-		}
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index, m_row_index + 1);
-	for (int i = 1; i < m; i++) {
-		m_cells[i][m].m_cells.titles.m_left = &m_cells[i - 1][m];
-		m_cells[i][m].m_cells.titles.m_right = &m_cells[i + 1][m];
-		m_cells[i][m].m_cells.titles.m_bottom = &m_cells[i][m - 1];
-
-		m_cells[i][m].m_cells.titles.m_left_bottom = &m_cells[i - 1][m - 1];
-		m_cells[i][m].m_cells.titles.m_right_bottom = &m_cells[i + 1][m - 1];
-
-		if (district) {
-			district->m_cells[i][0].m_cells.titles.m_bottom = &m_cells[i][n];
-
-			m_cells[i][m].m_cells.titles.m_left_top = &district->m_cells[i - 1][0];
-			m_cells[i][m].m_cells.titles.m_right_top = &district->m_cells[i + 1][0];
-
-			district->m_cells[i][0].m_cells.titles.m_left_bottom = &m_cells[i - 1][m];
-			district->m_cells[i][0].m_cells.titles.m_right_bottom = &m_cells[i + 1][m];
-		}
-	}
-
-	// (0;0)
-	m_cells[0][0].m_cells.titles.m_right = &m_cells[1][0];
-	m_cells[0][0].m_cells.titles.m_top = &m_cells[0][1];
-	m_cells[0][0].m_cells.titles.m_right_top = &m_cells[1][1];
-	// (0;m)
-	m_cells[0][m].m_cells.titles.m_right = &m_cells[1][m];
-	m_cells[0][m].m_cells.titles.m_bottom = &m_cells[0][m - 1];
-	m_cells[0][m].m_cells.titles.m_right_bottom = &m_cells[1][m - 1];
-	// (m;0)
-	m_cells[m][0].m_cells.titles.m_left = &m_cells[m - 1][0];
-	m_cells[m][0].m_cells.titles.m_top = &m_cells[m][1];
-	m_cells[m][0].m_cells.titles.m_left_top = &m_cells[m - 1][1];
-	// (m;m)
-	m_cells[m][m].m_cells.titles.m_left = &m_cells[m - 1][m];
-	m_cells[m][m].m_cells.titles.m_bottom = &m_cells[m][m - 1];
-	m_cells[m][m].m_cells.titles.m_left_bottom = &m_cells[m - 1][m - 1];
-
-	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index);
-	if (district) {
-		m_cells[0][0].m_cells.titles.m_left = &district->m_cells[m][0];
-		district->m_cells[m][0].m_cells.titles.m_right = &m_cells[0][0];
-
-		m_cells[0][m].m_cells.titles.m_left = &district->m_cells[m][m];
-		district->m_cells[m][m].m_cells.titles.m_right = &m_cells[0][m];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index);
-	if (district) {
-		m_cells[m][0].m_cells.titles.m_right = &district->m_cells[0][0];
-		district->m_cells[0][0].m_cells.titles.m_left = &m_cells[m][0];
-
-		m_cells[m][m].m_cells.titles.m_right = &district->m_cells[0][m];
-		district->m_cells[0][m].m_cells.titles.m_left = &m_cells[m][m];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index, m_row_index - 1);
-	if (district) {
-		m_cells[0][0].m_cells.titles.m_bottom = &district->m_cells[0][m];
-		district->m_cells[0][m].m_cells.titles.m_top = &m_cells[0][0];
-
-		m_cells[m][0].m_cells.titles.m_bottom = &district->m_cells[m][m];
-		district->m_cells[m][m].m_cells.titles.m_top = &m_cells[m][0];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index, m_row_index + 1);
-	if (district) {
-		m_cells[0][m].m_cells.titles.m_top = &district->m_cells[0][0];
-		district->m_cells[0][0].m_cells.titles.m_bottom = &m_cells[0][m];
-
-		m_cells[m][m].m_cells.titles.m_top = &district->m_cells[m][0];
-		district->m_cells[m][0].m_cells.titles.m_bottom = &m_cells[m][m];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index - 1);
-	if (district) {
-		m_cells[0][0].m_cells.titles.m_left_bottom = &district->m_cells[m][m];
-		district->m_cells[m][m].m_cells.titles.m_right_top = &m_cells[0][0];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index - 1, m_row_index + 1);
-	if (district) {
-		m_cells[0][m].m_cells.titles.m_left_top = &district->m_cells[m][0];
-		district->m_cells[m][0].m_cells.titles.m_right_bottom = &m_cells[0][m];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index - 1);
-	if (district) {
-		m_cells[m][0].m_cells.titles.m_right_bottom = &district->m_cells[0][m];
-		district->m_cells[0][m].m_cells.titles.m_left_top = &m_cells[m][0];
-	}
-
-	district = m_net->getDistrictByIndecies(m_col_index + 1, m_row_index + 1);
-	if (district) {
-		m_cells[m][m].m_cells.titles.m_right_top = &district->m_cells[0][0];
-		district->m_cells[0][0].m_cells.titles.m_left_bottom = &m_cells[m][m];
-	}
-
-	for (uint32_t i = 0; i < n; i++)
-		for (uint32_t j = 0; j < n; j++)
-			for (uint32_t k = 0; k < 9; k++)
-				if (m_cells[i][j].m_cells.buffer[k] == nullptr) {
-					m_cells[i][j].m_is_border = true;
-					break;
-				}
 }
 
 District::~District() {
@@ -239,155 +42,69 @@ District::~District() {
 
 	for (int i = m_moveable_objeсts.size(); i; i--)
 		(*m_moveable_objeсts.begin())->removeFromDistrictList();
-
-	uint32_t n = m_net->m_cells_partition;
-
-	for (uint32_t i = 0; i < n; i++)
-		delete[] m_cells[i];
-
-	delete[] m_cells;
 }
 
-DistrictCell* District::getCell(float x, float y) {
-	float cell_size = m_net->m_cells_size;
-	int x_index = floor(x / cell_size);
-	int y_index = floor(y / cell_size);
-
-	return &m_cells[x_index][y_index];
+bool District::isCellExist(ivec2 index) const{
+	return !(index.x < 0 || index.y < 0 || 
+		index.x >= getCellsXAmount() || index.y >= getCellsYAmount());
 }
 
-District* DistrictNet::getDistrictByCoords(float x, float y) {
-	int district_x = floor(x / m_district_size);
-	int district_y = floor(y / m_district_size);
+void District::moveObjects(float dt) {
+	float col_time;
 
-	return getDistrictByIndecies(district_x, district_y);
-}
+	vector<bool> m_collision_members(m_moveable_objeсts.size());
+	int moveable_object_index = 0;
+	int width = getCellsXAmount();
+	int height = getCellsYAmount();
 
-DistrictCell* DistrictNet::getCell(float x, float y) {
-	District* district = this->getDistrictByCoords(x, y);
+	for (SpaceObject* m : m_moveable_objeсts) {
+		if (m->m_current_speed == 0)
+			continue;
+		// Нужно изменить логику и коллизить не все
+		// объекты, а только те, которые находятся в 
+		// соседних ячейках
 
-	if (district == nullptr)
-		return nullptr;
-	else
-		return district->getCell(
-			x - district->m_borders.m_left,
-			y - district->m_borders.m_bottom);
-}
+		bool move_possible = true;
+		ivec2 mo_cell_index = m->m_position.m_index;
+		for (int x_cell = std::max(mo_cell_index.x - 1, 0),
+			x_cell_end = std::min(x_cell + 3, width - 1);
+			x_cell < x_cell_end; x_cell++)
+			for (int y_cell = std::max(mo_cell_index.y - 1, 0),
+				y_cell_end = std::min(y_cell + 3, height - 1);
+				move_possible && y_cell < y_cell_end; y_cell++) {
+				DistrictCell* current_cell = &m_cells(y_cell, x_cell);
+				m->m_position.shiftToCoordsSystem(ivec2(x_cell, y_cell));
 
-ivec2&& District::getCellIndex(float x, float y) {
-	float m_size = m_net->m_cells_size;
-	return ivec2(trunc(x / m_size), trunc(y / m_size));
-}
-
-DistrictNet::DistrictNet(
-	uint32_t width,
-	uint32_t height,
-	float district_size,
-	uint32_t cells_partion)
-	: m_width(width), m_height(height),
-	m_district_size(district_size), 
-	m_cells_partition(cells_partion),
-	m_districts_amount(0),
-	m_min_load_index(),
-	m_max_load_index() {
-
-	m_cells_size = district_size / cells_partion;
-
-	m_districts = new District * *[width];
-	
-	for (uint32_t i = 0; i < width; i++) {
-		m_districts[i] = new District * [height];
-
-		for (uint32_t j = 0; j < height; j++)
-			m_districts[i][j] = nullptr;
-	}
-}
-
-District* DistrictNet::addDistrict(uint32_t x, uint32_t y) {
-	if (!m_districts_amount) {
-		m_max_load_index.x = m_min_load_index.x = x;
-		m_max_load_index.y = m_min_load_index.y = y;
-	}
-
-	if (m_districts[x][y] == nullptr)
-		m_districts[x][y] = new District(this, y, x);
-
-	return getDistrictByIndecies(x, y);
-}
-
-District* DistrictNet::getDistrictByIndecies(uint32_t x, uint32_t y) {
-	if (x < 0 || x >= m_width || y < 0 || y >= m_height)
-		return nullptr;
-	else
-		return m_districts[x][y];
-}
-
-void DistrictNet::moveObjects(float dt) {
-	for (int i = m_min_load_index.x;
-		i <= m_max_load_index.x; i++)
-		for (int j = m_min_load_index.y;
-			j <= m_max_load_index.y; j++) {
-		District* district = m_districts[i][j];
-		float col_time;
-
-		vector<bool> m_collision_members(
-			district->m_moveable_objeсts.size());
-		int moveable_object_index = 0;
-
-		if (district) {
-			for (SpaceObject* m : district->m_moveable_objeсts) {
-				// Нужно изменить логику и коллизить не все
-				// объекты, а только те, которые находятся в 
-				// соседних ячейках
-				
-				bool move_possible = true;
-				for (int i = 0; i < 9; i++) {
-					DistrictCell* current_cell = 
-						m->m_cell->m_cells.buffer[i];
-
-					if(current_cell)
-						for (SpaceObject* s : 
-							current_cell->m_objects)
-
-							if (m != s) {
-								if (Collisions::Collision(m, s, dt, &col_time)) {
-									move_possible = false;
-									m->setCurrentSpeed(0);
-									if (s->isMoveable())
-										s->setCurrentSpeed(0);
-									break;
-								}
-							}
-				}
-				
-				if (move_possible) {
-					if (m->m_cell->m_is_border == true) {
-						Vector future_pos = m->getFuturePosition(dt);
-						DistrictCell* next_cell = getCell(future_pos.x, future_pos.y);
-
-						if (next_cell == nullptr)
-							continue;
-						else
-							m->m_position = future_pos;
+				for (SpaceObject* s : current_cell->m_objects)
+					if (m != s) {
+						if (Collisions::Collision(m, s, dt, &col_time)) {
+							move_possible = false;
+							m->setCurrentSpeed(0);
+							if (s->isMoveable())
+								s->setCurrentSpeed(0);
+							break;
+						}
 					}
-					else
-						m->move(dt);
-					
+			}
+		m->m_position.normalizeCoords();
+		if (move_possible) {
+			if (m->m_cell->m_is_border == true) {
+				Position future_pos = m->getFuturePosition(dt);
+				future_pos.normalizeCoords();
+
+				if (isCellExist(future_pos.m_index)) {
+					m->m_position = future_pos;
 					m->updateCell();
 				}
+				else {
+					continue;
+				}
 			}
+			else {
+				m->move(dt);
+			}
+
+			m->updateCell();
 		}
 	}
-}
-
-DistrictNet::~DistrictNet() {
-	for (uint32_t i = 0; i < m_width; i++) {
-		for (uint32_t j = 0; j < m_height; j++)
-			if (m_districts[i][j] != nullptr)
-				delete m_districts[i][j];
-
-		delete[] m_districts[i];
-	}
-
-	delete m_districts;
 }

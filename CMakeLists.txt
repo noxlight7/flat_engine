@@ -11,13 +11,13 @@ include_directories ("src" "game")
 
 include ("dependencies/CMakeLists.txt")
 add_executable ( ${solution_name} 
-	${src_files} 
+	${src_files}
 	${src_files_glfw} 
 	${src_files_vulcan} 
 	${src_files_opengl} 
 	${src_files_stb} 
 	${game_files}
-)
+ )
 
 target_link_libraries ( ${solution_name} 
 	${lib_files_glfw} 

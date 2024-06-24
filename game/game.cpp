@@ -5,7 +5,7 @@
 #include "display/camera.hpp"
 
 Game::Game(const char* title, uint32_t width, uint32_t height)
-	: Engine(title, width, height), m_district_net(10, 10, 10000, 20), 
+	: Engine(title, width, height), m_district_net(1000, 1000),
 	m_test_obj(true, ObjectForm(2, 2)),
 	m_test_obj2(true, ObjectForm(4, 2)),
 	m_test_static_obj(false, ObjectForm(160, 160)), 
@@ -15,11 +15,8 @@ Game::Game(const char* title, uint32_t width, uint32_t height)
 }
 
 void Game::onInit() {
-	// —юда добавить код при инициализации
-	District* district = m_district_net.addDistrict(0, 0);
-
-	m_test_obj.moveTo(district, 900, 900);
-	m_test_obj2.moveTo(district, 895.7, 895.7);
+	m_test_obj.moveTo(&m_district_net, 900, 900);
+	m_test_obj2.moveTo(&m_district_net, 895.7, 895.7);
 	//m_test_static_obj.moveTo(district, 400, 400);
 	//m_test_static_obj2.moveTo(district, 600, 600);
 	//m_test_fly.moveTo(district, 200, 600);
@@ -42,21 +39,21 @@ void Game::onRender() {
 	Vector v = getPlayerKeyboardSpeedDirection();
 
 	m_test_obj.setSpeedDirection(v);
-	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 10: 0);
+	m_test_obj.setCurrentSpeed(v.x != 0 || v.y != 0 ? 8: 0);
 
 	Vector v2 = getPlayer2KeyboardSpeedDirection();
 
 	m_test_obj2.setSpeedDirection(v2);
-	m_test_obj2.setCurrentSpeed(v2.x != 0 || v2.y != 0 ? 7 : 0);
+	m_test_obj2.setCurrentSpeed(v2.x != 0 || v2.y != 0 ? 5.27 : 0);
 
-	Vector v3 = Vector(cos(ct), sin(ct), 0);
+	Vector v3 = Vector(cos(ct), sin(ct));
 
 	m_test_fly.setSpeedDirection(v3);
-	m_test_fly.setCurrentSpeed(100);
+	m_test_fly.setCurrentSpeed(2);
 
 	//m_test_obj.move( dt );
-	g_renderer->g_test_entity.m_render_origin = m_test_obj.getPosition( );
-	g_renderer->g_test_entity2.m_render_origin = m_test_obj2.getPosition( );
+	g_renderer->g_test_entity.m_render_origin = m_test_obj.getRenderOrigin();
+	g_renderer->g_test_entity2.m_render_origin = m_test_obj2.getRenderOrigin();
 
 	g_camera->setOrigin( g_renderer->g_test_entity.m_render_origin );
 	//g_renderer->g_test_entity.m_render_origin.z = 2.f;

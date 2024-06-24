@@ -20,7 +20,7 @@ protected:
 	SpaceObject m_test_fly;
 	SpaceObject m_test_static_obj;
 	SpaceObject m_test_static_obj2;
-	DistrictNet m_district_net;
+	District m_district_net;
 };
 
 inline const auto g_game =

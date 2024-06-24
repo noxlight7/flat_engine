@@ -7,6 +7,7 @@
 #include <cinttypes>
 #include <unordered_map>
 #include "../texts/texts.hpp"
+#include "utils/common.hpp"
 //#include "QuestEvents.h"
 
 using namespace std;
@@ -17,11 +18,24 @@ using namespace glm;
 class SpaceObject;
 class District;
 class Collisions;
-class DistrictNet;
 class DistrictCell;
+class Texture;
 
-using Vector = glm::vec3;
+using Vector = glm::vec2;
+using DVector = dvec2;
 //#define Vector glm::vec3
+
+struct Position
+{
+	Vector m_coords;			// Координаты в ячейке
+	ivec2 m_index;				// Индекс ячейки
+
+	void normalizeCoords();
+	DVector getGlobalCoords();
+	void setFromGlobalCoords(double x, double y);
+	void shiftToCoordsSystem(ivec2 cell_index);
+	void shiftToCoordsSystem(Position pos);
+};
 
 // Форма объектов, участвующих в столкновении
 enum CollisionType
@@ -134,12 +148,37 @@ private:
 	int m_row_amount;
 };
 
+
+// Позиционный объект. Имеет x, y координаты и угол поворота
+class LocatableObject {
+public:
+	LocatableObject(ObjectForm &&form = ObjectForm(0.5));
+	LocatableObject(LocatableObject&);
+
+	// Обновляет индексы клеток в соответствии с координатами
+	void normalizeCoords();				
+protected:
+	float m_rotation;					// Угол поворота
+	Position m_position;					// Позиция объекта
+	ObjectForm m_form;					// Данные о форме объекта
+	District* m_current_district;	// Область, в которой находится объект
+};
+
+
+class TerrainMap {
+public: 
+	TerrainMap(District *distict);
+
+private:
+
+};
+
+
 // Объект локации, имеет x, y координаты и размер
-class SpaceObject
+class SpaceObject: LocatableObject
 {
 	friend class Collisions;
 	friend class District;
-	friend class DistrictNet;
 public:
 	// Создаёт локальный объект с указанными параметрами
 	SpaceObject(
@@ -148,7 +187,7 @@ public:
 		float rotation = 0.f,
 		float rotation_speed = 0.f,
 		float max_rotation_speed = 0.f,
-		Vector&& speed_direction = Vector(1.f, 0.f, 0.f),
+		Vector&& speed_direction = Vector(1.f, 0.f),
 		float max_speed = 1.0f,
 		float acceleration = 0);
 	// Создаёт локальный объект, загружая его из файла
@@ -158,10 +197,11 @@ public:
 	// Move-конструктор
 	SpaceObject(SpaceObject&& lo);
 
-	void rotate(float da);				// Вращает объект на da радиан (против чс?)
-	void moveTo(float x, float y);
-	void moveTo(const District* district, float x, float y);
-	void moveTo(DistrictNet* net, float x, float y);
+	~SpaceObject();
+
+	void rotate(float da);				// Вращает объект на da радиан
+	void moveTo(double x, double y);
+	void moveTo(District* district, double x, double y);
 
 	void initInCell(DistrictCell* cell);
 
@@ -171,8 +211,8 @@ public:
 	virtual void load(FILE* f);				// Загружает объект из файла
 	virtual void save(FILE* f);				// Сохраняет объект в файл
 
-	Vector getPosition();					// Возвращает вектор позиции
-	glm::vec2 getRenderOrigin( );
+	Position getPosition();					// Возвращает вектор позиции
+	glm::vec3 getRenderOrigin( );
 
 	// Добавляет объект в списки объектов локации
 	// Если объект ранее находился в другой локации,
@@ -184,7 +224,8 @@ public:
 	void move(float dt);					// Перемещает объект в состояние через dt мс
 	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
 	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
-	Vector getFuturePosition(float dt); // Возвращает положение объекта через время dt
+	Vector getFutureCoords(float dt); // Возвращает положение объекта через время dt
+	Position getFuturePosition(float dt);
 
 	bool isMoveable();
 
@@ -192,20 +233,16 @@ public:
 	void updateCell();
 
 protected:
-	void initInNewDistrictNet();
+	void initInNewDistrict();
 
 	bool m_is_moveable;					// Является ли движущимся объектом
-
-	const District* m_current_district;	// Область, в которой находится объект
-	float m_rotation;					// Угол поворота
-	Vector m_position;					// Позиция объекта
+	
 	float m_rotation_speed;				// Скорость поворота, используется только для круглого объекта
 	float m_max_rotation_speed;			// Максимальная скорость поворота
 	float m_current_speed;				// Текущая скорость объекта
 	Vector m_speed_direction;			// Текущее направление скорости объекта
 	float m_max_speed;					// Максимальная скорость
 	float m_acceleration;				// Ускорение объекта (скорость набора скорости)
-	ObjectForm m_form;					// Данные о форме объекта
 
 	DistrictCell* m_cell;
 	ListPElementInfo<SpaceObject> m_cell_info;
@@ -245,52 +282,27 @@ class Decoration : SpaceObject
 
 };
 
-struct CellNeighborsInfo {
-	DistrictCell* m_left;
-	DistrictCell* m_right;
-	DistrictCell* m_top;
-	DistrictCell* m_bottom;
-
-	DistrictCell* m_left_top;
-	DistrictCell* m_left_bottom;
-	DistrictCell* m_right_top;
-	DistrictCell* m_right_bottom;
-		
-	DistrictCell* m_self;
-};
-
-union CellNeighbors{
-	CellNeighborsInfo titles;
-	DistrictCell* buffer[9];
-};
-
 // Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
 class DistrictCell
 {
 	friend District;
-	friend DistrictNet;
+	friend SpaceObject;
 public:
-	DistrictCell() = default;
+	DistrictCell();
 
 	// Проводит инициализацию ячейки, стирает
 	// указатели на соседние ячейки, устанавливает
 	// границы в соответствии с положением ячейки
 	// в области (x; y)
-	void init(int x, int y);
+	void init(ivec2 index_in_district);
 
-	// Очищает указатели на соседние ячейки и
-	// устанавливает m_is_border в false 
-	void clearBorders();
+protected:
+
+	bool m_is_border;
+	ivec2 m_index_in_district;
 
 	// Область, в которой содержится ячейка
 	District* m_owner_district;
-
-	// Указатели на соседние ячейки и на неё саму
-	CellNeighbors m_cells;	
-	// Является ли ячейка граничной с несуществующей
-	bool m_is_border;		
-	
-	RectangleArea m_borders;
 
 	// Список содержащихся в ячейке объектов
 	std::list<SpaceObject*> m_objects;
@@ -301,25 +313,26 @@ public:
 class District
 {
 	friend DistrictCell;
-	friend DistrictNet;
 	friend SpaceObject;
 public:
-	// Конструктор. Создаёт область, принадлежащую локации location
-	District(DistrictNet* net, int col_index, int row_index);
+	// Конструктор. Создаёт область
+	District(int width, int height);
 	~District();
 
 	//void addObject(SpaceObject* obj, float x, float y);
+
+	DistrictCell* getCell(int x, int y);
+	DistrictCell* getCell(ivec2 index);
+
+	int getCellsXAmount() const { return m_cells.colCount(); };
+	int getCellsYAmount() const { return m_cells.rowCount(); };
 		
 	void load(FILE* f);					// Загружает область из файла
 	void save(FILE* f);					// Сохраняет область в файл
 
-	// Возвращает ячейку, содержащую точку с координатами (x; y)
-	// Координаты заданы в пределах области
-	DistrictCell* getCell(float x_local, float y_local);
-	// Возвращает индекс [i, j] ячейки, содержащей
-	// точку с координатами (x; y)
-	// !!! Работает неправильно !!!
-	ivec2&& getCellIndex(float x, float y);
+	void moveObjects(float dt);
+
+	bool isCellExist(ivec2 index) const;
 
 private:	
 	// Хранит ссылки на все пространственные объекты
@@ -327,71 +340,12 @@ private:
 	// Хранит ссылки на все способные двигаться объекты
 	list<SpaceObject*> m_moveable_objeсts;
 		
-	DistrictCell** m_cells;				// Ячейки хранятся по (x, y)
-	DistrictNet* m_net;					// Указатель на сеть-владельца
-
-	int m_row_index;	// Индекс строки в сети областей
-	int m_col_index;	// Индекс столбца в сети областей
+	Matrix<DistrictCell> m_cells;				// Ячейки хранятся по (x, y)
 
 	RectangleArea m_borders;
 
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;		// Имена сетей, в которые возможно перейти из текущей области 
-};
-
-// Единая сеть областей
-class DistrictNet : TitledObject
-{
-	friend District;
-	friend DistrictCell;
-public:
-	DistrictNet(
-		uint32_t width,
-		uint32_t height,
-		float district_size,
-		uint32_t cells_partion);
-
-	DistrictNet(FILE* f);
-
-	// Возвращает координаты ячейки, содержащей точку (x;y)
-	// Координаты заданы в пределах сети областей
-	DistrictCell* getCell(float x_global, float y_global);
-
-	void moveObjects(float dt);
-
-	~DistrictNet();
-
-	// Добавляет новую область в сеть
-	District* addDistrict(uint32_t x, uint32_t y);
-	// Возвращает область по её индексам в сети ячеек
-	District* getDistrictByIndecies(uint32_t x, uint32_t y);
-	// Возвращает область по её глобальным координатам в сети ячеек
-	District* getDistrictByCoords(float x, float y);
-
-	void load(FILE* f);		// Загружает сеть локаций из файла
-	void save(FILE* f);		// Сохраняет сеть локаций в файл
-
-private:
-	// Двумерный массив указателей на области
-	// Если области не существует, то массив 
-	// хранит nullptr 
-	District*** m_districts;	
-	uint32_t m_width, m_height;	// Ширина и высота сети (в областях)
-	float m_district_size;		// Размер области сети
-
-	// Всего загружено областей
-	uint32_t m_districts_amount;
-	
-	// Левый и нижний индексы загруженных областей
-	vec2 m_min_load_index;
-	// Верхней и правый индексы загруженных областей
-	vec2 m_max_load_index;	
-
-	// Число ячеек, на которые каждая область 
-	// разбивается по длине и по ширине
-	uint32_t m_cells_partition;
-	
-	float m_cells_size; // Размер ячейки сети
 };
 
 class Player : TitledObject
