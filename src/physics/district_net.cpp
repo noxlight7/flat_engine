@@ -1,11 +1,17 @@
 #include "Physics.hpp"
 #include "collisions.hpp"
+#include "factory/definitions.hpp"
+
+TerrainMap::TerrainMap(): m_matrix(g_metres_in_cell, g_metres_in_cell){
+}
 
 DistrictCell::DistrictCell()
 	:m_is_border(false),
 	m_index_in_district(),
 	m_owner_district(nullptr),
-	m_objects() {}
+	m_objects(),
+	m_map()
+{}
 
 DistrictCell* District::getCell(int x, int y) {
 	return &m_cells(y, x);
@@ -22,8 +28,12 @@ void DistrictCell::init(ivec2 index_in_district) {
 		index_in_district.y == m_owner_district->m_cells.rowCount() - 1;
 }
 
+std::list<SpaceObject*>& DistrictCell::getInnerObjects() {
+	return m_objects;
+}
+
 District::District(int cells_x_amount, int cells_y_amount) 
-	: m_cells(cells_y_amount, cells_x_amount)
+	: m_cells(cells_y_amount, cells_x_amount), m_renderer(nullptr)
 {
 	for (uint32_t y = 0; y < cells_y_amount; y++) {
 		for (uint32_t x = 0; x < cells_x_amount; x++) {
@@ -42,6 +52,9 @@ District::~District() {
 
 	for (int i = m_moveable_objeñts.size(); i; i--)
 		(*m_moveable_objeñts.begin())->removeFromDistrictList();
+
+	if (m_renderer)
+		delete m_renderer;
 }
 
 bool District::isCellExist(ivec2 index) const{
@@ -67,10 +80,10 @@ void District::moveObjects(float dt) {
 		bool move_possible = true;
 		ivec2 mo_cell_index = m->m_position.m_index;
 		for (int x_cell = std::max(mo_cell_index.x - 1, 0),
-			x_cell_end = std::min(x_cell + 3, width - 1);
+			x_cell_end = std::min(x_cell + 3, width);
 			x_cell < x_cell_end; x_cell++)
 			for (int y_cell = std::max(mo_cell_index.y - 1, 0),
-				y_cell_end = std::min(y_cell + 3, height - 1);
+				y_cell_end = std::min(y_cell + 3, height);
 				move_possible && y_cell < y_cell_end; y_cell++) {
 				DistrictCell* current_cell = &m_cells(y_cell, x_cell);
 				m->m_position.shiftToCoordsSystem(ivec2(x_cell, y_cell));
@@ -107,4 +120,38 @@ void District::moveObjects(float dt) {
 			m->updateCell();
 		}
 	}
+}
+
+void District::setRenderer(int width, int height) {
+	if (m_renderer == nullptr)
+		m_renderer = new DistrictRenderer(this, width, height);
+	else {
+		m_renderer->m_height = height;
+		m_renderer->m_width = width;
+	}
+}
+
+DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_height)
+	: IRendererWorld(), m_width(out_width), m_height(out_height), 
+	m_district(district) {
+	
+}
+
+void DistrictRenderer::drawWorld() {
+	auto render_area = g_camera->getVisibleRect(m_width, m_height);
+	Position left_bottom = Position(render_area.m_left, render_area.m_bottom);
+	Position right_top = Position(render_area.m_right, render_area.m_top);
+	int x_start = std::max(0, left_bottom.m_index.x);
+	int y_start = std::max(0, left_bottom.m_index.y);
+	int x_end = std::min(right_top.m_index.x + 1, m_district->getCellsXAmount());
+	int y_end = std::min(right_top.m_index.y + 1, m_district->getCellsYAmount());
+	for (int x_index = x_start; x_index < x_end; x_index++)
+		for (int y_index = y_start; y_index < y_end; y_index++) {
+			for (auto &draw_obj : m_district->getCell(x_index, y_index)->getInnerObjects()) {
+				auto info = draw_obj->getDrawInfo();
+				info->setOrigin(vec3(g_camera->getOrigin().getShift(
+					draw_obj->getPosition()), 0.0f));
+				info->draw();
+			}
+		}
 }

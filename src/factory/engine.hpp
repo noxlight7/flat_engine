@@ -10,7 +10,8 @@ class Engine {
 public:
 	//void StartUp( );
 
-	Engine(const char* title, uint32_t width = 1024, uint32_t height = 768);
+	Engine();
+	void init(const char* title, uint32_t width = 1024, uint32_t height = 768);
 	~Engine();
 	void run();
 
@@ -36,13 +37,27 @@ public:
 	// Возвращает true, если клавиша scancode нажата
 	bool isKeyPressed(int scancode);
 
+	inline IRendererWorld* getWorld() { return m_world; }
+	inline void setWorld(IRendererWorld* world) { m_world = world; }
+
+	inline float getDeltaTime() { return m_delta_time; }
+	inline std::chrono::steady_clock::time_point 
+		getStartFrameProcessingTime() { return m_start_frame_processing_time; }
+	inline uint32_t getWidth() { return m_width; }
+	inline uint32_t getHeight() { return m_height; }
 protected:
 	uint32_t	m_width, m_height;
 	bool		m_button_state[KEYS_AMOUNT];
 	bool		m_vsync{ true };
 private:
+	IRendererWorld* m_world;
 	GLFWwindow*	m_window;
+	float		m_delta_time;
+	std::chrono::steady_clock::time_point m_start_frame_processing_time;
 
+	void drawInterface();
+	void initTime();
+	void updateTime();
 	void initWindow(const char* title);
 	void mainLoop();
 	void setCallbacks();

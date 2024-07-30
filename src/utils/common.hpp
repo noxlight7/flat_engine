@@ -13,7 +13,8 @@ private:
 
 public:
     // Конструктор с заданными размерами
-    Matrix(int rows, int cols, const T& initial = T());
+    Matrix(int rows, int cols);
+    Matrix(int rows, int cols, const T& initial);
 
     // Деструктор для освобождения памяти
     ~Matrix();

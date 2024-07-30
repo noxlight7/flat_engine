@@ -4,6 +4,8 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+using namespace glm;
+
 VertexArray::VertexArray( ) {
 
 }
@@ -66,15 +68,15 @@ void VertexBaseEntity::createObject(
 	m_vertices_count = vertices_count;
 }
 
-void VertexBaseEntity::draw( ) {
+void VertexBaseEntity::draw(vec3 render_origin) {
 	// setup mvp matrix.
-	m_mvp_matrix = g_camera->worldToScreen( m_render_origin );
+	m_mvp_matrix = g_camera->worldToScreen(render_origin);
 
 	// force mvp matrix.
 	g_shader_program->setUniformMatrix4fv( "u_MvpMatrix", m_mvp_matrix );
 
 	// .
-	const auto originZ = m_render_origin.z;
+	const auto originZ = render_origin.z;
 	g_shader_program->setUniform1f( "u_originZ", originZ );
 
 	// 
@@ -117,5 +119,5 @@ void VertexBaseEntity::setTexture( const Texture *texture ) const {
 }
 
 void VertexBaseEntity::setScale( const glm::vec2 size ) const {
-	g_shader_program->setUniform2f( "u_Scale", size );
+	g_shader_program->setUniform2f( "u_Scale", size * 0.5f );
 }

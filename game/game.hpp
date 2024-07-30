@@ -17,10 +17,11 @@ public:
 protected:
 	SpaceObject m_test_obj;
 	SpaceObject m_test_obj2;
-	SpaceObject m_test_fly;
-	SpaceObject m_test_static_obj;
-	SpaceObject m_test_static_obj2;
-	District m_district_net;
+	//SpaceObject m_test_fly;
+	//SpaceObject m_test_static_obj;
+	//SpaceObject m_test_static_obj2;
+	District m_district;
+	void init();
 };
 
 inline const auto g_game =

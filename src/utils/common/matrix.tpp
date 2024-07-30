@@ -1,6 +1,14 @@
 #pragma once
 
 template <typename T>
+Matrix<T>::Matrix(int rows, int cols) : rows(rows), cols(cols) {
+    data = new T * [rows];
+    for (int i = 0; i < rows; ++i) {
+        data[i] = new T[cols];
+    }
+}
+
+template <typename T>
 Matrix<T>::Matrix(int rows, int cols, const T& initial) : rows(rows), cols(cols) {
     data = new T * [rows];
     for (int i = 0; i < rows; ++i) {

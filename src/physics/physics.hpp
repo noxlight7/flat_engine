@@ -8,6 +8,10 @@
 #include <unordered_map>
 #include "../texts/texts.hpp"
 #include "utils/common.hpp"
+#include "display/renderer.hpp"
+#include "display/camera.hpp"
+#include "display/draw_info.h"
+#include "base_physics.hpp"
 //#include "QuestEvents.h"
 
 using namespace std;
@@ -20,90 +24,7 @@ class District;
 class Collisions;
 class DistrictCell;
 class Texture;
-
-using Vector = glm::vec2;
-using DVector = dvec2;
-//#define Vector glm::vec3
-
-struct Position
-{
-	Vector m_coords;			// Координаты в ячейке
-	ivec2 m_index;				// Индекс ячейки
-
-	void normalizeCoords();
-	DVector getGlobalCoords();
-	void setFromGlobalCoords(double x, double y);
-	void shiftToCoordsSystem(ivec2 cell_index);
-	void shiftToCoordsSystem(Position pos);
-};
-
-// Форма объектов, участвующих в столкновении
-enum CollisionType
-{
-	COL_LINE,					// Линия
-	COL_CIRCLE,					// Круг
-	COL_RECTANGLE,				// Прямоугольник
-};
-
-// Форма объекта
-enum ObjectFormType
-{
-	FORM_CIRCLE = COL_CIRCLE,		// Круг
-	FORM_RECTANGLE = COL_RECTANGLE// Прямоугольник
-};
-
-struct CircleFormData
-{
-	float m_radius;
-};
-
-struct RectangleFormData
-{
-	float m_height;
-	float m_width;
-};
-
-union ObjectFormData
-{
-	CircleFormData* m_circle;
-	RectangleFormData* m_rectangle;
-};
-
-struct ObjectForm
-{
-public:
-	ObjectForm();
-	ObjectForm(ObjectForm& form);
-	ObjectForm(float radius);
-	ObjectForm(float width, float height);
-	~ObjectForm();
-
-	void setData(float radius);
-	void setData(float width, float height);
-	void releaseData();
-
-	vec2&& getSize(float angle);
-	float getMaxSize();
-
-	ObjectFormData m_data;
-	ObjectFormType m_type;
-};
-
-// Круглая область
-struct CircleArea
-{
-	glm::vec2 m_pos;
-	float m_radius;
-};
-
-// Прямоугольная область
-struct RectangleArea
-{
-	float m_left;
-	float m_right;
-	float m_bottom;
-	float m_top;
-};
+class DistrictRenderer;
 
 // Представляет собой пару из указателя на список и
 // итератора, указывающего на конкретный элемент списка
@@ -149,33 +70,45 @@ private:
 };
 
 
-// Позиционный объект. Имеет x, y координаты и угол поворота
+// Позиционный объект. Имеет x, y координаты
 class LocatableObject {
 public:
 	LocatableObject(ObjectForm &&form = ObjectForm(0.5));
 	LocatableObject(LocatableObject&);
+	~LocatableObject();
 
 	// Обновляет индексы клеток в соответствии с координатами
-	void normalizeCoords();				
+	void normalizeCoords();
+
+	inline ObjectForm& getForm() { return m_form; }
+	void addDrawInfo(Texture *texture);
+	SpaceObjectDrawInfo* getDrawInfo() { return m_draw_info; }
 protected:
-	float m_rotation;					// Угол поворота
-	Position m_position;					// Позиция объекта
-	ObjectForm m_form;					// Данные о форме объекта
+	float m_rotation;				// Угол поворота
+	Position m_position;			// Позиция объекта
+	ObjectForm m_form;				// Данные о форме объекта
 	District* m_current_district;	// Область, в которой находится объект
+	VertexBaseEntity* m_entity;		// Entity, на сервере всегда nullptr
+	SpaceObjectDrawInfo* m_draw_info;
+};
+
+
+struct Terrain {
+	short terrain_index = 0;
 };
 
 
 class TerrainMap {
-public: 
-	TerrainMap(District *distict);
+public:
+	TerrainMap();
 
 private:
-
+	Matrix<short> m_matrix;
 };
 
 
 // Объект локации, имеет x, y координаты и размер
-class SpaceObject: LocatableObject
+class SpaceObject: public LocatableObject
 {
 	friend class Collisions;
 	friend class District;
@@ -184,6 +117,7 @@ public:
 	SpaceObject(
 		bool is_moveable,
 		ObjectForm&& form = ObjectForm(0.5),
+		Texture* texture = nullptr,
 		float rotation = 0.f,
 		float rotation_speed = 0.f,
 		float max_rotation_speed = 0.f,
@@ -233,7 +167,7 @@ public:
 	void updateCell();
 
 protected:
-	void initInNewDistrict();
+	void RemoveFromOldDistrict();
 
 	bool m_is_moveable;					// Является ли движущимся объектом
 	
@@ -296,6 +230,8 @@ public:
 	// в области (x; y)
 	void init(ivec2 index_in_district);
 
+	std::list<SpaceObject*>& getInnerObjects();
+
 protected:
 
 	bool m_is_border;
@@ -306,6 +242,8 @@ protected:
 
 	// Список содержащихся в ячейке объектов
 	std::list<SpaceObject*> m_objects;
+
+	TerrainMap m_map;
 };
 
 /*	Область(может подгружаться и выгружаться из / в файл по необходимости для игрока
@@ -314,6 +252,7 @@ class District
 {
 	friend DistrictCell;
 	friend SpaceObject;
+	friend DistrictRenderer;
 public:
 	// Конструктор. Создаёт область
 	District(int width, int height);
@@ -334,6 +273,9 @@ public:
 
 	bool isCellExist(ivec2 index) const;
 
+	DistrictRenderer* getRenderer() { return m_renderer; }
+	void setRenderer(int width, int height);
+
 private:	
 	// Хранит ссылки на все пространственные объекты
 	list<SpaceObject*> m_space_objects; 
@@ -344,8 +286,26 @@ private:
 
 	RectangleArea m_borders;
 
+	DistrictRenderer *m_renderer;
+
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;		// Имена сетей, в которые возможно перейти из текущей области 
+};
+
+class DistrictRenderer : public IRendererWorld {
+	friend District;
+public:
+	DistrictRenderer(District* district, int out_width, int out_height);
+	virtual void drawWorld() override;
+	virtual float getCameraHeight() override { return g_camera->getHeight(); }
+	vec3 getCameraPosition() { return g_camera->getGlobalOrigin(); }
+	void setCameraPosition(vec3 coords) { g_camera->setGlobalOrigin(coords); }
+	void setCameraHeight(float height) { g_camera->setHeight(height); }
+private:
+	//Camera m_camera;
+	District* m_district;
+	int m_width;
+	int m_height;
 };
 
 class Player : TitledObject

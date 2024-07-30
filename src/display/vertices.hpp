@@ -3,6 +3,8 @@
 #include "../entry.hpp"
 #include "texture_manager.hpp"
 
+using namespace glm;
+
 class VertexArray {
 public:
 	VertexArray( );
@@ -55,17 +57,17 @@ public:
 				const size_t tex_count = 4u
 	);
 
-	void draw( );
+	void draw(vec3 render_origin);
 
 	void setTexture( const Texture *texture ) const;
 
 	void setScale( const glm::vec2 size ) const;
 
-	ALWAYS_INLINE void setOriginZ( const GLfloat originZ ) { m_render_origin.z = originZ / 2.0f; }
+	// ALWAYS_INLINE void setOriginZ( const GLfloat originZ ) { m_render_origin.z = originZ / 2.0f; }
 public:
 	RenderBuffer  m_pos_buffer{}, m_tex_buffer{};
 	VertexArray   m_array{};
 	size_t		  m_vertices_count{};
-	glm::vec3	  m_render_origin{};
+	//glm::vec3	  m_render_origin{};
 	glm::mat4     m_mvp_matrix{};
 };

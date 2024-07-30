@@ -3,7 +3,8 @@
 #include "../entry.hpp"
 #include <numbers>
 
-constexpr float g_cell_size = 8.f;
+constexpr int g_metres_in_cell = 2;
+constexpr float g_cell_size = (float) g_metres_in_cell;
 
 // simple math
 namespace math {

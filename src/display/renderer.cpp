@@ -35,8 +35,7 @@ void Renderer::setupVAO( ) {
 
 	// we should create entity once.
 	// @todo: create base entity class and move this into entities list
-	g_test_entity.createObject( );
-	g_test_entity2.createObject( );
+	m_rectangle_entity.createObject( );
 }
 
 void Renderer::loadTexture( const fnv1a::value_type entry, const char *path ) {
@@ -49,40 +48,23 @@ void Renderer::destroy( ) {
 
 }
 
-void Renderer::drawFrame( ) {
+
+void Renderer::prepareFrame() {
 	// attach blend channel to renderer.
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// attach shader program.
-	g_shader_program->attach( );
+	g_shader_program->attach();
 
 	// setup current view matrix.
-	g_camera->think( );
+	g_camera->think();
 
 	// @todo: make color mix w tex color.
-	g_shader_program->setUniform4f( "u_Color", { 1.f, 1.f, 1.f, 1.f } );
+	g_shader_program->setUniform4f("u_Color", { 1.f, 1.f, 1.f, 1.f });
+}
 
-	// setup entity #1.
-	{
-		const auto texture = g_textures->get( HASH( "test" ) );
-
-		g_test_entity.setScale( { 1.0f, 1.0f } );
-		g_test_entity.setTexture( texture );
-
-		g_test_entity.draw( );
-	}
-
-	// setup entity #2.
-	{
-		const auto texture = g_textures->get( HASH( "test2" ) );
-		
-		g_test_entity2.setScale( { 2.0f, 1.0f } );
-		g_test_entity2.setTexture( texture );
-
-		g_test_entity2.draw( );
-	}
-
+void Renderer::drawFrame( ) {
 	// detach shader program.
 	g_shader_program->detach( );
 }
@@ -93,4 +75,22 @@ void Renderer::resizeFrameBuffer( GLFWwindow *window, int width, int height ) {
 	glViewport( 0, 0, width, height );
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity( );
+}
+
+void Renderer::drawRectangleTextured(
+	float rect_width,
+	float rect_height,
+	Texture* texture,
+	vec3 origin) {
+	m_rectangle_entity.setScale({ rect_width, rect_height });
+	m_rectangle_entity.setTexture(texture);
+
+	m_rectangle_entity.draw(origin);
+}
+
+void Renderer::drawRectangleTextured(
+	RectangleFormData rect,
+	Texture* texture,
+	vec3 origin) {
+	drawRectangleTextured(rect.m_width, rect.m_height, texture, origin);
 }

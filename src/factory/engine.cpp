@@ -3,12 +3,32 @@
 //	printf( "hello" );
 //}
 
-Engine::Engine(const char* title, uint32_t width, uint32_t height)
-	: m_width(width), m_height(height)
-{
-	initWindow(title);
+void Engine::initTime() {
+	m_start_frame_processing_time = std::chrono::high_resolution_clock::now();
+	m_delta_time = 0;
+}
 
+void Engine::drawInterface() {
+
+}
+
+void Engine::updateTime() {
+	auto current_time = std::chrono::high_resolution_clock::now();
+	m_delta_time = std::chrono::duration<float, std::chrono::seconds::period>
+		(current_time - m_start_frame_processing_time).count();
+	m_start_frame_processing_time = current_time;
+}
+
+Engine::Engine() : m_world(nullptr), m_height(0), m_width(0), m_delta_time(0),
+m_start_frame_processing_time(), m_window() {
+}
+
+void Engine::init(const char* title, uint32_t width, uint32_t height) {
+	m_width = width;
+	m_height = height;
+	initWindow(title);
 	memset(m_button_state, 0, sizeof(bool) * ScanCode::KEYS_AMOUNT);
+	initTime();
 }
 
 void Engine::initWindow(const char* title) {
@@ -71,9 +91,14 @@ void Engine::mainLoop() {
 
 		onRender();
 
+		g_renderer->prepareFrame();
+
+		if (m_world)
+			m_world->drawWorld();
+
 		g_renderer->drawFrame();
 
-		static bool bx = false;
+		/*static bool bx = false;
 		static bool by = false;
 		if ( isKeyPressed( ScanCode::KEY_W ) && !bx ) {
 			g_renderer->g_test_entity.m_render_origin.x += 1.0f;
@@ -81,7 +106,7 @@ void Engine::mainLoop() {
 		}if ( isKeyPressed( ScanCode::KEY_S ) && !by ) {
 			g_renderer->g_test_entity.m_render_origin.x -= 1.0f;
 			by = true;
-		}
+		}*/
 
 		glfwSwapBuffers( m_window );
 		glfwPollEvents( );
@@ -90,6 +115,8 @@ void Engine::mainLoop() {
 
 void Engine::run() {
 	onInit();
+
+	initTime();
 
 	mainLoop();
 }
