@@ -36,7 +36,7 @@ LocatableObject::~LocatableObject() {
 		delete m_draw_info;
 }
 
-// ������ ��������� ������ � ���������� �����������
+// РЎРѕР·РґР°С‘С‚ Р»РѕРєР°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚ СЃ СѓРєР°Р·Р°РЅРЅС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
 SpaceObject::SpaceObject(
 	bool is_moveable,
 	ObjectForm&& form,
@@ -57,12 +57,12 @@ SpaceObject::SpaceObject(
 	m_cell(nullptr)
 {
 }
-// ������ ��������� ������, �������� ��� �� �����
+// РЎРѕР·РґР°С‘С‚ Р»РѕРєР°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚, Р·Р°РіСЂСѓР¶Р°СЏ РµРіРѕ РёР· С„Р°Р№Р»Р°
 SpaceObject::SpaceObject(FILE* f)
 {
 	load(f);
 }
-// ���������� �����������
+// РљРѕРїРёСЂСѓСЋС‰РёР№ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 SpaceObject::SpaceObject(SpaceObject& lo)
 	: LocatableObject(lo),
 	m_rotation_speed(lo.m_rotation_speed), 
@@ -153,7 +153,7 @@ void SpaceObject::insertToDistrictList()
 
 	if (m_is_moveable)
 		m_district_moveable_info.insert(
-			&v_district->m_moveable_obje�ts, this);
+			&v_district->m_moveable_objects, this);
 }
 
 void SpaceObject::removeFromDistrictList() {

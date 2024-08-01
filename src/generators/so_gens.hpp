@@ -5,3 +5,4 @@ class SpaceObjectGenerator {
 public:
 	static void generateSpaceObjects(District* district, float fill_coeff, Texture* tex);
 };
+

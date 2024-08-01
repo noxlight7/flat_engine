@@ -23,30 +23,30 @@ private:
 
 class IRenderer {
 public:
-	virtual void init( GLFWwindow *window ) abstract;
-	virtual void destroy( ) abstract;
+	virtual void init( GLFWwindow *window ) = 0;
+	virtual void destroy( ) = 0;
 
-	virtual void drawFrame( ) abstract;
-	virtual void prepareFrame() abstract;
-	virtual void resizeFrameBuffer( GLFWwindow *window, int width, int height ) abstract;
+	virtual void drawFrame( ) = 0;
+	virtual void prepareFrame() = 0;
+	virtual void resizeFrameBuffer( GLFWwindow *window, int width, int height ) = 0;
 
 	virtual void drawRectangleTextured(
 		RectangleFormData rect, 
 		Texture* texture, 
-		vec3 origin) abstract;
+		vec3 origin) = 0;
 	virtual void drawRectangleTextured(
 		float rect_width,
 		float rect_height,
 		Texture* texture,
-		vec3 origin) abstract;
+		vec3 origin) = 0;
 protected:
 	GLFWwindow *m_window;
 };
 
 class IRendererWorld {
 public:
-	virtual void drawWorld() abstract;
-	virtual float getCameraHeight() abstract;
+	virtual void drawWorld() = 0;
+	virtual float getCameraHeight() = 0;
 };
 
 class Renderer : public IRenderer {

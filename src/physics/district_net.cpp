@@ -1,4 +1,4 @@
-#include "Physics.hpp"
+#include "physics.hpp"
 #include "collisions.hpp"
 #include "factory/definitions.hpp"
 
@@ -44,14 +44,14 @@ District::District(int cells_x_amount, int cells_y_amount)
 }
 
 District::~District() {
-	// ��������� ������� ��������� ������ �� ������ �
-	// ������� ����� �������� �������� 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 	for (int i = m_space_objects.size(); i; i--)
 		(*m_space_objects.begin())->removeFromDistrictList();
 
-	for (int i = m_moveable_obje�ts.size(); i; i--)
-		(*m_moveable_obje�ts.begin())->removeFromDistrictList();
+	for (int i = m_moveable_objects.size(); i; i--)
+		(*m_moveable_objects.begin())->removeFromDistrictList();
 
 	if (m_renderer)
 		delete m_renderer;
@@ -65,17 +65,17 @@ bool District::isCellExist(ivec2 index) const{
 void District::moveObjects(float dt) {
 	float col_time;
 
-	vector<bool> m_collision_members(m_moveable_obje�ts.size());
+	vector<bool> m_collision_members(m_moveable_objects.size());
 	int moveable_object_index = 0;
 	int width = getCellsXAmount();
 	int height = getCellsYAmount();
 
-	for (SpaceObject* m : m_moveable_obje�ts) {
+	for (SpaceObject* m : m_moveable_objects) {
 		if (m->m_current_speed == 0)
 			continue;
-		// ����� �������� ������ � ��������� �� ���
-		// �������, � ������ ��, ������� ��������� � 
-		// �������� �������
+		// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 		bool move_possible = true;
 		ivec2 mo_cell_index = m->m_position.m_index;

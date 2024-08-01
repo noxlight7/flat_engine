@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #define STB_IMAGE_IMPLEMENTATION
 #define NOMINMAX
@@ -22,9 +22,9 @@
 	return;
 #endif
 
-#ifndef _WIN64
-#error unsupported arch (use x64 win).
-#endif
+//#ifndef _WIN64
+//#error unsupported arch (use x64 win).
+//#endif
 
 #include <iostream>
 #include <chrono>
@@ -44,5 +44,5 @@
 
 //#include "factory/engine.hpp"
 
-#pragma comment (lib, "opengl32.lib")
-#pragma comment (lib, "glfw3dll.lib")
+//#pragma comment (lib, "opengl32.lib")
+//#pragma comment (lib, "glfw3dll.lib")

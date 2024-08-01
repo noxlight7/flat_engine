@@ -13,8 +13,8 @@ std::tuple<double, double> to_tuple(const glm::vec2& vec);
 typedef struct Position
 {
 public:
-	Vector m_coords;			// Координаты в ячейке
-	ivec2 m_index;				// Индекс ячейки
+	Vector m_coords;			// РљРѕРѕСЂРґРёРЅР°С‚С‹ РІ СЏС‡РµР№РєРµ
+	ivec2 m_index;				// РРЅРґРµРєСЃ СЏС‡РµР№РєРё
 
 	Position() = default;
 	Position(Vector coords, ivec2 index);
@@ -27,24 +27,24 @@ public:
 	void shiftToCoordsSystem(ivec2 cell_index);
 	void shiftToCoordsSystem(Position pos);
 
-	// Вычисляет вектор, который нужно прибавить к позиции, 
-	// чтобы получить позицию объекта
+	// Р’С‹С‡РёСЃР»СЏРµС‚ РІРµРєС‚РѕСЂ, РєРѕС‚РѕСЂС‹Р№ РЅСѓР¶РЅРѕ РїСЂРёР±Р°РІРёС‚СЊ Рє РїРѕР·РёС†РёРё, 
+	// С‡С‚РѕР±С‹ РїРѕР»СѓС‡РёС‚СЊ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р°
 	vec2 getShift(Position obj);
 } Position;
 
-// Форма объектов, участвующих в столкновении
+// Р¤РѕСЂРјР° РѕР±СЉРµРєС‚РѕРІ, СѓС‡Р°СЃС‚РІСѓСЋС‰РёС… РІ СЃС‚РѕР»РєРЅРѕРІРµРЅРёРё
 enum CollisionType
 {
-	COL_LINE,					// Линия
-	COL_CIRCLE,					// Круг
-	COL_RECTANGLE,				// Прямоугольник
+	COL_LINE,					// Р›РёРЅРёСЏ
+	COL_CIRCLE,					// РљСЂСѓРі
+	COL_RECTANGLE,				// РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє
 };
 
-// Форма объекта
+// Р¤РѕСЂРјР° РѕР±СЉРµРєС‚Р°
 enum ObjectFormType
 {
-	FORM_CIRCLE = COL_CIRCLE,		// Круг
-	FORM_RECTANGLE = COL_RECTANGLE// Прямоугольник
+	FORM_CIRCLE = COL_CIRCLE,		// РљСЂСѓРі
+	FORM_RECTANGLE = COL_RECTANGLE// РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє
 };
 
 struct CircleFormData
@@ -84,14 +84,14 @@ public:
 	ObjectFormType m_type;
 };
 
-// Круглая область
+// РљСЂСѓРіР»Р°СЏ РѕР±Р»Р°СЃС‚СЊ
 struct CircleArea
 {
 	glm::vec2 m_pos;
 	float m_radius;
 };
 
-// Прямоугольная область
+// РџСЂСЏРјРѕСѓРіРѕР»СЊРЅР°СЏ РѕР±Р»Р°СЃС‚СЊ
 struct RectangleArea
 {
 	float m_left;

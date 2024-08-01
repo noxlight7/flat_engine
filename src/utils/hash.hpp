@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../entry.hpp"
+#include <string.h>
 
 template<typename _ty, _ty _value>
 struct CompileTimeHolder {

@@ -2,33 +2,33 @@
 #include <fstream>
 using namespace std;
 
-// Объект, имеющий идентификатор
+// РћР±СЉРµРєС‚, РёРјРµСЋС‰РёР№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ
 class IDObject
 {
 protected:
-	// Идентификатор объекта
+	// РРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РѕР±СЉРµРєС‚Р°
 	unsigned long m_id;
 };
 
-// Объект, имеющий имя
+// РћР±СЉРµРєС‚, РёРјРµСЋС‰РёР№ РёРјСЏ
 class NamedObject : IDObject
 {
 protected:
-	// Имя объекта
+	// РРјСЏ РѕР±СЉРµРєС‚Р°
 	char* m_name;
 };
 
-// Объект, имеющий название
+// РћР±СЉРµРєС‚, РёРјРµСЋС‰РёР№ РЅР°Р·РІР°РЅРёРµ
 class TitledObject : NamedObject
 {
 protected:
-	// Название объекта
+	// РќР°Р·РІР°РЅРёРµ РѕР±СЉРµРєС‚Р°
 	char* m_title;
 };
 
-class IDownloadable abstract
+class IDownloadable
 {
 public:
-	virtual void loadv(const FILE* f);		// Загружает объект из файла
-	virtual void savev(const FILE* f);		// Сохраняет объект в файл
+	virtual void loadv(const FILE* f);		// Р—Р°РіСЂСѓР¶Р°РµС‚ РѕР±СЉРµРєС‚ РёР· С„Р°Р№Р»Р°
+	virtual void savev(const FILE* f);		// РЎРѕС…СЂР°РЅСЏРµС‚ РѕР±СЉРµРєС‚ РІ С„Р°Р№Р»
 };

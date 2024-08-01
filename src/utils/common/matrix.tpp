@@ -35,7 +35,7 @@ void Matrix<T>::freeMemory() {
 template <typename T>
 T& Matrix<T>::operator()(int row, int col) {
     if (row >= rows || col >= cols || row < 0 || col < 0) {
-        throw std::out_of_range("Индекс вне границ матрицы");
+        throw std::out_of_range("РРЅРґРµРєСЃ РІРЅРµ РіСЂР°РЅРёС† РјР°С‚СЂРёС†С‹");
     }
     return data[row][col];
 }
@@ -43,7 +43,7 @@ T& Matrix<T>::operator()(int row, int col) {
 template <typename T>
 const T& Matrix<T>::operator()(int row, int col) const {
     if (row >= rows || col >= cols || row < 0 || col < 0) {
-        throw std::out_of_range("Индекс вне границ матрицы");
+        throw std::out_of_range("РРЅРґРµРєСЃ РІРЅРµ РіСЂР°РЅРёС† РјР°С‚СЂРёС†С‹");
     }
     return data[row][col];
 }
@@ -65,24 +65,24 @@ void Matrix<T>::resize(int newRows, int newCols, const T& initial) {
         newData[i] = new T[newCols];
     }
 
-    // Копирование старых значений в новую матрицу
+    // РљРѕРїРёСЂРѕРІР°РЅРёРµ СЃС‚Р°СЂС‹С… Р·РЅР°С‡РµРЅРёР№ РІ РЅРѕРІСѓСЋ РјР°С‚СЂРёС†Сѓ
     for (int i = 0; i < std::min(rows, newRows); ++i) {
         for (int j = 0; j < std::min(cols, newCols); ++j) {
             newData[i][j] = data[i][j];
         }
     }
 
-    // Заполнение новых элементов значением initial
+    // Р—Р°РїРѕР»РЅРµРЅРёРµ РЅРѕРІС‹С… СЌР»РµРјРµРЅС‚РѕРІ Р·РЅР°С‡РµРЅРёРµРј initial
     for (int i = 0; i < newRows; ++i) {
         for (int j = (i < rows ? cols : 0); j < newCols; ++j) {
             newData[i][j] = initial;
         }
     }
 
-    // Освобождение старой памяти
+    // РћСЃРІРѕР±РѕР¶РґРµРЅРёРµ СЃС‚Р°СЂРѕР№ РїР°РјСЏС‚Рё
     freeMemory();
 
-    // Присвоение новых значений
+    // РџСЂРёСЃРІРѕРµРЅРёРµ РЅРѕРІС‹С… Р·РЅР°С‡РµРЅРёР№
     data = newData;
     rows = newRows;
     cols = newCols;

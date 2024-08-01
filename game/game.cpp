@@ -31,8 +31,8 @@ void Game::onInit() {
 }
 
 void Game::onRender() {
-	// Сюда добавить код, выполняющийся
-	// перед обработкой кадра 
+	// РЎСЋРґР° РґРѕР±Р°РІРёС‚СЊ РєРѕРґ, РІС‹РїРѕР»РЅСЏСЋС‰РёР№СЃСЏ
+	// РїРµСЂРµРґ РѕР±СЂР°Р±РѕС‚РєРѕР№ РєР°РґСЂР° 
 	static auto start_time = std::chrono::high_resolution_clock::now();
 	std::chrono::steady_clock::time_point x;
 

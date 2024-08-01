@@ -15,26 +15,26 @@ public:
 	~Engine();
 	void run();
 
-	// Выполняется перед запуском цикла обработки сообщений
+	// Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ РїРµСЂРµРґ Р·Р°РїСѓСЃРєРѕРј С†РёРєР»Р° РѕР±СЂР°Р±РѕС‚РєРё СЃРѕРѕР±С‰РµРЅРёР№
 	virtual void onInit() {}
 	virtual void onDraw() {}
 	virtual void onClose() {}
-	// Выполняется при каждой прорисовке
+	// Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ РїСЂРё РєР°Р¶РґРѕР№ РїСЂРѕСЂРёСЃРѕРІРєРµ
 	virtual void onRender() {}
 	virtual void onDestroy() {}
 	virtual void onMouseMove() {}
 	virtual void onMouseDown() {}
 	virtual void onMouseUp() {}
-	// Выполняется при нажатии клавиши
+	// Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ РїСЂРё РЅР°Р¶Р°С‚РёРё РєР»Р°РІРёС€Рё
 	virtual void onKeyDown(int key, int scancode, int action, int mods) {}
-	// Выполняется при отжатии клавиши
+	// Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ РїСЂРё РѕС‚Р¶Р°С‚РёРё РєР»Р°РІРёС€Рё
 	virtual void onKeyUp(int key, int scancode, int action, int mods) {}
-	// Выполняется при изменении размера окна
+	// Р’С‹РїРѕР»РЅСЏРµС‚СЃСЏ РїСЂРё РёР·РјРµРЅРµРЅРёРё СЂР°Р·РјРµСЂР° РѕРєРЅР°
 	virtual void onResize(int width, int height) {}
-	// Рендерер
+	// Р РµРЅРґРµСЂРµСЂ
 	// Renderer* m_renderer;
 
-	// Возвращает true, если клавиша scancode нажата
+	// Р’РѕР·РІСЂР°С‰Р°РµС‚ true, РµСЃР»Рё РєР»Р°РІРёС€Р° scancode РЅР°Р¶Р°С‚Р°
 	bool isKeyPressed(int scancode);
 
 	inline IRendererWorld* getWorld() { return m_world; }

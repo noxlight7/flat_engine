@@ -4,7 +4,7 @@
 //}
 
 void Engine::initTime() {
-	m_start_frame_processing_time = std::chrono::high_resolution_clock::now();
+	m_start_frame_processing_time = std::chrono::steady_clock::now();
 	m_delta_time = 0;
 }
 
@@ -13,7 +13,7 @@ void Engine::drawInterface() {
 }
 
 void Engine::updateTime() {
-	auto current_time = std::chrono::high_resolution_clock::now();
+	auto current_time = std::chrono::steady_clock::now();
 	m_delta_time = std::chrono::duration<float, std::chrono::seconds::period>
 		(current_time - m_start_frame_processing_time).count();
 	m_start_frame_processing_time = current_time;
