@@ -44,5 +44,7 @@
 
 //#include "factory/engine.hpp"
 
-//#pragma comment (lib, "opengl32.lib")
-//#pragma comment (lib, "glfw3dll.lib")
+#ifdef _WIN32
+	#pragma comment (lib, "opengl32.lib")
+	#pragma comment (lib, "glfw3dll.lib")
+#endif

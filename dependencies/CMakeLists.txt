@@ -14,8 +14,8 @@ if(WIN32)
 	file(GLOB_RECURSE lib_files_glfw ${CMAKE_CURRENT_LIST_DIR}/glfw/lib/*.lib)
 	file(GLOB_RECURSE dll_files_glfw ${CMAKE_CURRENT_LIST_DIR}/glfw/lib/*.dll)
 
-	file(GLOB_RECURSE lib_files_vulcan ${CMAKE_CURRENT_LIST_DIR}/vulcan/lib/*.lib)
-	file(GLOB_RECURSE dll_files_vulcan ${CMAKE_CURRENT_LIST_DIR}/vulcan/lib/*.dll)
+	# file(GLOB_RECURSE lib_files_vulcan ${CMAKE_CURRENT_LIST_DIR}/vulcan/lib/*.lib)
+	# file(GLOB_RECURSE dll_files_vulcan ${CMAKE_CURRENT_LIST_DIR}/vulcan/lib/*.dll)
 
 	file(GLOB_RECURSE lib_files_opengl ${CMAKE_CURRENT_LIST_DIR}/opengl/lib/*.lib)
 	file(GLOB_RECURSE dll_files_opengl ${CMAKE_CURRENT_LIST_DIR}/opengl/lib/*.dll)
