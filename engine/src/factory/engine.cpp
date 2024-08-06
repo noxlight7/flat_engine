@@ -33,7 +33,6 @@ void Engine::init(const char* title, uint32_t width, uint32_t height) {
 
 void Engine::initWindow(const char* title) {
 	glfwInit();
-
 	m_window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 	glfwMakeContextCurrent( m_window );
 	glfwSwapInterval( m_vsync ); // turns glfw vsync.
