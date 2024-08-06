@@ -2,10 +2,8 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm)
 
 if(WIN32)
 	file(GLOB_RECURSE lib_files_glfw ${CMAKE_CURRENT_LIST_DIR}/glfw/lib/*.lib)
-	file(GLOB_RECURSE dll_files_glfw ${CMAKE_CURRENT_LIST_DIR}/glfw/lib/*.dll)
 
 	file(GLOB_RECURSE lib_files_opengl ${CMAKE_CURRENT_LIST_DIR}/opengl/lib/*.lib)
-	file(GLOB_RECURSE dll_files_opengl ${CMAKE_CURRENT_LIST_DIR}/opengl/lib/*.dll)
 
 	file(GLOB_RECURSE src_files_glfw
 			${CMAKE_CURRENT_LIST_DIR}/glfw/GLFW/*.[ch]pp
@@ -18,13 +16,14 @@ if(WIN32)
 	)
 
 	set(INCLUDE_LIBS
-			${src_files_glfw}
-			${src_files_opengl}
+			${CMAKE_CURRENT_SOURCE_DIR}/glfw
+			${CMAKE_CURRENT_SOURCE_DIR}/opengl
 	)
 
 	set(DEPENDENCY_LIBS
 			${lib_files_glfw}
 			${lib_files_opengl}
+			${glm}
 	)
 
 else()
