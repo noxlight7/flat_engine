@@ -1,5 +1,5 @@
 #include "texture_manager.hpp"
-#include <stb/stb_image.h>
+#include <stb_image.h>
 
 Texture::Texture( const char *path ) {
 	// flip y-axis for opengl renderer.

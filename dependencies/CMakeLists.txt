@@ -1,6 +1,3 @@
-include_directories(${CMAKE_CURRENT_LIST_DIR})
-
-include_directories("stb/stb_image.h")
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm)
 
 if(WIN32)
@@ -11,16 +8,16 @@ if(WIN32)
 	file(GLOB_RECURSE dll_files_opengl ${CMAKE_CURRENT_LIST_DIR}/opengl/lib/*.dll)
 
 	file(GLOB_RECURSE src_files_glfw
-			${CMAKE_CURRENT_LIST_DIR}/glfw/src/*.[ch]pp
-			${CMAKE_CURRENT_LIST_DIR}/glfw/src/*.[ch]
+			${CMAKE_CURRENT_LIST_DIR}/glfw/GLFW/*.[ch]pp
+			${CMAKE_CURRENT_LIST_DIR}/glfw/GLFW/*.[ch]
 	)
 
 	file(GLOB_RECURSE src_files_opengl
-			${CMAKE_CURRENT_LIST_DIR}/opengl/src/*.[ch]pp
-			${CMAKE_CURRENT_LIST_DIR}/opengl/src/*.[ch]
+			${CMAKE_CURRENT_LIST_DIR}/opengl/GL/*.[ch]pp
+			${CMAKE_CURRENT_LIST_DIR}/opengl/GL/*.[ch]
 	)
 
-	include_directories(
+	set(INCLUDE_LIBS
 			${src_files_glfw}
 			${src_files_opengl}
 	)
@@ -41,13 +38,24 @@ else()
 	pkg_search_module(GLFW REQUIRED glfw3)
 	pkg_search_module(GLEW REQUIRED glew)
 
-	include_directories(
-			${GLFW_INCLUDE_DIRS}
-			${GLEW_INCLUDE_DIRS}
-	)
-
 	set(DEPENDENCY_LIBS
 			${GLFW_LIBRARIES}
 			${GLEW_LIBRARIES}
+			${glm}
+	)
+
+	set(INCLUDE_LIBS
+			${GLFW_INCLUDE_DIRS}
+			${GLEW_INCLUDE_DIRS}
 	)
 endif()
+
+add_library(dependencies INTERFACE)
+
+target_include_directories(dependencies INTERFACE
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/stb
+		${INCLUDE_LIBS}
+)
+
+target_link_libraries(dependencies INTERFACE ${DEPENDENCY_LIBS})

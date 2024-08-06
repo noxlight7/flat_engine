@@ -8,14 +8,14 @@ project(${solution_name})
 
 include_directories("src" "game")
 
-include("dependencies/CMakeLists.txt")
+add_subdirectory(dependencies)
 
 add_executable(${solution_name}
 		${src_files}
 		${game_files}
 )
 
-target_link_libraries(${solution_name} ${DEPENDENCY_LIBS})
+target_link_libraries(${solution_name} PUBLIC dependencies)
 
 if(WIN32)
 	add_custom_target(dlls_glfw COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_glfw} ${CMAKE_BINARY_DIR})

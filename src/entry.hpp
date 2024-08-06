@@ -35,8 +35,8 @@
 #include <fstream>
 
 #include <glm/glm.hpp>
-#include <opengl/src/glew.h>
-#include <glfw/src/glfw3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 
 #include "factory/definitions.hpp"
 
