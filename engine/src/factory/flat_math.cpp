@@ -2,6 +2,6 @@
 
 namespace math {
 	bool fcompare(float x, float y) {
-		return abs(x - y) < g_fepsilon;
+		return fabsf(x - y) < g_fepsilon;
 	}
 }

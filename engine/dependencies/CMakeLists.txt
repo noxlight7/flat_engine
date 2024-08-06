@@ -16,8 +16,8 @@ if(WIN32)
 	)
 
 	set(INCLUDE_LIBS
-			${CMAKE_CURRENT_SOURCE_DIR}/glfw
-			${CMAKE_CURRENT_SOURCE_DIR}/opengl
+			${CMAKE_CURRENT_LIST_DIR}/glfw
+			${CMAKE_CURRENT_LIST_DIR}/opengl
 	)
 
 	set(DEPENDENCY_LIBS
@@ -49,12 +49,3 @@ else()
 	)
 endif()
 
-add_library(dependencies INTERFACE)
-
-target_include_directories(dependencies INTERFACE
-		${CMAKE_CURRENT_SOURCE_DIR}
-		${CMAKE_CURRENT_SOURCE_DIR}/stb
-		${INCLUDE_LIBS}
-)
-
-target_link_libraries(dependencies INTERFACE ${DEPENDENCY_LIBS})
