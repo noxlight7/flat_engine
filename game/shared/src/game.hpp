@@ -1,14 +1,14 @@
 #pragma once
 
-#include "main.hpp"
+#include "../../client/src/main.hpp"
 #include "input/input.hpp"
 #include "physics/physics.hpp"
 #include "factory/engine.hpp"
 
 
-class Game : public Engine {
+class GameEngine : public Engine {
 public:
-	Game(const char* title, uint32_t width = 1024, uint32_t height = 768);
+	GameEngine(const char* title, uint32_t width = 1024, uint32_t height = 768);
 	void onInit();
 	void onRender();
 	Vector getPlayerKeyboardSpeedDirection();
@@ -22,4 +22,4 @@ protected:
 };
 
 inline const auto g_game =
-	std::make_shared<Game>("Game");
+	std::make_shared<GameEngine>("GameEngine");

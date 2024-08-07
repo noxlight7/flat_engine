@@ -10,6 +10,7 @@ add_executable(client
 )
 
 target_link_libraries(client PUBLIC engine)
+target_link_libraries(client PUBLIC shared)
 
 add_custom_target(copy_assets
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/resources ${CMAKE_BINARY_DIR}/game/client/assets
