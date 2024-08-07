@@ -25,4 +25,13 @@ target_include_directories(engine PUBLIC
         ${INCLUDE_LIBS}
 )
 
+if(WIN32)
+    file(GLOB_RECURSE dll_files_glfw dependencies/glfw/lib/*.dll)
+    file(GLOB_RECURSE dll_files_opengl dependencies/opengl/lib/*.dll)
+    add_custom_target(dlls_glfw COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_glfw} ${CMAKE_BINARY_DIR}/game/client)
+    add_dependencies(engine dlls_glfw)
+    add_custom_target(dlls_opengl COMMAND ${CMAKE_COMMAND} -E copy ${dll_files_opengl} ${CMAKE_BINARY_DIR}/game/client)
+    add_dependencies(engine dlls_opengl)
+endif()
+
 target_link_libraries(engine PUBLIC ${DEPENDENCY_LIBS})

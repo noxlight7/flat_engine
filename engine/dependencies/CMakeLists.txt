@@ -48,4 +48,3 @@ else()
 			${GLEW_INCLUDE_DIRS}
 	)
 endif()
-
