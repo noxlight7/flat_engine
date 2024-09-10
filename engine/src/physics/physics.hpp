@@ -10,7 +10,7 @@
 #include "utils/common.hpp"
 #include "display/renderer.hpp"
 #include "display/camera.hpp"
-#include "display/draw_info.h"
+#include "display/draw_info.hpp"
 #include "base_physics.hpp"
 //#include "QuestEvents.h"
 
@@ -88,7 +88,6 @@ protected:
 	Position m_position;			// Позиция объекта
 	ObjectForm m_form;				// Данные о форме объекта
 	District* m_current_district;	// Область, в которой находится объект
-	VertexBaseEntity* m_entity;		// Entity, на сервере всегда nullptr
 	SpaceObjectDrawInfo* m_draw_info;
 };
 

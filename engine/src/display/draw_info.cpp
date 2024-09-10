@@ -1,4 +1,4 @@
-#include "draw_info.h"
+#include "draw_info.hpp"
 #include "physics/physics.hpp"
 
 SpaceObjectDrawInfo::SpaceObjectDrawInfo() : m_obj(), m_origin(), m_texture(nullptr) {
