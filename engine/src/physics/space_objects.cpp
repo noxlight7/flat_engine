@@ -7,7 +7,7 @@ using namespace std;
 using namespace math;
 
 LocatableObject::LocatableObject(ObjectForm &&form)
-	: m_current_district(nullptr), m_entity(), m_form(form), m_position(), 
+	: m_current_district(nullptr), m_form(form), m_position(),
 	m_draw_info(nullptr){
 	/*if (texture != nullptr) {
 		m_entity = new VertexBaseEntity();
