@@ -2,4 +2,4 @@
 
 #include "entry.hpp"
 
-#include "../../shared/src/game.hpp"
+#include "client_game_engine/game.hpp"

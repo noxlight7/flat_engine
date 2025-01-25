@@ -5,21 +5,21 @@
 #include "shaders/shader.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 
-void Renderer::init( GLFWwindow *window ) {
+void Renderer::init( GLFWwindow *window, std::vector<std::string> textures_names ) {
 	m_window = window;
 
 	if ( glewInit( ) != GLEW_OK )
 		return;
 
 	createTextures( );
+	for (const auto &texture_name : textures_names ) {
+		loadTexture(texture_name);
+	}
 	setupVAO( );
 }
 
 void Renderer::createTextures( ) {
-	loadTexture( HASH( "test" ), "assets/sprites/test.png" );
-	loadTexture( HASH( "test2" ), "assets/sprites/test2.png" );
-	loadTexture( HASH( "circle_move" ), "assets/sprites/circle_move.png" );
-	loadTexture( HASH( "circle_static" ), "assets/sprites/circle_static.png" );
+
 }
 
 void Renderer::setupVAO( ) {
@@ -38,10 +38,8 @@ void Renderer::setupVAO( ) {
 	m_rectangle_entity.createObject( );
 }
 
-void Renderer::loadTexture( const fnv1a::value_type entry, const char *path ) {
-	Texture texture = Texture( path );
-
-	g_textures->push( entry, texture );
+void Renderer::loadTexture(std::string path) {
+	g_textures->push( std::move(path) );
 }
 
 void Renderer::destroy( ) {

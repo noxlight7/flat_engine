@@ -1,11 +1,11 @@
 #include "texture_manager.hpp"
 #include <stb_image.h>
 
-Texture::Texture( const char *path ) {
+Texture::Texture( const std::string& path ) {
 	// flip y-axis for opengl renderer.
 	stbi_set_flip_vertically_on_load( true );
 
-	m_pixels = stbi_load( path, &m_width, &m_height, &m_comps, NULL );
+	m_pixels = stbi_load( path.c_str(), &m_width, &m_height, &m_comps, NULL );
 	if ( m_pixels )
 		setParameters( );
 }

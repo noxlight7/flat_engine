@@ -1,5 +1,11 @@
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm)
 
+## Находим Boost
+#find_package(Boost REQUIRED COMPONENTS system)
+#if(NOT Boost_FOUND)
+#    message(FATAL_ERROR "Boost not found. Please install it with 'sudo apt-get install libboost-all-dev'")
+#endif()
+
 if(WIN32)
 	file(GLOB_RECURSE lib_files_glfw ${CMAKE_CURRENT_LIST_DIR}/glfw/lib/*.lib)
 
@@ -41,10 +47,12 @@ else()
 			${GLFW_LIBRARIES}
 			${GLEW_LIBRARIES}
 			${glm}
+			${Boost_LIBRARIES}  # Добавляем библиотеки Boost
 	)
 
 	set(INCLUDE_LIBS
 			${GLFW_INCLUDE_DIRS}
 			${GLEW_INCLUDE_DIRS}
+			${Boost_INCLUDE_DIRS}  # Добавляем include-директории Boost
 	)
 endif()

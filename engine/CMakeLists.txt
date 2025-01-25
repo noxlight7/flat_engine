@@ -1,15 +1,43 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(engine)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # add_subdirectory(dependencies)
 include("dependencies/CMakeLists.txt")
 
-file(GLOB_RECURSE src_files src/*.[tch]pp)
+add_subdirectory(src/network)
+
+file(GLOB_RECURSE src_files_client src/client/*.[tch]pp)
+file(GLOB_RECURSE src_files_server src/server/*.[tch]pp)
+file(GLOB_RECURSE src_files_server src/display/*.[tch]pp)
+file(GLOB_RECURSE src_files_entities src/entities/*.[tch]pp)
+file(GLOB_RECURSE src_files_factory src/factory/*.[tch]pp)
+file(GLOB_RECURSE src_files_generators src/generators/*.[tch]pp)
+file(GLOB_RECURSE src_files_input src/input/*.[tch]pp)
+file(GLOB_RECURSE src_files_physics src/physics/*.[tch]pp)
+file(GLOB_RECURSE src_files_shaders src/shaders/*.[tch]pp)
+file(GLOB_RECURSE src_files_texts src/texts/*.[tch]pp)
+file(GLOB_RECURSE src_files_utils src/utils/*.[tch]pp)
+
+set(src_files
+        ${src_files_client}
+        ${src_files_server}
+        ${src_files_entities}
+        ${src_files_factory}
+        ${src_files_generators}
+        ${src_files_input}
+        ${src_files_physics}
+        ${src_files_shaders}
+        ${src_files_texts}
+        ${src_files_utils}
+        ${src_files_display}
+        src/entry.hpp
+)
 
 add_library(engine STATIC ${src_files})
+target_link_libraries(engine PUBLIC ogf-network)
 
 target_include_directories(engine PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/src

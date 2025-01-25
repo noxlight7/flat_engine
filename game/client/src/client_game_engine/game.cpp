@@ -4,24 +4,26 @@
 #include "physics/collisions.hpp"
 #include "display/camera.hpp"
 #include "generators/so_gens.hpp"
+#include <serializer.hpp>
 
-GameEngine::GameEngine(const char* title, uint32_t width, uint32_t height)
-	: Engine(), m_district(100, 100),
-	m_test_obj(true, ObjectForm(0.8f, 0.8f)),
-	m_test_obj2(true, ObjectForm(1.f, 1.2f))
+GameEngine::GameEngine(boost::asio::io_context& io_context, std::string host, uint16_t port)
+	: ClientEngine(io_context, std::move(host), port), m_district(100, 100),
+      m_test_obj(true, ObjectForm(0.8f, 0.8f)),
+      m_test_obj2(true, ObjectForm(1.f, 1.2f))
 {
-	Engine::init(title, width, height);
-	m_district.setRenderer(width, height);
+	ClientEngine::init(k_wnd_title, k_wnd_width, k_wnd_height);
+	m_district.setRenderer(k_wnd_width, k_wnd_height);
 	this->setWorld(m_district.getRenderer());
-	m_test_obj.addDrawInfo(g_textures->get(HASH("test")));
-	m_test_obj2.addDrawInfo(g_textures->get(HASH("test2")));
+	m_test_obj.addDrawInfo(g_textures->get("assets/sprites/test.png"));
+	m_test_obj2.addDrawInfo(g_textures->get("assets/sprites/test2.png"));
 }
 
 void GameEngine::onInit() {
 	m_test_obj.moveTo(&m_district, 90, 90);
 	m_test_obj2.moveTo(&m_district, 87, 87);
 	m_district.getRenderer()->setCameraHeight(2.5f);
-	SpaceObjectGenerator::generateSpaceObjects(&m_district, 0.123f, g_textures->get(HASH("test2")));
+	SpaceObjectGenerator::generateSpaceObjects(&m_district, 0.123f,
+		g_textures->get("assets/sprites/test2.png"));
 }
 
 void GameEngine::onRender() {
@@ -52,6 +54,23 @@ void GameEngine::onRender() {
 	g_camera->setOrigin(m_test_obj.getPosition());
 
 	m_district.moveObjects(dt);
+
+	// m_session->sendPacket(flat_engine::network::SHARED_TEST_TEXT_MESSAGE,
+	// 	flat_engine::network::Serializer::serializeTextMessage("123"));
+	m_session->sendPacket(flat_engine::network::SERVER_SEND_PLAYER_AVATAR,
+		flat_engine::network::Serializer::serializePlayerAvatar(
+			m_test_obj.getPosition().m_coords.x, m_test_obj.getPosition().m_coords.y,
+			m_test_obj.getPosition().m_index.x, m_test_obj.getPosition().m_index.y,
+			v.x, v.y));
+}
+
+std::vector<std::string> GameEngine::getAllTexturesFullNames() {
+	return {
+		"assets/sprites/test.png",
+		"assets/sprites/test2.png",
+		"assets/sprites/circle_move.png",
+		"assets/sprites/circle_static.png"
+	};
 }
 
 Vector GameEngine::getPlayerKeyboardSpeedDirection() {
@@ -84,6 +103,5 @@ Vector GameEngine::getPlayer2KeyboardSpeedDirection() {
 	return v_direct;
 }
 
-void GameEngine::init()
-{
+void GameEngine::init() {
 }

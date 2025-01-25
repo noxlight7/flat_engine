@@ -1,18 +1,14 @@
 #pragma once
 #include <glm/glm.hpp>
-//#include <stdio.h>
 #include <fstream>
 #include <list>
-#include <vector>
 #include <cinttypes>
-#include <unordered_map>
 #include "../texts/texts.hpp"
 #include "utils/common.hpp"
 #include "display/renderer.hpp"
 #include "display/camera.hpp"
 #include "display/draw_info.hpp"
 #include "base_physics.hpp"
-//#include "QuestEvents.h"
 
 using namespace std;
 using namespace glm;
@@ -73,12 +69,12 @@ private:
 // Позиционный объект. Имеет x, y координаты
 class LocatableObject {
 public:
-	LocatableObject(ObjectForm &&form = ObjectForm(0.5));
+	explicit LocatableObject(ObjectForm &&form = ObjectForm(0.5));
 	LocatableObject(LocatableObject&);
 	~LocatableObject();
 
 	// Обновляет индексы клеток в соответствии с координатами
-	void normalizeCoords();
+	// void normalizeCoords();
 
 	inline ObjectForm& getForm() { return m_form; }
 	void addDrawInfo(Texture *texture);
@@ -295,8 +291,8 @@ class DistrictRenderer : public IRendererWorld {
 	friend District;
 public:
 	DistrictRenderer(District* district, int out_width, int out_height);
-	virtual void drawWorld() override;
-	virtual float getCameraHeight() override { return g_camera->getHeight(); }
+	void drawWorld() override;
+	float getCameraHeight() override { return g_camera->getHeight(); }
 	vec3 getCameraPosition() { return g_camera->getGlobalOrigin(); }
 	void setCameraPosition(vec3 coords) { g_camera->setGlobalOrigin(coords); }
 	void setCameraHeight(float height) { g_camera->setHeight(height); }
@@ -305,9 +301,4 @@ private:
 	District* m_district;
 	int m_width;
 	int m_height;
-};
-
-class Player : TitledObject
-{
-	bool m_computer;
 };

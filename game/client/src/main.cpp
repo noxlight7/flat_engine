@@ -1,5 +1,5 @@
-#include "main.hpp"
+#include "client_game_engine/game.hpp"
 
 int main( ) {
-	g_game->run();
+	GameEngine::instance().run();
 }

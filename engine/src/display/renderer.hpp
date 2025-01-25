@@ -10,7 +10,7 @@
 class Texture;
 class Sprite {
 public:
-	Sprite( const fnv1a::value_type texture_id );
+	Sprite( const GLuint texture_id );
 	~Sprite( );
 
 	void create( );
@@ -23,7 +23,7 @@ private:
 
 class IRenderer {
 public:
-	virtual void init( GLFWwindow *window ) = 0;
+	virtual void init( GLFWwindow *window, std::vector<std::string> textures_names ) = 0;
 	virtual void destroy( ) = 0;
 
 	virtual void drawFrame( ) = 0;
@@ -51,7 +51,7 @@ public:
 
 class Renderer : public IRenderer {
 public:
-	virtual void init( GLFWwindow *window ) override;
+	virtual void init( GLFWwindow *window, std::vector<std::string> textures_names ) override;
 	virtual void destroy( ) override;
 
 	void setupVAO( );
@@ -69,11 +69,11 @@ public:
 		Texture* texture,
 		vec3 origin) override;
 
-	void createTextures( );
+	virtual void createTextures( );
 
 	VertexBaseEntity m_rectangle_entity{};
 protected:
-	void loadTexture( const fnv1a::value_type entry, const char *path );
+	void loadTexture(std::string path);
 public:
 };
 
