@@ -139,7 +139,7 @@ void ObjectForm::releaseData()
 	}
 }
 
-vec2&& ObjectForm::getSize(float angle)
+vec2 ObjectForm::getSize(float angle)
 {
 	vec2 size{};
 	switch (m_type)

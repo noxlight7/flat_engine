@@ -14,6 +14,7 @@ project(client)
 
 add_executable(client
     ${game_files}
+        src/client_constants.h
 )
 
 target_link_libraries(client PUBLIC 

@@ -42,7 +42,7 @@ set(OGF_NETWORK_SOURCES
 # Создаём статическую библиотеку (можно STATIC или SHARED)
 add_library(ogf-network SHARED
         ${OGF_NETWORK_SOURCES}
-        ${GENERATED_HEADERS}  # Чтобы они были видны на этапе компиляции (хотя .h)
+        ${GENERATED_HEADERS}  # Чтобы они были видны на этапе компиляции
 )
 
 # Зависимость от generate_flatbuffers
@@ -50,8 +50,6 @@ add_dependencies(ogf-network generate_flatbuffers)
 
 # Подключаем нужные директории
 target_include_directories(ogf-network PUBLIC
-        # Папка, где лежат *.h фреймворка (shared, server, client):
-        # Например, если вы хотите #include "shared/transport.h" -- можно прописать так:
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/shared>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/server>

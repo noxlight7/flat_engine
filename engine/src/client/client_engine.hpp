@@ -2,7 +2,7 @@
 
 #include "../entry.hpp"
 #include "../input/input.hpp"
-#include "../display/renderer.hpp"
+#include "../display/renderer_world.hpp"
 #include "client/network_client.h"
 
 #include <boost/asio.hpp>
@@ -10,11 +10,19 @@
 #include <array>
 #include <vector>
 
+#include <renderer.hpp>
+#include <utils/scheduler.hpp>
+
+#include "display/display_objects.hpp"
+#include "display/display_system.hpp"
+#include "utils/pool_id.hpp"
+
 using tcp = boost::asio::ip::tcp;
 
 class ClientEngine {
 public:
-    void init(const std::string& title, uint32_t width = 1024, uint32_t height = 768);
+    void init(const std::string& title, std::string host, uint16_t port,
+        uint32_t width = 1024, uint32_t height = 768);
     virtual void run();
 
     // Выполняется перед запуском цикла обработки сообщений
@@ -23,6 +31,7 @@ public:
     virtual void onClose() {}
     // Выполняется при каждой прорисовке
     virtual void onRender() {}
+    virtual void onLogicUpdate() {}
     virtual void onDestroy() {}
     virtual void onMouseMove() {}
     virtual void onMouseDown() {}
@@ -37,33 +46,36 @@ public:
     // Возвращает true, если клавиша scancode нажата
     bool isKeyPressed(int scancode);
 
-    inline IRendererWorld* getWorld() { return m_world; }
-    inline void setWorld(IRendererWorld* world) { m_world = world; }
+    IRendererWorld* getWorld() { return m_world; }
+    void setWorld(IRendererWorld* world) { m_world = world; }
 
-    inline float getDeltaTime() { return m_delta_time; }
-    inline std::chrono::steady_clock::time_point 
-        getStartFrameProcessingTime() { return m_start_frame_processing_time; }
-    inline uint32_t getWidth() { return m_width; }
-    inline uint32_t getHeight() { return m_height; }
+    float getDeltaTime() const { return m_delta_time; }
+    std::chrono::steady_clock::time_point
+        getStartFrameProcessingTime() const { return m_start_frame_processing_time; }
+    uint32_t getWidth() const { return m_width; }
+    uint32_t getHeight() const { return m_height; }
 
-    // Сетевые методы
-    // bool connect(const std::string& host, unsigned short port);
-    // void send(const std::vector<uint8_t>& data);
-    // virtual void onDataReceived(const std::array<uint8_t, 1024>& data, std::size_t length) {}
-    // virtual void onDisconnected() {}
-    virtual std::vector<std::string> getAllTexturesFullNames() { return {}; }
+    virtual void initDisplayObjects() = 0;
 
 protected:
-    boost::asio::io_context& m_io_context;
-    thread m_async_thread;
+    boost::asio::io_context m_receiving_context;
+    boost::asio::io_context m_processing_context;
+    Scheduler m_scheduler;
+    PoolID m_pool_id;
+    thread m_message_receiving_thread;
+    thread m_processing_thread;
     uint32_t m_width, m_height;
     bool m_button_state[KEYS_AMOUNT]{};
     bool m_vsync{ true };
     std::shared_ptr<flat_engine::network::ClientSession> m_session;
+    DisplaySystem m_display_system;
+    DisplayObjects m_objects_types_textures;
+    std::unique_ptr<IRenderer> m_renderer{};
+
+    std::mutex m_renderer_mutex;
 
     virtual ~ClientEngine();
-    ClientEngine(boost::asio::io_context& io_context, std::string host, uint16_t port);
-
+    ClientEngine();
 
 private:
     IRendererWorld* m_world;
@@ -80,6 +92,7 @@ private:
     void setCallbacks();
     static void windowResizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void windowCloseCallback(GLFWwindow* window);
 
     // void startReceive();
 };

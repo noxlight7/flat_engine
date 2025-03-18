@@ -1,0 +1,28 @@
+// schemas/player_avatar.fbs
+namespace Game;
+
+struct Vec2F {
+  x: float;
+  y: float;
+}
+
+struct Vec2I {
+  x: int;
+  y: int;
+}
+
+struct Position {
+  in_cell_coords: Vec2F;
+  cell_coords: Vec2I;
+}
+
+struct DistrictObject {
+  position: Position;
+  speed: Vec2F;
+}
+
+table PlayerAvatarT {
+  player_info: DistrictObject;
+}
+
+root_type PlayerAvatarT;

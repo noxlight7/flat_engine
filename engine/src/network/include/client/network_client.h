@@ -43,9 +43,11 @@ namespace flat_engine::network {
 
         void doResolve() {
             auto self = shared_from_this();
+            std::cout << "Connection to " << host_ << ":" << port_ << std::endl;
             resolver_.async_resolve(host_, std::to_string(port_),
                 [this, self](const boost::system::error_code& ec,
                     const boost::asio::ip::tcp::resolver::results_type& results) {
+                    std::cout << "Resolve done" << std::endl;
                     if (!ec) {
                         std::cout << "[Client] Resolve OK" << std::endl;
                         doConnect(results);

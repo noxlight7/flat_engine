@@ -3,6 +3,6 @@
 
 class SpaceObjectGenerator {
 public:
-	static void generateSpaceObjects(District* district, float fill_coeff, Texture* tex);
+	static void generateSpaceObjects(District* district, float fill_coeff, uint32_t type_id, PoolID& pool);
 };
 

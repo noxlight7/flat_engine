@@ -2,33 +2,35 @@
 #include "chrono"
 #include "utils/hash.hpp"
 #include "physics/collisions.hpp"
-#include "display/camera.hpp"
+#include "display/game_camera.hpp"
 #include "generators/so_gens.hpp"
 #include <serializer.hpp>
 
-GameEngine::GameEngine(boost::asio::io_context& io_context, std::string host, uint16_t port)
-	: ClientEngine(io_context, std::move(host), port), m_district(100, 100),
-      m_test_obj(true, ObjectForm(0.8f, 0.8f)),
-      m_test_obj2(true, ObjectForm(1.f, 1.2f))
+#include "shared_constants.hpp"
+
+GameEngine::GameEngine(std::string host, uint16_t port)
+	: ClientEngine(), m_district(100, 100),
+      m_test_obj(&m_pool_id, true, shared_constants::k_player_object_type_id,
+      	ObjectForm(0.8f, 0.8f)),
+      m_test_obj2(&m_pool_id, true, shared_constants::k_player_object_type_id,
+      	ObjectForm(1.f, 1.2f))
 {
-	ClientEngine::init(k_wnd_title, k_wnd_width, k_wnd_height);
 	m_district.setRenderer(k_wnd_width, k_wnd_height);
 	this->setWorld(m_district.getRenderer());
-	m_test_obj.addDrawInfo(g_textures->get("assets/sprites/test.png"));
-	m_test_obj2.addDrawInfo(g_textures->get("assets/sprites/test2.png"));
+	ClientEngine::init(k_wnd_title, std::move(host), port, k_wnd_width, k_wnd_height);
 }
 
 void GameEngine::onInit() {
 	m_test_obj.moveTo(&m_district, 90, 90);
 	m_test_obj2.moveTo(&m_district, 87, 87);
-	m_district.getRenderer()->setCameraHeight(2.5f);
+	m_renderer->getCurrentCamera()->setHeight(10.f);
 	SpaceObjectGenerator::generateSpaceObjects(&m_district, 0.123f,
-		g_textures->get("assets/sprites/test2.png"));
+		shared_constants::k_wall_object_type_id, m_pool_id);
 }
 
-void GameEngine::onRender() {
+void GameEngine::onLogicUpdate() {
 	// Сюда добавить код, выполняющийся
-	// перед обработкой кадра 
+	// перед обработкой кадра
 	static auto start_time = std::chrono::high_resolution_clock::now();
 	std::chrono::steady_clock::time_point x;
 
@@ -51,7 +53,7 @@ void GameEngine::onRender() {
 	m_test_obj2.setSpeedDirection(v2);
 	m_test_obj2.setCurrentSpeed(v2.x != 0 || v2.y != 0 ? 5.27f : 0.f);
 
-	g_camera->setOrigin(m_test_obj.getPosition());
+	dynamic_cast<Camera*>(m_renderer->getCurrentCamera().get())->setOrigin(m_test_obj.getPosition());
 
 	m_district.moveObjects(dt);
 
@@ -64,13 +66,17 @@ void GameEngine::onRender() {
 			v.x, v.y));
 }
 
-std::vector<std::string> GameEngine::getAllTexturesFullNames() {
-	return {
-		"assets/sprites/test.png",
-		"assets/sprites/test2.png",
-		"assets/sprites/circle_move.png",
-		"assets/sprites/circle_static.png"
-	};
+void GameEngine::initDisplayObjects() {
+	constexpr uint32_t k_main_object_type_id = 0;
+
+	auto texture_buffer = m_renderer->getTextureManager();
+	m_objects_types_textures.add(
+		shared_constants::k_player_object_type_id,
+		texture_buffer->loadTexture("assets/sprites/warrior.png"));
+
+	m_objects_types_textures.add(
+		shared_constants::k_wall_object_type_id,
+		texture_buffer->loadTexture("assets/sprites/wall.jpg"));
 }
 
 Vector GameEngine::getPlayerKeyboardSpeedDirection() {

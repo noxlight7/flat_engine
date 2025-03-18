@@ -6,9 +6,11 @@
 using namespace std;
 using namespace math;
 
-LocatableObject::LocatableObject(ObjectForm &&form)
-	: m_current_district(nullptr), m_form(form), m_position(),
-	m_draw_info(nullptr){
+uint32_t LocatableObject::c_next_id = 1;
+
+LocatableObject::LocatableObject(uint32_t id, uint32_t type_id, ObjectForm &&form)
+	: BaseEntity(id), m_current_district(nullptr), m_form(form), m_position(),
+	  m_type_id(type_id), m_id(nextID()) {
 	/*if (texture != nullptr) {
 		m_entity = new VertexBaseEntity();
 		m_entity->createObject();
@@ -16,37 +18,35 @@ LocatableObject::LocatableObject(ObjectForm &&form)
 	}*/
 }
 
-void LocatableObject::addDrawInfo(Texture *texture) {
-	if (m_draw_info == nullptr) {
-		m_draw_info = new SpaceObjectDrawInfo();
-		m_draw_info->init(this, texture);
-	}
-	else {
-		m_draw_info->setTexture(texture);
-	}
+LocatableObject::LocatableObject(PoolID* pool_id, uint32_t type_id, ObjectForm&& form)
+	: BaseEntity(pool_id), m_current_district(nullptr), m_form(form), m_position(),
+	  m_type_id(type_id), m_id(nextID()) {
 }
 
-LocatableObject::LocatableObject(LocatableObject &obj)
-	: m_current_district(obj.m_current_district), m_form(obj.m_form), 
-	m_position(obj.m_position) {
+LocatableObject::LocatableObject(uint32_t id, LocatableObject &obj)
+	: BaseEntity(id), m_position(obj.m_position), m_form(obj.m_form),
+	  m_current_district(obj.m_current_district), m_id(nextID()), m_type_id(obj.m_type_id) {
 }
 
-LocatableObject::~LocatableObject() {
-	if (m_draw_info)
-		delete m_draw_info;
+LocatableObject::LocatableObject(PoolID*pool_id, LocatableObject&obj)
+	: BaseEntity(pool_id), m_position(obj.m_position), m_form(obj.m_form),
+	  m_current_district(obj.m_current_district), m_id(nextID()), m_type_id(obj.m_type_id) {
 }
+
+LocatableObject::~LocatableObject() = default;
 
 // РЎРѕР·РґР°С‘С‚ Р»РѕРєР°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚ СЃ СѓРєР°Р·Р°РЅРЅС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё
 SpaceObject::SpaceObject(
+	PoolID* pool_id,
 	bool is_moveable,
+	uint32_t type_id,
 	ObjectForm&& form,
-	Texture* texture,
 	float rotation,
 	float rotation_speed,
 	float max_rotation_speed,
 	Vector&& speed_direction,
 	float max_speed, float acceleration)
-	: LocatableObject(std::move(form)),
+	: LocatableObject(pool_id, type_id, std::move(form)),
 	m_is_moveable(is_moveable),
 	m_rotation_speed(rotation_speed), 
 	m_max_rotation_speed(max_rotation_speed),
@@ -57,24 +57,58 @@ SpaceObject::SpaceObject(
 	m_cell(nullptr)
 {
 }
-// РЎРѕР·РґР°С‘С‚ Р»РѕРєР°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚, Р·Р°РіСЂСѓР¶Р°СЏ РµРіРѕ РёР· С„Р°Р№Р»Р°
-SpaceObject::SpaceObject(FILE* f)
-{
-	load(f);
-}
-// РљРѕРїРёСЂСѓСЋС‰РёР№ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
-SpaceObject::SpaceObject(SpaceObject& lo)
-	: LocatableObject(lo),
-	m_rotation_speed(lo.m_rotation_speed), 
-	m_max_rotation_speed(lo.m_max_rotation_speed),
-	m_acceleration(lo.m_acceleration),
-	m_cell(nullptr),
+
+SpaceObject::SpaceObject(
+	uint32_t id,
+	bool is_moveable,
+	uint32_t type_id,
+	ObjectForm&& form,
+	float rotation,
+	float rotation_speed,
+	float max_rotation_speed,
+	Vector&& speed_direction,
+	float max_speed, float acceleration)
+	: LocatableObject(id, type_id, std::move(form)),
+	m_is_moveable(is_moveable),
+	m_rotation_speed(rotation_speed),
+	m_max_rotation_speed(max_rotation_speed),
+	m_speed_direction(speed_direction),
 	m_current_speed(0),
+	m_max_speed(max_speed),
+	m_acceleration(acceleration),
+	m_cell(nullptr) {
+}
+
+// РЎРѕР·РґР°С‘С‚ Р»РѕРєР°Р»СЊРЅС‹Р№ РѕР±СЉРµРєС‚, Р·Р°РіСЂСѓР¶Р°СЏ РµРіРѕ РёР· С„Р°Р№Р»Р°
+// SpaceObject::SpaceObject(FILE* f)
+// {
+// 	load(f);
+// }
+// РљРѕРїРёСЂСѓСЋС‰РёР№ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
+SpaceObject::SpaceObject(PoolID* pool_id, SpaceObject& lo)
+	: LocatableObject(pool_id, lo),
 	m_is_moveable(lo.m_is_moveable),
+	m_rotation_speed(lo.m_rotation_speed),
+	m_max_rotation_speed(lo.m_max_rotation_speed),
+	m_current_speed(0),
+	m_speed_direction(Vector(1, 0)),
 	m_max_speed(lo.m_max_speed),
-	m_speed_direction(Vector(1, 0))
+	m_acceleration(lo.m_acceleration),
+	m_cell(nullptr)
 {
 		
+}
+
+SpaceObject::SpaceObject(const uint32_t id, SpaceObject& lo)
+	: LocatableObject(id, lo),
+	  m_is_moveable(lo.m_is_moveable),
+	  m_rotation_speed(lo.m_rotation_speed),
+	  m_max_rotation_speed(lo.m_max_rotation_speed),
+	  m_current_speed(0),
+	  m_speed_direction(Vector(1, 0)),
+	  m_max_speed(lo.m_max_speed),
+	  m_acceleration(lo.m_acceleration),
+	  m_cell(nullptr){
 }
 
 SpaceObject::~SpaceObject() {
@@ -302,11 +336,11 @@ void SpaceObject::setCurrentSpeed(float current_speed)
 	m_current_speed = current_speed;
 }
 
-glm::vec3 SpaceObject::getRenderOrigin( ) {
-	return glm::vec3(m_position.getGlobalCoords(), 0);
+glm::vec3 LocatableObject::getRenderOrigin( ) const {
+	return {m_position.getGlobalCoords(), 0};
 }
 
-Position SpaceObject::getPosition()
+Position& LocatableObject::getPosition()
 {
 	return m_position;
 }

@@ -1,0 +1,7 @@
+namespace Game;
+
+table TextMessage{
+    text: string;
+}
+
+root_type TextMessage;

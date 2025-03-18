@@ -5,10 +5,13 @@
 #include <cinttypes>
 #include "../texts/texts.hpp"
 #include "utils/common.hpp"
-#include "display/renderer.hpp"
-#include "display/camera.hpp"
-#include "display/draw_info.hpp"
+#include "display/renderer_world.hpp"
+#include "display/game_camera.hpp"
 #include "base_physics.hpp"
+#include "renderer.hpp"
+#include "display/display_system.hpp"
+#include "entities/base_entity.hpp"
+#include "display/display_objects.hpp"
 
 using namespace std;
 using namespace glm;
@@ -19,7 +22,6 @@ class SpaceObject;
 class District;
 class Collisions;
 class DistrictCell;
-class Texture;
 class DistrictRenderer;
 
 // Представляет собой пару из указателя на список и
@@ -67,24 +69,38 @@ private:
 
 
 // Позиционный объект. Имеет x, y координаты
-class LocatableObject {
+class LocatableObject : public BaseEntity{
 public:
-	explicit LocatableObject(ObjectForm &&form = ObjectForm(0.5));
-	LocatableObject(LocatableObject&);
-	~LocatableObject();
+	LocatableObject() = delete;
+	LocatableObject(LocatableObject&) = delete;
+	explicit LocatableObject(uint32_t id, uint32_t type_id, ObjectForm &&form = ObjectForm(0.5));
+	explicit LocatableObject(PoolID* pool_id, uint32_t type_id, ObjectForm &&form = ObjectForm(0.5));
+	LocatableObject(uint32_t id, LocatableObject&);
+	LocatableObject(PoolID* pool_id, LocatableObject&);
+	~LocatableObject() override;
 
 	// Обновляет индексы клеток в соответствии с координатами
 	// void normalizeCoords();
 
-	inline ObjectForm& getForm() { return m_form; }
-	void addDrawInfo(Texture *texture);
-	SpaceObjectDrawInfo* getDrawInfo() { return m_draw_info; }
+	ObjectForm& getForm() { return m_form; }
+
+	[[nodiscard]] uint32_t getTypeID() const { return m_type_id; }
+	// [[nodiscard]] Position& getPosition() { return m_position; }
+
+	Position& getPosition();					// Возвращает вектор позиции
+	[[nodiscard]] glm::vec3 getRenderOrigin( ) const;
+
 protected:
-	float m_rotation;				// Угол поворота
-	Position m_position;			// Позиция объекта
-	ObjectForm m_form;				// Данные о форме объекта
-	District* m_current_district;	// Область, в которой находится объект
-	SpaceObjectDrawInfo* m_draw_info;
+	float m_rotation{};				// Угол поворота
+	Position m_position{};			// Позиция объекта
+	ObjectForm m_form{};				// Данные о форме объекта
+	District* m_current_district{};	// Область, в которой находится объект
+	uint32_t m_id{};					// Идентификатор объекта
+	uint32_t m_type_id{};				// Идентификатор типа объекта
+
+private:
+	static uint32_t c_next_id;	// Следующий идентификатор объекта
+	static uint32_t nextID() { return c_next_id++; }
 };
 
 
@@ -108,11 +124,25 @@ class SpaceObject: public LocatableObject
 	friend class Collisions;
 	friend class District;
 public:
+	SpaceObject() = delete;
+	SpaceObject(SpaceObject&) = delete;
 	// Создаёт локальный объект с указанными параметрами
 	SpaceObject(
+		PoolID* pool_id,
 		bool is_moveable,
+		uint32_t type_id,
 		ObjectForm&& form = ObjectForm(0.5),
-		Texture* texture = nullptr,
+		float rotation = 0.f,
+		float rotation_speed = 0.f,
+		float max_rotation_speed = 0.f,
+		Vector&& speed_direction = Vector(1.f, 0.f),
+		float max_speed = 1.0f,
+		float acceleration = 0);
+	SpaceObject(
+		uint32_t id,
+		bool is_moveable,
+		uint32_t type_id,
+		ObjectForm&& form = ObjectForm(0.5),
 		float rotation = 0.f,
 		float rotation_speed = 0.f,
 		float max_rotation_speed = 0.f,
@@ -120,13 +150,14 @@ public:
 		float max_speed = 1.0f,
 		float acceleration = 0);
 	// Создаёт локальный объект, загружая его из файла
-	SpaceObject(FILE* f);
+	// SpaceObject(FILE* f);
 	// Копирующий конструктор
-	SpaceObject(SpaceObject& lo);
+	SpaceObject(PoolID* pool_id, SpaceObject& lo);
+	SpaceObject(uint32_t id, SpaceObject& lo);
 	// Move-конструктор
 	SpaceObject(SpaceObject&& lo);
 
-	~SpaceObject();
+	~SpaceObject() override;
 
 	void rotate(float da);				// Вращает объект на da радиан
 	void moveTo(double x, double y);
@@ -139,9 +170,6 @@ public:
 		
 	virtual void load(FILE* f);				// Загружает объект из файла
 	virtual void save(FILE* f);				// Сохраняет объект в файл
-
-	Position getPosition();					// Возвращает вектор позиции
-	glm::vec3 getRenderOrigin( );
 
 	// Добавляет объект в списки объектов локации
 	// Если объект ранее находился в другой локации,
@@ -258,8 +286,8 @@ public:
 	DistrictCell* getCell(int x, int y);
 	DistrictCell* getCell(ivec2 index);
 
-	int getCellsXAmount() const { return m_cells.colCount(); };
-	int getCellsYAmount() const { return m_cells.rowCount(); };
+	[[nodiscard]] int getCellsXAmount() const { return m_cells.colCount(); };
+	[[nodiscard]] int getCellsYAmount() const { return m_cells.rowCount(); };
 		
 	void load(FILE* f);					// Загружает область из файла
 	void save(FILE* f);					// Сохраняет область в файл
@@ -290,15 +318,18 @@ private:
 class DistrictRenderer : public IRendererWorld {
 	friend District;
 public:
-	DistrictRenderer(District* district, int out_width, int out_height);
-	void drawWorld() override;
-	float getCameraHeight() override { return g_camera->getHeight(); }
-	vec3 getCameraPosition() { return g_camera->getGlobalOrigin(); }
-	void setCameraPosition(vec3 coords) { g_camera->setGlobalOrigin(coords); }
-	void setCameraHeight(float height) { g_camera->setHeight(height); }
+	DistrictRenderer(District* district, int out_width, int out_height,
+		Camera camera = Camera({0, 0, 5}));
+	void drawWorld(DisplaySystem& display_system, const DisplayObjects& object_types_textures, IRenderer* renderer) override;
+	// float getCameraHeight() override { return m_camera.getHeight(); }
+	// [[nodiscard]] vec3 getCameraPosition() const { return m_camera.getGlobalOrigin(); }
+	// void setCameraPosition(vec3 coords) { m_camera.setGlobalOrigin(coords); }
+	// void setCameraHeight(float height) { m_camera.setHeight(height); }
+	// Camera& getCamera() { return m_camera; }
+
 private:
-	//Camera m_camera;
 	District* m_district;
+	// Camera m_camera;
 	int m_width;
 	int m_height;
 };

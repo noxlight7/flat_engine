@@ -1,5 +1,7 @@
 #include "physics.hpp"
 #include "collisions.hpp"
+#include "display/display_objects.hpp"
+#include "display/draw_info_factory.hpp"
 #include "factory/definitions.hpp"
 
 TerrainMap::TerrainMap(): m_matrix(g_metres_in_cell, g_metres_in_cell){
@@ -131,14 +133,21 @@ void District::setRenderer(int width, int height) {
 	}
 }
 
-DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_height)
-	: IRendererWorld(), m_width(out_width), m_height(out_height), 
-	m_district(district) {
+DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_height, Camera camera)
+	: IRendererWorld(), m_district(district), m_width(out_width),
+	m_height(out_height) {
 	
 }
 
-void DistrictRenderer::drawWorld() {
-	auto render_area = g_camera->getVisibleRect(m_width, m_height);
+void DistrictRenderer::drawWorld(DisplaySystem& display_system,
+	const DisplayObjects& object_types_textures,
+	IRenderer* renderer) {
+	auto& building_layout = display_system.getBuildingLayout();
+
+	auto &camera = *dynamic_cast<Camera*>(renderer->getCurrentCamera().get());
+
+	auto& land_layer = building_layout[static_cast<int>(Layers::Land)];
+	auto render_area = camera.getVisibleRect(m_width, m_height);
 	Position left_bottom = Position(render_area.m_left, render_area.m_bottom);
 	Position right_top = Position(render_area.m_right, render_area.m_top);
 	int x_start = std::max(0, left_bottom.m_index.x);
@@ -148,10 +157,15 @@ void DistrictRenderer::drawWorld() {
 	for (int x_index = x_start; x_index < x_end; x_index++)
 		for (int y_index = y_start; y_index < y_end; y_index++) {
 			for (auto &draw_obj : m_district->getCell(x_index, y_index)->getInnerObjects()) {
-				auto info = draw_obj->getDrawInfo();
-				info->setOrigin(vec3(g_camera->getOrigin().getShift(
-					draw_obj->getPosition()), 0.0f));
-				info->draw();
+				auto draw_info = DrawInfoFactory::getSpaceObjectDrawInfo(
+					*draw_obj, camera, object_types_textures);
+				auto id = draw_obj->getID();
+				land_layer[id] = draw_info;
+				// auto info = draw_obj->getDrawInfo();
+				// info->setOrigin(vec3(g_camera->getOrigin().getShift(
+				// 	draw_obj->getPosition()), 0.0f));
+				// info->draw();
 			}
 		}
+	display_system.nextState();
 }

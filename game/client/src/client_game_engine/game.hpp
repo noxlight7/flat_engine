@@ -14,22 +14,20 @@ class GameEngine : public ClientEngine {
 public:
 
 	static GameEngine& instance() {
-		static boost::asio::io_context io_context;
 		static GameEngine engine = GameEngine(
-			io_context,
 			flat_engine::network::k_host_name,
 			flat_engine::network::k_host_tcp_port);
 		return engine;
 	}
 
 	void onInit() final;
-	void onRender() final;
-	std::vector<std::string> getAllTexturesFullNames() final;
+	void onLogicUpdate() final;
+	void initDisplayObjects() final;
 	Vector getPlayerKeyboardSpeedDirection();
 	Vector getPlayer2KeyboardSpeedDirection();
 
 protected:
-	GameEngine(boost::asio::io_context& io_context, std::string host, uint16_t port);
+	GameEngine(std::string host, uint16_t port);
 	~GameEngine() override = default;
 	SpaceObject m_test_obj;
 	SpaceObject m_test_obj2;

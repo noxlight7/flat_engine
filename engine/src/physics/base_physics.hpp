@@ -77,7 +77,7 @@ public:
 	void setData(float width, float height);
 	void releaseData();
 
-	vec2&& getSize(float angle);
+	vec2 getSize(float angle);
 	float getMaxSize();
 
 	ObjectFormData m_data;

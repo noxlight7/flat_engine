@@ -1,4 +1,4 @@
-add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm)
+#add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/glm)
 
 ## Находим Boost
 #find_package(Boost REQUIRED COMPONENTS system)
@@ -17,19 +17,19 @@ if(WIN32)
 	)
 
 	file(GLOB_RECURSE src_files_opengl
-			${CMAKE_CURRENT_LIST_DIR}/opengl/GL/*.[ch]pp
-			${CMAKE_CURRENT_LIST_DIR}/opengl/GL/*.[ch]
+#			${CMAKE_CURRENT_LIST_DIR}/opengl/GL/*.[ch]pp
+#			${CMAKE_CURRENT_LIST_DIR}/opengl/GL/*.[ch]
 	)
 
 	set(INCLUDE_LIBS
 			${CMAKE_CURRENT_LIST_DIR}/glfw
-			${CMAKE_CURRENT_LIST_DIR}/opengl
+#			${CMAKE_CURRENT_LIST_DIR}/opengl
 	)
 
 	set(DEPENDENCY_LIBS
 			${lib_files_glfw}
-			${lib_files_opengl}
-			${glm}
+#			${lib_files_opengl}
+#			${glm}
 	)
 
 else()
@@ -46,7 +46,7 @@ else()
 	set(DEPENDENCY_LIBS
 			${GLFW_LIBRARIES}
 			${GLEW_LIBRARIES}
-			${glm}
+#			${glm}
 			${Boost_LIBRARIES}  # Добавляем библиотеки Boost
 	)
 
