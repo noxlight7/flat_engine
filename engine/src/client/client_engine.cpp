@@ -99,7 +99,10 @@ void ClientEngine::setCallbacks() {
 }
 
 ClientEngine::~ClientEngine() {
-	//delete renderer;
+	if (m_renderer) {
+		m_renderer->shutdown();
+		m_renderer.reset();
+	}
 	glfwDestroyWindow(m_window);
 	glfwTerminate();
 }
@@ -158,8 +161,6 @@ void ClientEngine::mainLoop() {
 			m_display_system.draw(interpolation_alpha, m_renderer->getCurrentCamera()->getHeight());
 		else
 			m_display_system.draw(interpolation_alpha, 0);
-
-		std::cout << "interpolation alpha: " << interpolation_alpha << std::endl;
 
 		m_renderer->endFrame();
 

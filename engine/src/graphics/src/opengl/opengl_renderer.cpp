@@ -105,17 +105,19 @@ void OpenGLRenderer::drawLayer(
         vertices.reserve(objects.size() * 6);
         for (const auto& draw : objects) {
             // Предполагаем, что draw.position — позиция (верхний левый угол) и draw.size — размеры в пикселях.
-            const glm::vec2 pos = draw.position;
+            const glm::vec2 center = draw.position;
             const glm::vec2 size = draw.size;
+            const glm::vec2 pos = center - size * 0.5f; // нижний левый угол
 
             // Первый треугольник
-            vertices.push_back({ glm::vec2(pos.x, pos.y),              glm::vec2(0.0f, 0.0f) });
-            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y),       glm::vec2(1.0f, 0.0f) });
-            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y + size.y),glm::vec2(1.0f, 1.0f) });
+            vertices.push_back({ glm::vec2(pos.x, pos.y),               glm::vec2(0.0f, 0.0f) });
+            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y),        glm::vec2(1.0f, 0.0f) });
+            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y + size.y), glm::vec2(1.0f, 1.0f) });
+
             // Второй треугольник
-            vertices.push_back({ pos,                                 glm::vec2(0.0f, 0.0f) });
-            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y + size.y),glm::vec2(1.0f, 1.0f) });
-            vertices.push_back({ glm::vec2(pos.x, pos.y + size.y),       glm::vec2(0.0f, 1.0f) });
+            vertices.push_back({ glm::vec2(pos.x, pos.y),               glm::vec2(0.0f, 0.0f) });
+            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y + size.y), glm::vec2(1.0f, 1.0f) });
+            vertices.push_back({ glm::vec2(pos.x, pos.y + size.y),        glm::vec2(0.0f, 1.0f) });
         }
 
         // Загружаем данные вершин в vertex buffer
