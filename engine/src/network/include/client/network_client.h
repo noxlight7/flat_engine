@@ -18,7 +18,7 @@
 namespace flat_engine::network {
     constexpr int k_reconnect_time = 2000;
 
-    class ClientSession: public std::enable_shared_from_this<ClientSession> {
+    class ClientSession: public ISession, public std::enable_shared_from_this<ClientSession> {
         boost::asio::io_context& io_context_;
         std::unique_ptr<boost::asio::ip::tcp::socket> socket_;
         boost::asio::ip::tcp::resolver resolver_;
@@ -32,8 +32,11 @@ namespace flat_engine::network {
 
     public:
         ClientSession(boost::asio::io_context& io_context,
-            std::string  host, const unsigned short port)
-            : io_context_(io_context), resolver_(io_context), is_stopped_(false),
+            std::string  host,
+            const unsigned short port,
+            std::unique_ptr<IGameData> game_data)
+            : ISession(io_context, std::move(game_data), 1),
+              io_context_(io_context), resolver_(io_context), is_stopped_(false),
               timer_(io_context), host_(std::move(host)), port_(port) {
         }
 
@@ -89,7 +92,7 @@ namespace flat_engine::network {
                 return handleError(ec);
             };
 
-            message_io_ = std::make_shared<MessageIO>(io_context_, std::move(transport), onPacket, onError);
+            message_io_ = std::make_shared<MessageIO>(std::move(transport), getStrand(), onPacket, onError);
             message_io_->startReading();
         }
 
@@ -105,7 +108,8 @@ namespace flat_engine::network {
         }
 
         bool handleServerPacket(MessageRouteType route, std::vector<uint8_t>&& data) {
-            auto res = Deserializer::instance().addMessage(route, std::move(data));
+            auto res = Deserializer::instance().addMessage(
+                route, std::move(data), shared_from_this());
             if (res != k_success) {
                 scheduleReconnect();
                 return false;

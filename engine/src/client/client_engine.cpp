@@ -2,6 +2,7 @@
 #include <iostream>
 #include <utility>
 
+#include "../../../game/server/src/game_server/session_controller.hpp"
 #include "display/game_camera.hpp"
 
 void ClientEngine::initTime() {
@@ -48,7 +49,7 @@ void ClientEngine::init(const std::string& title, std::string host, uint16_t por
 	m_width = width;
 	m_height = height;
 	m_session = std::make_shared<flat_engine::network::ClientSession>(
-		m_receiving_context, std::move(host), port);
+		m_receiving_context, std::move(host), port, std::make_unique<PlayerData>());
 	m_session->start();
 	// m_session->sendPacket(flat_engine::network::SHARED_TEST_TEXT_MESSAGE,
     // 	flat_engine::network::Serializer::serializeTextMessage("Игра подключена успешно"));

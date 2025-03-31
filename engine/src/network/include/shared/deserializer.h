@@ -14,7 +14,8 @@
 #include "messages.h"
 
 namespace flat_engine::network {
-    using MessageHandler = std::function<IMessage*(std::vector<uint8_t> &&buffer)>;
+    using MessageHandler = std::function<IMessage*(
+        std::vector<uint8_t> &&buffer, std::shared_ptr<ISession> session)>;
 
     constexpr uint32_t k_max_messages_in_queue = 100000;
 
@@ -38,11 +39,11 @@ namespace flat_engine::network {
         Deserializer(Deserializer&&) = delete;
         Deserializer& operator=(Deserializer&&) = delete;
 
-        MessageAddResult addMessage(const MessageRouteType route_id, std::vector<uint8_t>&& buffer) {
+        MessageAddResult addMessage(const MessageRouteType route_id, std::vector<uint8_t>&& buffer, std::shared_ptr<ISession> session) {
             if (!handlers.contains(route_id)) {
                 return k_invalid_route;
             }
-            auto message = handlers[route_id](std::move(buffer));
+            auto message = handlers[route_id](std::move(buffer), std::move(session));
             if (message == nullptr)
                 return k_invalid_route;
 
@@ -67,9 +68,9 @@ namespace flat_engine::network {
             // return false;
         }
 
-        std::unique_ptr<IMessage> getNextMessage() {
-            if (IMessage* message; messagesQueue.pop(message)) {
-                return std::unique_ptr<IMessage>(message);
+        IMessage* getNextMessage() {
+            if (IMessage* message = nullptr; messagesQueue.pop(message)) {
+                return message;
             }
             return nullptr;
         }
@@ -80,7 +81,7 @@ namespace flat_engine::network {
                 threads.emplace_back([this] {
                     auto message = getNextMessage();
                     while (message != nullptr) {
-                        message->process();
+                        message->processSession();
                         message = getNextMessage();
                     }
                 });

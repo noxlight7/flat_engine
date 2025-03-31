@@ -8,13 +8,10 @@ using namespace glm;
 Camera::~Camera( )
 	{}
 
-RectangleGlobalArea Camera::getVisibleRect(int screen_width, int screen_height) {
+RectangleArea Camera::getVisibleRect(int screen_width, int screen_height) {
 	float dy = getHeight() * 2;
-	float dx = dy * (float) screen_width / (float) screen_height;
+	float dx = dy * static_cast<float>(screen_width) / static_cast<float>(screen_height);
 	auto [x, y] = to_tuple(m_origin.getGlobalCoords());
-	RectangleGlobalArea rect{
-		.m_left = x - dx, .m_right = x + dx, 
-		.m_bottom = y - dy, .m_top = y + dy 
-	};
+	RectangleArea rect{x - dx, x + dx, y - dy, y + dy};
 	return rect;
 }

@@ -2,34 +2,32 @@
 
 #include <glm/glm.hpp>
 
-using namespace glm;
-
-using Vector = vec2;
-using DVector = dvec2;
+using Vector = glm::vec2;
+using DVector = glm::dvec2;
 //#define Vector glm::vec3
 
 std::tuple<double, double> to_tuple(const glm::vec2& vec);
 
 typedef struct Position
 {
-public:
 	Vector m_coords;			// Координаты в ячейке
-	ivec2 m_index;				// Индекс ячейки
+	glm::ivec2 m_index;				// Индекс ячейки
 
 	Position() = default;
-	Position(Vector coords, ivec2 index);
+	Position(Vector coords, glm::ivec2 index);
 	Position(double x, double y);
 
 	void normalizeCoords();
 
-	DVector getGlobalCoords() const;
+	[[nodiscard]] DVector getGlobalCoords() const;
 	void setFromGlobalCoords(double x, double y);
-	void shiftToCoordsSystem(ivec2 cell_index);
+	void shiftToCoordsSystem(glm::ivec2 cell_index);
 	void shiftToCoordsSystem(Position pos);
 
 	// Вычисляет вектор, который нужно прибавить к позиции, 
 	// чтобы получить позицию объекта
-	vec2 getShift(Position obj);
+	glm::vec2 getShift(Position obj);
+	float getDistance(const Position& obj);
 } Position;
 
 // Форма объектов, участвующих в столкновении
@@ -66,10 +64,9 @@ union ObjectFormData
 
 struct ObjectForm
 {
-public:
 	ObjectForm();
 	ObjectForm(ObjectForm& form);
-	ObjectForm(float radius);
+	explicit ObjectForm(float radius);
 	ObjectForm(float width, float height);
 	~ObjectForm();
 
@@ -77,8 +74,8 @@ public:
 	void setData(float width, float height);
 	void releaseData();
 
-	vec2 getSize(float angle);
-	float getMaxSize();
+	[[nodiscard]] glm::vec2 getSize(float angle) const;
+	[[nodiscard]] float getMaxSize() const;
 
 	ObjectFormData m_data;
 	ObjectFormType m_type;
@@ -87,23 +84,27 @@ public:
 // Круглая область
 struct CircleArea
 {
-	glm::vec2 m_pos;
-	float m_radius;
+	glm::dvec2 m_pos;
+	double m_radius;
 };
 
 // Прямоугольная область
 struct RectangleArea
 {
-	float m_left;
-	float m_right;
-	float m_bottom;
-	float m_top;
-};
-
-struct RectangleGlobalArea
-{
 	double m_left;
 	double m_right;
 	double m_bottom;
 	double m_top;
+
+	RectangleArea() = default;
+	RectangleArea(double left, double right, double bottom, double top);
+	RectangleArea(CircleArea area);
 };
+
+// struct RectangleGlobalArea
+// {
+// 	double m_left;
+// 	double m_right;
+// 	double m_bottom;
+// 	double m_top;
+// };

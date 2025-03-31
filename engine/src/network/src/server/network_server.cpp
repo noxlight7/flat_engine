@@ -4,7 +4,7 @@
 
 
 #include <iostream>
-#include "network_server.hpp"
+#include "network_server.h"
 
 #include "deserializer.h"
 
@@ -23,14 +23,17 @@ namespace flat_engine::network {
         acceptor_.async_accept(*socket,
             [this, socket](const boost::system::error_code& ec) {
                 if (!ec) {
-                    boost::asio::dispatch(strand_, [socket, this]() {
+                    boost::asio::dispatch(strand_, [socket, this] {
                         std::cout << "[Server] Подключён новый клиент" << std::endl;
                         uint32_t new_session_id = nextSessionId();
                         sessions_[new_session_id] = std::make_shared<ServerSession>(io_context_,
                             std::move(*socket), [this](uint32_t session_id) {
                                 removeSession(session_id);
-                            }, new_session_id);
+                            }, new_session_id, session_controller_->generateStartData());
                         sessions_[new_session_id]->start();
+
+                        if (session_controller_)
+                            session_controller_->onConnect(new_session_id);
                     });
 
                     boost::asio::post(strand_, [this] {
@@ -44,25 +47,26 @@ namespace flat_engine::network {
             });
     }
 
-    NetworkServer::NetworkServer(boost::asio::io_context& io_context, const uint16_t port)
+    NetworkServer::NetworkServer(
+        boost::asio::io_context& io_context,
+        const uint16_t port,
+        std::unique_ptr<ISessionController> session_controller)
             : io_context_(io_context), strand_(make_strand(io_context)),
               acceptor_(io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
-              port_(port), current_session_id_(0) {
+              port_(port), current_session_id_(0), session_controller_(std::move(session_controller)) {
         startAccept();
     }
 
     void NetworkServer::removeSession(const uint32_t session_id) {
         post(strand_, [this, session_id] {
+            if (session_controller_)
+                session_controller_->onDisconnect(session_id);
             if (!sessions_.contains(session_id))
                 return;
 
             sessions_.erase(session_id);
             std::cout << "[Server] Сессия с id=" << session_id << " удалена" << std::endl;
         });
-    }
-
-    void processGameLogic() {
-        // Допустим, здесь идёт обработка игровой логики
     }
 }
 //

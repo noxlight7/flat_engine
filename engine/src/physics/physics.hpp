@@ -12,13 +12,12 @@
 #include "display/display_system.hpp"
 #include "entities/base_entity.hpp"
 #include "display/display_objects.hpp"
-
-using namespace std;
-using namespace glm;
+#include "utils/constants.hpp"
 
 // Здесь хранятся классы и структуры для организации 
 
 class SpaceObject;
+class Actor;
 class District;
 class Collisions;
 class DistrictCell;
@@ -103,6 +102,12 @@ private:
 	static uint32_t nextID() { return c_next_id++; }
 };
 
+using LocatableObject2Predict = std::function<bool(
+	LocatableObject& subject, LocatableObject& object)>;
+using LocatableObject1Predict = std::function<bool(LocatableObject& object)>;
+
+inline bool alwaysTrue2(LocatableObject& subject, LocatableObject& object){ return true; }
+inline bool alwaysTrue1(LocatableObject& obj){ return true; }
 
 struct Terrain {
 	short terrain_index = 0;
@@ -189,6 +194,8 @@ public:
 	// Обновляет данные о текущей ячейке
 	void updateCell();
 
+	DistrictCell* getCurrentCell(){return m_cell;}
+
 protected:
 	void RemoveFromOldDistrict();
 
@@ -213,20 +220,44 @@ protected:
 	// удалял.		
 };
 
-class Actor : SpaceObject, IDownloadable
-{
+class Actor {
+	float m_current_hit_points;
+	float m_max_hit_points;
+	std::unique_ptr<SpaceObject> m_physical_body;
 public:
-	Actor(ObjectForm&& form,
-		float max_speed = 1.0f, 
-		glm::vec2&& speed_direction = glm::vec2(0, 0),
-		float acceleration = 0, 
-		bool global = false);
+	virtual ~Actor() = default;
+	Actor(std::unique_ptr<SpaceObject> physical_body, float max_hit_points)
+		: m_current_hit_points(max_hit_points), m_max_hit_points(max_hit_points),
+		  m_physical_body(std::move(physical_body)) {
+	}
+
+	[[nodiscard]] SpaceObject* getPhysicalBody() const { return m_physical_body.get(); }
+	[[nodiscard]] float getCurrentHitPoints() const { return m_current_hit_points; }
+	[[nodiscard]] float getMaxHitPoints() const { return m_max_hit_points; }
+
+	void setCurrentHitPoints(float current_hit_points){ m_current_hit_points = current_hit_points; }
+	void setMaxHitPoints(float max_hit_points){ m_max_hit_points = max_hit_points; }
+	void setPhysicalBody(std::unique_ptr<SpaceObject> physical_body){ m_physical_body = std::move(physical_body); }
+
+	std::list<LocatableObject*> getAreaInterestObjects();
+
 	void load(FILE* f);	// Загружает объект из файла
 	void save(FILE* f);	// Сохраняет объект в файл
+
+	void moveTo(double x, double y);
+	void moveTo(District* district, double x, double y);
 
 	virtual void onLoadArea();			// Срабатывает при загрузке области, на которой находится актёр
 	virtual void onUnloadArea();		// Срабатывает при выгрузке области, на которой находится актёр
 	virtual void onAreaChange();        // Срабатывает при смене области
+	virtual void onTick();				// Срабатывает на каждом тике
+
+	virtual float getAreaInterestRadius() { return constants::actors::k_default_visible_radius; }
+
+	[[nodiscard]] virtual bool isNetRelevantFor(const Actor& actor) const { return true; }
+	virtual void onDamaged(Actor& damager, float damage) {m_current_hit_points -= damage;}
+	virtual void onDie() {}
+	virtual void onSpawn() {}
 
 	//void* questEvents;
 protected:
@@ -234,10 +265,10 @@ protected:
 	virtual void savev(FILE* f) {}		// Сохраняет объект в файл
 };
 
-class Decoration : SpaceObject
-{
-
-};
+// class Decoration : SpaceObject
+// {
+//
+// };
 
 // Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
 class DistrictCell
@@ -251,14 +282,18 @@ public:
 	// указатели на соседние ячейки, устанавливает
 	// границы в соответствии с положением ячейки
 	// в области (x; y)
-	void init(ivec2 index_in_district);
+	void init(glm::ivec2 index_in_district);
 
 	std::list<SpaceObject*>& getInnerObjects();
+
+	[[nodiscard]] District* getOwnerDistrict() const {return m_owner_district;}
+
+	District *getOwnerDistrict() {return m_owner_district;}
 
 protected:
 
 	bool m_is_border;
-	ivec2 m_index_in_district;
+	glm::ivec2 m_index_in_district;
 
 	// Область, в которой содержится ячейка
 	District* m_owner_district;
@@ -284,20 +319,58 @@ public:
 	//void addObject(SpaceObject* obj, float x, float y);
 
 	DistrictCell* getCell(int x, int y);
-	DistrictCell* getCell(ivec2 index);
+	DistrictCell* getCell(glm::ivec2 index);
 
-	[[nodiscard]] int getCellsXAmount() const { return m_cells.colCount(); };
-	[[nodiscard]] int getCellsYAmount() const { return m_cells.rowCount(); };
+	[[nodiscard]] int getCellsXAmount() const { return m_cells.colCount(); }
+	[[nodiscard]] int getCellsYAmount() const { return m_cells.rowCount(); }
 		
 	void load(FILE* f);					// Загружает область из файла
 	void save(FILE* f);					// Сохраняет область в файл
 
 	void moveObjects(float dt);
 
-	bool isCellExist(ivec2 index) const;
+	bool isCellExist(glm::ivec2 index) const;
 
 	DistrictRenderer* getRenderer() { return m_renderer; }
 	void setRenderer(int width, int height);
+
+	class RectangleAreaRange {
+		District& m_district;
+		int m_row_start, m_row_end;
+		int m_col_start, m_col_end;
+
+	public:
+		class Iterator {
+			District& m_district;
+			std::list<SpaceObject*>::iterator m_list_it;
+			int m_row_start, m_row_end;
+			int m_col_start, m_col_end;
+			int m_current_row, m_current_col;
+
+			void advanceCell();
+			void skipEmpty();
+
+		public:
+			Iterator(District& district,
+				int row_start, int col_start,
+				int row_end, int col_end, bool end = false);
+
+			bool operator!=(const Iterator&) const;
+			SpaceObject& operator*() const;
+			Iterator& operator++();
+		};
+
+		RectangleAreaRange(District& district, int row_start, int col_start, int row_end, int col_end);
+		Iterator begin();
+		Iterator end();
+	};
+
+	RectangleAreaRange getRectangleAreaObjects(const RectangleArea& area);
+	std::list<LocatableObject*> getCircleAreaObjects(
+		const CircleArea& area, const LocatableObject1Predict& func = alwaysTrue1);
+	std::list<LocatableObject*> getCircleAreaObjects(
+		LocatableObject& subject, const CircleArea& area,
+		const LocatableObject2Predict& func = alwaysTrue2);
 
 private:	
 	// Хранит ссылки на все пространственные объекты
@@ -307,29 +380,26 @@ private:
 		
 	Matrix<DistrictCell> m_cells;				// Ячейки хранятся по (x, y)
 
+	void f() {
+		for (auto& x : m_cells(0, 0).m_objects) {}
+	}
+
 	RectangleArea m_borders;
 
 	DistrictRenderer *m_renderer;
 
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
-	//vector<string> m_portal_nets;		// Имена сетей, в которые возможно перейти из текущей области 
+	//vector<string> m_portal_nets;			// Имена сетей, в которые возможно перейти из текущей области
 };
 
 class DistrictRenderer : public IRendererWorld {
 	friend District;
 public:
-	DistrictRenderer(District* district, int out_width, int out_height,
-		Camera camera = Camera({0, 0, 5}));
+	DistrictRenderer(District* district, int out_width, int out_height);
 	void drawWorld(DisplaySystem& display_system, const DisplayObjects& object_types_textures, IRenderer* renderer) override;
-	// float getCameraHeight() override { return m_camera.getHeight(); }
-	// [[nodiscard]] vec3 getCameraPosition() const { return m_camera.getGlobalOrigin(); }
-	// void setCameraPosition(vec3 coords) { m_camera.setGlobalOrigin(coords); }
-	// void setCameraHeight(float height) { m_camera.setHeight(height); }
-	// Camera& getCamera() { return m_camera; }
 
 private:
 	District* m_district;
-	// Camera m_camera;
 	int m_width;
 	int m_height;
 };

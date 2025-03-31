@@ -19,11 +19,11 @@ DistrictCell* District::getCell(int x, int y) {
 	return &m_cells(y, x);
 }
 
-DistrictCell* District::getCell(ivec2 index) {
+DistrictCell* District::getCell(glm::ivec2 index) {
 	return &m_cells(index.y, index.x);
 }
 
-void DistrictCell::init(ivec2 index_in_district) {
+void DistrictCell::init(glm::ivec2 index_in_district) {
 	m_index_in_district = index_in_district;
 	m_is_border = index_in_district.x == 0 || index_in_district.y == 0 ||
 		index_in_district.x == m_owner_district->m_cells.colCount() - 1 ||
@@ -40,7 +40,7 @@ District::District(int cells_x_amount, int cells_y_amount)
 	for (uint32_t y = 0; y < cells_y_amount; y++) {
 		for (uint32_t x = 0; x < cells_x_amount; x++) {
 			m_cells(y, x).m_owner_district = this;
-			m_cells(y, x).init(ivec2(y, x));
+			m_cells(y, x).init(glm::ivec2(y, x));
 		}
 	}
 }
@@ -59,7 +59,7 @@ District::~District() {
 		delete m_renderer;
 }
 
-bool District::isCellExist(ivec2 index) const{
+bool District::isCellExist(glm::ivec2 index) const{
 	return !(index.x < 0 || index.y < 0 || 
 		index.x >= getCellsXAmount() || index.y >= getCellsYAmount());
 }
@@ -80,7 +80,7 @@ void District::moveObjects(float dt) {
 		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 		bool move_possible = true;
-		ivec2 mo_cell_index = m->m_position.m_index;
+		glm::ivec2 mo_cell_index = m->m_position.m_index;
 		for (int x_cell = std::max(mo_cell_index.x - 1, 0),
 			x_cell_end = std::min(x_cell + 3, width);
 			x_cell < x_cell_end; x_cell++)
@@ -88,7 +88,7 @@ void District::moveObjects(float dt) {
 				y_cell_end = std::min(y_cell + 3, height);
 				move_possible && y_cell < y_cell_end; y_cell++) {
 				DistrictCell* current_cell = &m_cells(y_cell, x_cell);
-				m->m_position.shiftToCoordsSystem(ivec2(x_cell, y_cell));
+				m->m_position.shiftToCoordsSystem(glm::ivec2(x_cell, y_cell));
 
 				for (SpaceObject* s : current_cell->m_objects)
 					if (m != s) {
@@ -133,10 +133,110 @@ void District::setRenderer(int width, int height) {
 	}
 }
 
-DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_height, Camera camera)
-	: IRendererWorld(), m_district(district), m_width(out_width),
-	m_height(out_height) {
-	
+void District::RectangleAreaRange::Iterator::advanceCell() {
+	if (m_current_col < m_col_end) {
+		++m_current_col;
+	} else {
+		++m_current_row;
+		if (m_current_row <= m_row_end) {
+			m_current_col = m_col_start;
+		}
+	}
+	if (m_current_row <= m_row_end && m_current_col <= m_col_end) {
+		m_list_it = m_district.getCell(m_current_row, m_current_col)->m_objects.begin();
+	}
+}
+
+void District::RectangleAreaRange::Iterator::skipEmpty() {
+	while (m_current_row <= m_row_end && m_current_col <= m_col_end &&
+		m_list_it == m_district.getCell(m_current_row, m_current_col)->m_objects.end()) {
+		advanceCell();
+	}
+}
+
+District::RectangleAreaRange::Iterator::Iterator(District& district,
+                                              int row_start, int col_start,
+                                              int row_end, int col_end, bool end)
+	: m_district(district), m_row_start(row_start), m_row_end(row_end),
+	  m_col_start(col_start), m_col_end(col_end),
+	  m_current_row(row_start), m_current_col(col_start){
+	if (end) {
+		m_current_row = row_end + 1;
+		m_current_col = col_end;
+	}
+	if (m_current_row <= m_row_end && m_current_col <= m_col_end) {
+		m_list_it = m_district.getCell(m_current_row, m_current_col)->m_objects.begin();
+		skipEmpty();
+	}
+}
+
+bool District::RectangleAreaRange::Iterator::operator!=(const Iterator& other) const {
+	return m_current_row != other.m_current_row ||
+		m_current_col != other.m_current_col ||
+			m_list_it != other.m_list_it;
+}
+
+SpaceObject& District::RectangleAreaRange::Iterator::operator*() const {
+	return **m_list_it;
+}
+
+District::RectangleAreaRange::Iterator& District::RectangleAreaRange::Iterator::operator++() {
+	++m_list_it;
+	skipEmpty();
+	return *this;
+}
+
+District::RectangleAreaRange::RectangleAreaRange(District& district, int row_start, int col_start, int row_end,
+	int col_end)
+	: m_district(district), m_row_start(row_start), m_row_end(row_end),
+	  m_col_start(col_start), m_col_end(col_end) {
+}
+
+District::RectangleAreaRange::Iterator District::RectangleAreaRange::begin() {
+	return {m_district, m_row_start, m_col_start, m_row_end, m_col_end};
+}
+
+District::RectangleAreaRange::Iterator District::RectangleAreaRange::end() {
+	return {m_district, m_row_start, m_col_start, m_row_end, m_col_end, true};
+}
+
+District::RectangleAreaRange District::getRectangleAreaObjects(
+	const RectangleArea& area) {
+	auto start = Position(area.m_left, area.m_bottom).m_index;
+	auto end = Position(area.m_right, area.m_top).m_index;
+	return {*this, start.y, start.x, end.y, end.x};
+}
+
+std::list<LocatableObject*> District::getCircleAreaObjects(
+	const CircleArea& area, const LocatableObject1Predict& func) {
+	list<LocatableObject*> objects;
+	RectangleArea rect(area);
+	Position center = {area.m_pos.x, area.m_pos.y};
+	for (auto& obj: getRectangleAreaObjects(rect)) {
+		if (obj.m_position.getDistance(center) <= area.m_radius && func(obj)) {
+			objects.push_back(&obj);
+		}
+	}
+
+	return objects;
+}
+
+std::list<LocatableObject*> District::getCircleAreaObjects(
+	LocatableObject& subject, const CircleArea& area, const LocatableObject2Predict& func) {
+	list<LocatableObject*> objects;
+	RectangleArea rect(area);
+	Position center = {area.m_pos.x, area.m_pos.y};
+	for (auto& obj: getRectangleAreaObjects(rect)) {
+		if (obj.m_position.getDistance(center) <= area.m_radius && func(subject, obj)) {
+			objects.push_back(&obj);
+		}
+	}
+
+	return objects;
+}
+
+DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_height)
+	: IRendererWorld(), m_district(district), m_width(out_width), m_height(out_height) {
 }
 
 void DistrictRenderer::drawWorld(DisplaySystem& display_system,

@@ -13,7 +13,8 @@ namespace flat_engine::network {
     class PlayerAvatarMessage final : public IMessage {
         const Game::PlayerAvatarT* player_;
     public:
-        explicit PlayerAvatarMessage(std::vector<uint8_t>&& data) : IMessage(std::move(data)) {
+        explicit PlayerAvatarMessage(std::vector<uint8_t>&& data, std::shared_ptr<ISession> session)
+            : IMessage(std::move(data), std::move(session)) {
             // todo: логика преобразования сырого буфера в полезные данные
             player_ = nullptr;
             if (auto verifier = flatbuffers::Verifier(data_.data(), data_.size());
@@ -27,8 +28,8 @@ namespace flat_engine::network {
             is_verified = player_ != nullptr;
         }
 
-        static IMessage* create(std::vector<uint8_t>&& data) {
-            return new PlayerAvatarMessage(std::move(data));
+        static IMessage* create(std::vector<uint8_t>&& data, std::shared_ptr<ISession> session) {
+            return new PlayerAvatarMessage(std::move(data), std::move(session));
         }
 
         void process() override {
@@ -55,7 +56,8 @@ namespace flat_engine::network {
     class TextMessage final : public IMessage {
         const Game::TextMessage* message_;
     public:
-        explicit TextMessage(std::vector<uint8_t>&& data) : IMessage(std::move(data)) {
+        explicit TextMessage(std::vector<uint8_t>&& data, std::shared_ptr<ISession> session)
+            : IMessage(std::move(data), std::move(session)) {
             // todo: логика преобразования сырого буфера в полезные данные
             message_ = nullptr;
             if (auto verifier = flatbuffers::Verifier(data_.data(), data_.size());
@@ -69,8 +71,8 @@ namespace flat_engine::network {
             is_verified = message_ != nullptr;
         }
 
-        static IMessage* create(std::vector<uint8_t>&& data) {
-            return new TextMessage(std::move(data));
+        static IMessage* create(std::vector<uint8_t>&& data, std::shared_ptr<ISession> session) {
+            return new TextMessage(std::move(data), std::move(session));
         }
 
         void process() override {

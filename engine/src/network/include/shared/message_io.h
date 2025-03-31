@@ -18,7 +18,7 @@ namespace flat_engine::network {
     using OnError = std::function<void (const boost::system::error_code& ec)>;
 
     class MessageIO: public std::enable_shared_from_this<MessageIO>{
-        boost::asio::strand<boost::asio::any_io_executor> strand_;
+        boost::asio::strand<boost::asio::any_io_executor> &strand_;
         std::unique_ptr<ITransport> transport_;
         OnPacketReceived on_packet_;
         OnError on_error_;
@@ -33,8 +33,8 @@ namespace flat_engine::network {
 
     public:
         explicit MessageIO(
-            boost::asio::io_context& io_context,
             std::unique_ptr<ITransport>&& transport,
+            boost::asio::strand<boost::asio::any_io_executor> &strand,
             OnPacketReceived on_packet_received = nullptr,
             OnError on_error = nullptr);
 

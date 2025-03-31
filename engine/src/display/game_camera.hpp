@@ -20,10 +20,10 @@ public:
 
 	void think();
 
-	glm::mat4 worldToScreen( const glm::vec3 origin, float model_scale = 1.f ) const;
+	[[nodiscard]] glm::mat4 worldToScreen( const glm::vec3 origin, float model_scale = 1.f ) const;
 
 	[[nodiscard]] ALWAYS_INLINE glm::vec3 getGlobalOrigin( ) const {
-		return {vec3(m_origin.getGlobalCoords(), getHeight())};
+		return {glm::vec3(m_origin.getGlobalCoords(), getHeight())};
 	}
 	
 	// @todo: remake it.
@@ -34,7 +34,7 @@ public:
 	[[nodiscard]] ALWAYS_INLINE Position getOrigin() const { return m_origin; };
 	ALWAYS_INLINE void setOrigin(Position pos) { m_origin = pos; }
 
-	RectangleGlobalArea getVisibleRect(int screen_width, int screen_height);
+	RectangleArea getVisibleRect(int screen_width, int screen_height);
 private:
 	Position    m_origin;
 	// glm::mat4   m_proj_matrix{};

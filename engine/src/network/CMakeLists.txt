@@ -22,12 +22,15 @@ set(FLATBUFFERS_GENERATED_DIR "${CMAKE_BINARY_DIR}/generated_fbs")
 # --- Собираем список cpp/h для фреймворка (shared, server, client) ---
 file(GLOB_RECURSE NETWORK_SOURCES_SHARED
         "src/shared/*.cpp"
+        "include/shared/*.h"
 )
 file(GLOB_RECURSE NETWORK_SOURCES_SERVER
         "src/server/*.cpp"
+        "include/server/*.h"
 )
 file(GLOB_RECURSE NETWORK_SOURCES_CLIENT
         "src/client/*.cpp"
+        "include/client/*.h"
 )
 
 # Можно объединить все .cpp в один список

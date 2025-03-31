@@ -2,9 +2,6 @@
 #include "factory/definitions.hpp"
 #include <glm/glm.hpp>
 
-using namespace std;
-using namespace math;
-using namespace glm;
 
 std::tuple<double, double> to_tuple(const glm::vec2& vec) {
 	return std::make_tuple(vec.x, vec.y);
@@ -15,7 +12,7 @@ Position::Position(double x, double y)
 	setFromGlobalCoords(x, y);
 }
 
-Position::Position(Vector coords, ivec2 index) : m_coords(coords), m_index(index) {
+Position::Position(Vector coords, glm::ivec2 index) : m_coords(coords), m_index(index) {
 }
 
 void Position::normalizeCoords() {
@@ -43,7 +40,7 @@ void Position::setFromGlobalCoords(double x, double y) {
 
 }
 
-void Position::shiftToCoordsSystem(ivec2 cell_index) {
+void Position::shiftToCoordsSystem(glm::ivec2 cell_index) {
 	m_coords.x += (m_index.x - cell_index.x) * g_cell_size;
 	m_coords.y += (m_index.y - cell_index.y) * g_cell_size;
 	m_index = cell_index;
@@ -53,12 +50,17 @@ void Position::shiftToCoordsSystem(Position pos) {
 	shiftToCoordsSystem(pos.m_index);
 }
 
-vec2 Position::getShift(Position obj) {
+glm::vec2 Position::getShift(Position obj) {
 	float x = (obj.m_index.x - m_index.x) * g_cell_size 
 		+ obj.m_coords.x - m_coords.x;
 	float y = (obj.m_index.y - m_index.y) * g_cell_size
 		+ obj.m_coords.y - m_coords.y;
-	return vec2(x, y);
+	return {x, y};
+}
+
+float Position::getDistance(const Position& obj) {
+	auto shift = getShift(obj);
+	return sqrtf(shift.x * shift.x + shift.y * shift.y);
 }
 
 ObjectForm::ObjectForm(ObjectForm& form)
@@ -139,9 +141,9 @@ void ObjectForm::releaseData()
 	}
 }
 
-vec2 ObjectForm::getSize(float angle)
+glm::vec2 ObjectForm::getSize(float angle) const
 {
-	vec2 size{};
+	glm::vec2 size{};
 	switch (m_type)
 	{
 	case ObjectFormType::FORM_CIRCLE:
@@ -150,14 +152,14 @@ vec2 ObjectForm::getSize(float angle)
 	case ObjectFormType::FORM_RECTANGLE:
 		float x = m_data.m_rectangle->m_width;
 		float y = m_data.m_rectangle->m_height;
-		size.x = x * cos(angle) + y * sin(angle);
-		size.y = y * cos(angle) + x * sin(angle);
+		size.x = x * cosf(angle) + y * sinf(angle);
+		size.y = y * cosf(angle) + x * sinf(angle);
 		break;
 	}
-	return move(size);
+	return size;
 }
 
-float ObjectForm::getMaxSize()
+float ObjectForm::getMaxSize() const
 {
 	float res = 0;
 	switch (m_type)
@@ -168,10 +170,21 @@ float ObjectForm::getMaxSize()
 	case ObjectFormType::FORM_RECTANGLE:
 		float x = m_data.m_rectangle->m_width;
 		float y = m_data.m_rectangle->m_height;
-		res = sqrt(x * x + y * y);
+		res = sqrtf(x * x + y * y);
 		break;
 	}
 	return res;
+}
+
+RectangleArea::RectangleArea(double left, double right, double bottom, double top)
+	: m_left(left), m_right(right), m_bottom(bottom), m_top(top){
+}
+
+RectangleArea::RectangleArea(CircleArea area) {
+	m_left = area.m_pos.x - area.m_radius;
+	m_right = area.m_pos.x + area.m_radius;
+	m_bottom = area.m_pos.y - area.m_radius;
+	m_top = area.m_pos.y + area.m_radius;
 }
 
 ObjectForm::~ObjectForm()

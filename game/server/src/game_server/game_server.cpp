@@ -1,6 +1,9 @@
 #include "game_server.hpp"
 
-GameServer::GameServer(const uint16_t port) : ServerEngine(port) {
+#include "session_controller.hpp"
+
+GameServer::GameServer(const uint16_t port)
+    : ServerEngine(port, std::make_unique<SessionController>()) {
 }
 
 

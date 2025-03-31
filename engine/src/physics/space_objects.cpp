@@ -3,9 +3,6 @@
 #include "input/input.hpp"
 #include "base_physics.hpp"
 
-using namespace std;
-using namespace math;
-
 uint32_t LocatableObject::c_next_id = 1;
 
 LocatableObject::LocatableObject(uint32_t id, uint32_t type_id, ObjectForm &&form)
@@ -118,10 +115,10 @@ SpaceObject::~SpaceObject() {
 void SpaceObject::rotate(float da)
 {
 	m_rotation += da;
-	if (m_rotation > g_pi2)
-		m_rotation -= trunc(m_rotation / g_pi2) * g_pi2;
+	if (m_rotation > math::g_pi2)
+		m_rotation -= trunc(m_rotation / math::g_pi2) * math::g_pi2;
 	else if (m_rotation < 0)
-		m_rotation -= (trunc(m_rotation / g_pi2) - 1) * g_pi2;
+		m_rotation -= (trunc(m_rotation / math::g_pi2) - 1) * math::g_pi2;
 }
 
 void SpaceObject::moveTo(double x, double y)
@@ -362,4 +359,13 @@ void SpaceObject::updateCell() {
 	if (m_cell->m_index_in_district != m_position.m_index)
 		initInCell(&m_current_district->m_cells(m_position.m_index.y,
 			m_position.m_index.x));
+}
+
+std::list<LocatableObject*> Actor::getAreaInterestObjects() {
+	auto cell_indices = m_physical_body->getPosition().getGlobalCoords();
+	return m_physical_body->getCurrentCell()->getOwnerDistrict()->getCircleAreaObjects(
+		*m_physical_body,
+		CircleArea(
+			glm::dvec2(cell_indices.x, cell_indices.y),
+			getAreaInterestRadius()));
 }

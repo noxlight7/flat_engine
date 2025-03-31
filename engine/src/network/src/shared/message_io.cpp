@@ -60,11 +60,11 @@ namespace flat_engine::network {
     }
 
     MessageIO::MessageIO(
-        boost::asio::io_context& io_context,
         std::unique_ptr<ITransport>&& transport,
+        boost::asio::strand<boost::asio::any_io_executor> &strand,
         OnPacketReceived on_packet_received,
         OnError on_error)
-        : strand_(make_strand(io_context)),
+        : strand_(strand),
           transport_(std::move(transport)),
           on_packet_(std::move(on_packet_received)),
           on_error_(std::move(on_error)),

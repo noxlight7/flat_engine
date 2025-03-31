@@ -8,16 +8,16 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
-#include <network_server.hpp>
+#include <network_server.h>
 #include <game_deserializer.hpp>
 #include <utils/scheduler.hpp>
 
 class ServerEngine {
 public:
-    explicit ServerEngine(uint16_t port)
+    explicit ServerEngine(uint16_t port, std::unique_ptr<flat_engine::network::ISessionController> session_controller)
         :
     // m_scheduler(m_io_context),
-    m_network_server(m_io_context, port) {
+    m_network_server(m_io_context, port, std::move(session_controller)) {
     }
 
     virtual ~ServerEngine() = default;
