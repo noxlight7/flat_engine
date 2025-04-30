@@ -44,7 +44,7 @@ public:
 
 private:
 	list<Type*>* m_plist;
-	list<Type*>::iterator m_iterator;
+	typename list<Type*>::iterator m_iterator;
 };
 
 template <typename Type>
@@ -66,14 +66,19 @@ private:
 	int m_row_amount;
 };
 
+constexpr float k_rotation_up = 0.f;
+constexpr float k_rotation_left = math::g_pi / 2.f;
+constexpr float k_rotation_down = math::g_pi;
+constexpr float k_rotation_right = math::g_pi * 3.f / 2.f;
 
 // Позиционный объект. Имеет x, y координаты
 class LocatableObject : public BaseEntity{
 public:
 	LocatableObject() = delete;
 	LocatableObject(LocatableObject&) = delete;
-	explicit LocatableObject(uint32_t id, uint32_t type_id, ObjectForm &&form = ObjectForm(0.5));
-	explicit LocatableObject(PoolID* pool_id, uint32_t type_id, ObjectForm &&form = ObjectForm(0.5));
+	LocatableObject(LocatableObject&&) noexcept ;
+	explicit LocatableObject(uint32_t id, uint32_t type_id, ObjectForm& form);
+	explicit LocatableObject(PoolID* pool_id, uint32_t type_id, ObjectForm& form);
 	LocatableObject(uint32_t id, LocatableObject&);
 	LocatableObject(PoolID* pool_id, LocatableObject&);
 	~LocatableObject() override;
@@ -86,15 +91,18 @@ public:
 	[[nodiscard]] uint32_t getTypeID() const { return m_type_id; }
 	// [[nodiscard]] Position& getPosition() { return m_position; }
 
+	void rotate(float da);				// Вращает объект на da радиан
+	void setRotation(float angle);
+	[[nodiscard]] float getRotation() const {return m_rotation;}
+
 	Position& getPosition();					// Возвращает вектор позиции
-	[[nodiscard]] glm::vec3 getRenderOrigin( ) const;
+	[[nodiscard]] glm::dvec3 getRenderOrigin( ) const;
 
 protected:
 	float m_rotation{};				// Угол поворота
 	Position m_position{};			// Позиция объекта
 	ObjectForm m_form{};				// Данные о форме объекта
 	District* m_current_district{};	// Область, в которой находится объект
-	uint32_t m_id{};					// Идентификатор объекта
 	uint32_t m_type_id{};				// Идентификатор типа объекта
 
 private:
@@ -109,18 +117,13 @@ using LocatableObject1Predict = std::function<bool(LocatableObject& object)>;
 inline bool alwaysTrue2(LocatableObject& subject, LocatableObject& object){ return true; }
 inline bool alwaysTrue1(LocatableObject& obj){ return true; }
 
-struct Terrain {
-	short terrain_index = 0;
-};
-
-
-class TerrainMap {
-public:
-	TerrainMap();
-
-private:
-	Matrix<short> m_matrix;
-};
+// class TerrainMap {
+// public:
+// 	TerrainMap();
+//
+// private:
+// 	Matrix<TerrainID> m_matrix;
+// };
 
 
 // Объект локации, имеет x, y координаты и размер
@@ -136,7 +139,7 @@ public:
 		PoolID* pool_id,
 		bool is_moveable,
 		uint32_t type_id,
-		ObjectForm&& form = ObjectForm(0.5),
+		ObjectForm& form,
 		float rotation = 0.f,
 		float rotation_speed = 0.f,
 		float max_rotation_speed = 0.f,
@@ -147,7 +150,7 @@ public:
 		uint32_t id,
 		bool is_moveable,
 		uint32_t type_id,
-		ObjectForm&& form = ObjectForm(0.5),
+		ObjectForm& form,
 		float rotation = 0.f,
 		float rotation_speed = 0.f,
 		float max_rotation_speed = 0.f,
@@ -160,11 +163,10 @@ public:
 	SpaceObject(PoolID* pool_id, SpaceObject& lo);
 	SpaceObject(uint32_t id, SpaceObject& lo);
 	// Move-конструктор
-	SpaceObject(SpaceObject&& lo);
+	SpaceObject(SpaceObject&& lo) noexcept ;
 
 	~SpaceObject() override;
 
-	void rotate(float da);				// Вращает объект на da радиан
 	void moveTo(double x, double y);
 	void moveTo(District* district, double x, double y);
 
@@ -186,10 +188,12 @@ public:
 	void move(float dt);					// Перемещает объект в состояние через dt мс
 	void setSpeedDirection(Vector& speed_direction); // Устанавливает направление скорости
 	void setCurrentSpeed(float current_speed); // Устанавливает текущее значение скорости
+	void setMaxSpeed(float max_speed);
+	[[nodiscard]] float getMaxSpeed() const { return m_max_speed; }
 	Vector getFutureCoords(float dt); // Возвращает положение объекта через время dt
 	Position getFuturePosition(float dt);
 
-	bool isMoveable();
+	bool isMoveable() const;
 
 	// Обновляет данные о текущей ячейке
 	void updateCell();
@@ -199,16 +203,16 @@ public:
 protected:
 	void RemoveFromOldDistrict();
 
-	bool m_is_moveable;					// Является ли движущимся объектом
+	bool m_is_moveable{};					// Является ли движущимся объектом
 	
-	float m_rotation_speed;				// Скорость поворота, используется только для круглого объекта
-	float m_max_rotation_speed;			// Максимальная скорость поворота
-	float m_current_speed;				// Текущая скорость объекта
-	Vector m_speed_direction;			// Текущее направление скорости объекта
-	float m_max_speed;					// Максимальная скорость
-	float m_acceleration;				// Ускорение объекта (скорость набора скорости)
+	float m_rotation_speed{};				// Скорость поворота, используется только для круглого объекта
+	float m_max_rotation_speed{};			// Максимальная скорость поворота
+	float m_current_speed{};				// Текущая скорость объекта
+	Vector m_speed_direction{};				// Текущее направление скорости объекта
+	float m_max_speed{};					// Максимальная скорость
+	float m_acceleration{};					// Ускорение объекта (скорость набора скорости)
 
-	DistrictCell* m_cell;
+	DistrictCell* m_cell{};
 	ListPElementInfo<SpaceObject> m_cell_info;
 	ListPElementInfo<SpaceObject> m_district_info;
 	ListPElementInfo<SpaceObject> m_district_moveable_info;
@@ -290,6 +294,10 @@ public:
 
 	District *getOwnerDistrict() {return m_owner_district;}
 
+	[[nodiscard]] bool isFill() const { return m_fill_object != nullptr; }
+	[[nodiscard]] SpaceObject &getFillObject() const {return *m_fill_object;}
+	void addFillObject(std::unique_ptr<SpaceObject> fill_object);
+
 protected:
 
 	bool m_is_border;
@@ -301,7 +309,7 @@ protected:
 	// Список содержащихся в ячейке объектов
 	std::list<SpaceObject*> m_objects;
 
-	TerrainMap m_map;
+	std::unique_ptr<SpaceObject> m_fill_object;
 };
 
 /*	Область(может подгружаться и выгружаться из / в файл по необходимости для игрока
@@ -313,13 +321,14 @@ class District
 	friend DistrictRenderer;
 public:
 	// Конструктор. Создаёт область
-	District(int width, int height);
+	District(int width, int height, const TerrainMap& terrain_map);
 	~District();
 
 	//void addObject(SpaceObject* obj, float x, float y);
 
 	DistrictCell* getCell(int x, int y);
 	DistrictCell* getCell(glm::ivec2 index);
+	Matrix<TerrainID>& getTerrainMatrix() { return m_terrain_matrix; }
 
 	[[nodiscard]] int getCellsXAmount() const { return m_cells.colCount(); }
 	[[nodiscard]] int getCellsYAmount() const { return m_cells.rowCount(); }
@@ -372,7 +381,10 @@ public:
 		LocatableObject& subject, const CircleArea& area,
 		const LocatableObject2Predict& func = alwaysTrue2);
 
-private:	
+	bool isPosInFreeCell(double x, double y);
+
+private:
+	Matrix<TerrainID> m_terrain_matrix;
 	// Хранит ссылки на все пространственные объекты
 	list<SpaceObject*> m_space_objects; 
 	// Хранит ссылки на все способные двигаться объекты
@@ -388,6 +400,8 @@ private:
 
 	DistrictRenderer *m_renderer;
 
+	const TerrainMap& m_terrain_map;
+
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;			// Имена сетей, в которые возможно перейти из текущей области
 };
@@ -396,7 +410,11 @@ class DistrictRenderer : public IRendererWorld {
 	friend District;
 public:
 	DistrictRenderer(District* district, int out_width, int out_height);
-	void drawWorld(DisplaySystem& display_system, const DisplayObjects& object_types_textures, IRenderer* renderer) override;
+	void drawWorld(
+		DisplaySystem& display_system,
+		const DisplayObjects& object_types_textures,
+		const TerrainMap& terrain_map,
+		IRenderer* renderer) override;
 
 private:
 	District* m_district;

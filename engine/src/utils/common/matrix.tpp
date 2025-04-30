@@ -40,6 +40,11 @@ T& Matrix<T>::operator()(int row, int col) {
     return data[row][col];
 }
 
+// template <typename T>
+// T Matrix<T>::get(int row, int col) const {
+//     return (*this)(row, col);
+// }
+
 template <typename T>
 const T& Matrix<T>::operator()(int row, int col) const {
     if (row >= rows || col >= cols || row < 0 || col < 0) {

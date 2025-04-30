@@ -9,6 +9,7 @@ Camera::~Camera( )
 	{}
 
 RectangleArea Camera::getVisibleRect(int screen_width, int screen_height) {
+	std::lock_guard lock(m_mutex);
 	float dy = getHeight() * 2;
 	float dx = dy * static_cast<float>(screen_width) / static_cast<float>(screen_height);
 	auto [x, y] = to_tuple(m_origin.getGlobalCoords());

@@ -9,8 +9,9 @@
 #include <thread>
 #include <iostream>
 #include <network_server.h>
-#include <game_deserializer.hpp>
 #include <utils/scheduler.hpp>
+
+#include "deserializer.h"
 
 class ServerEngine {
 public:
@@ -23,7 +24,6 @@ public:
     virtual ~ServerEngine() = default;
 
     void init() {
-        flat_engine::network::GameDeserializeRoutes::initRoutes();
         initThreads();
         run();
     }

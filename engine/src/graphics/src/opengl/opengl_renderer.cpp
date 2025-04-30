@@ -9,6 +9,23 @@
 #include <opengl/opengl_vertex_buffer.hpp>
 #include "res/opengl/embedded_shaders.hpp"
 
+struct InstanceData {
+    glm::vec2 pos;
+    glm::vec2 size;
+    float rotation;
+};
+
+std::vector<Vertex> quadVertices = {
+    // Первый треугольник
+    { {-0.5f, -0.5f}, {0.0f, 0.0f} },
+    { { 0.5f, -0.5f}, {1.0f, 0.0f} },
+    { { 0.5f,  0.5f}, {1.0f, 1.0f} },
+    // Второй треугольник
+    { {-0.5f, -0.5f}, {0.0f, 0.0f} },
+    { { 0.5f,  0.5f}, {1.0f, 1.0f} },
+    { {-0.5f,  0.5f}, {0.0f, 1.0f} }
+};
+
 bool OpenGLRenderer::init(void* window) {
     m_window = static_cast<GLFWwindow*>(window);
     glfwMakeContextCurrent(m_window);
@@ -29,6 +46,9 @@ bool OpenGLRenderer::init(void* window) {
     m_vertex_buffer = std::make_unique<OpenGLVertexBuffer>();
     m_texture_manager = std::make_unique<OpenGLTextureManager>();
     m_view = glm::mat4(1.0f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     return true;
 }
@@ -70,7 +90,8 @@ void OpenGLRenderer::drawLayer(
             DrawInfo draw_info {
                 .tex = draw.tex,
                 .position = prev_draw.position + (draw.position - prev_draw.position) * dt_ratio,
-                .size = prev_draw.size + (draw.size - prev_draw.size) * dt_ratio
+                .size = prev_draw.size + (draw.size - prev_draw.size) * dt_ratio,
+                .rotation = prev_draw.rotation + (draw.rotation - prev_draw.rotation) * dt_ratio
             };
             groups[draw.tex].push_back(draw_info);
         } else {
@@ -79,62 +100,91 @@ void OpenGLRenderer::drawLayer(
     }
 
     // Для каждой группы объектов с одинаковой текстурой
-    for (const auto& groupPair : groups) {
-        TextureID texId = groupPair.first;
-        const auto& objects = groupPair.second;
+for (const auto& groupPair : groups) {
+    TextureID texId = groupPair.first;
+    const auto& objects = groupPair.second;
 
-        // Получаем текстуру из менеджера (предполагается, что ITexture* можно привести к OpenGLTexture*)
-        ITexture* tex = getTextureManager()->getTexture(texId);
-        if (!tex) continue;  // Если текстура не найдена — пропускаем
+    // Получаем текстуру
+    ITexture* tex = getTextureManager()->getTexture(texId);
+    if (!tex) continue;
+    const auto* oglTex = dynamic_cast<OpenGLTexture*>(tex);
+    if (!oglTex) continue;
 
-        const auto* oglTex = dynamic_cast<OpenGLTexture*>(tex);
-        // Активируем текстурный юнит 0 и привязываем текстуру
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, oglTex->getGlID());
-        // std::cout << "Binding texture (ID = " << oglTex->getGlID() << ") for group with TextureID " << texId << std::endl;
-        if (!glIsTexture(oglTex->getGlID())) {
-            std::cerr << "Ошибка: идентификатор текстуры " << oglTex->getGlID() << " не распознан как корректный объект текстуры." << std::endl;
-        }
-        // Проверка ошибок OpenGL
-        GLenum error = glGetError();
-        if (error != GL_NO_ERROR) {
-            std::cerr << "OpenGL error after glBindTexture: " << error << std::endl;
-        }
-        // Собираем вершины для всех объектов в группе
-        std::vector<Vertex> vertices;
-        vertices.reserve(objects.size() * 6);
-        for (const auto& draw : objects) {
-            // Предполагаем, что draw.position — позиция (верхний левый угол) и draw.size — размеры в пикселях.
-            const glm::vec2 center = draw.position;
-            const glm::vec2 size = draw.size;
-            const glm::vec2 pos = center - size * 0.5f; // нижний левый угол
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, oglTex->getGlID());
 
-            // Первый треугольник
-            vertices.push_back({ glm::vec2(pos.x, pos.y),               glm::vec2(0.0f, 0.0f) });
-            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y),        glm::vec2(1.0f, 0.0f) });
-            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y + size.y), glm::vec2(1.0f, 1.0f) });
-
-            // Второй треугольник
-            vertices.push_back({ glm::vec2(pos.x, pos.y),               glm::vec2(0.0f, 0.0f) });
-            vertices.push_back({ glm::vec2(pos.x + size.x, pos.y + size.y), glm::vec2(1.0f, 1.0f) });
-            vertices.push_back({ glm::vec2(pos.x, pos.y + size.y),        glm::vec2(0.0f, 1.0f) });
-        }
-
-        // Загружаем данные вершин в vertex buffer
-        m_vertex_buffer->uploadData(vertices);
-        m_vertex_buffer->bind();
-        m_shader->use();
-
-        // Передаём матрицы в шейдер
-        m_shader->setMat4("u_projection", m_projection);
-        m_shader->setMat4("u_view", m_view);
-        // Шейдер ожидает текстуру на юните 0
-        m_shader->setInt("u_texture", 0);
-
-        // Отрисовываем группу одним вызовом glDrawArrays
-        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertices.size()));
-        m_vertex_buffer->unbind();
+    // Собираем инстанс-данные для каждого объекта.
+    std::vector<InstanceData> instances;
+    instances.reserve(objects.size());
+    for (const auto& draw : objects) {
+        InstanceData inst;
+        // Если требуется интерполяция между предыдущим и текущим состоянием, то делается как ранее:
+        // inst.pos = prev_draw.position + (draw.position - prev_draw.position) * dt_ratio;
+        // inst.size = prev_draw.size + (draw.size - prev_draw.size) * dt_ratio;
+        // inst.rotation = prev_draw.rotation + (draw.rotation - prev_draw.rotation) * dt_ratio;
+        // В простейшем случае:
+        inst.pos = draw.position;
+        inst.size = draw.size;
+        inst.rotation = draw.rotation;
+        instances.push_back(inst);
     }
+
+    // Создаем VAO и VBO для квадрата и инстанс-данных.
+    GLuint VAO, quadVBO, instanceVBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &quadVBO);
+    glGenBuffers(1, &instanceVBO);
+
+    glBindVertexArray(VAO);
+
+    // Загрузка вершин квадрата (не инстансированные данные)
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(Vertex), quadVertices.data(), GL_STATIC_DRAW);
+    // Атрибут 0: позиция
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    // Атрибут 1: текстурные координаты
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex_coords));
+
+    // Загрузка инстанс-данных
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(InstanceData), instances.data(), GL_DYNAMIC_DRAW);
+
+    // Атрибут 2: instancePos (vec2)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, pos));
+    glVertexAttribDivisor(2, 1);  // Использовать одно и то же значение для каждого экземпляра
+
+    // Атрибут 3: instanceSize (vec2)
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, size));
+    glVertexAttribDivisor(3, 1);
+
+    // Атрибут 4: instanceRotation (float)
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (void*)offsetof(InstanceData, rotation));
+    glVertexAttribDivisor(4, 1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    // Отправляем данные в шейдер
+    m_shader->use();
+    m_shader->setMat4("u_projection", m_projection);
+    m_shader->setMat4("u_view", m_view);
+    m_shader->setInt("u_texture", 0);
+
+    // Отрисовка с использованием инстансинга
+    glBindVertexArray(VAO);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, static_cast<GLsizei>(instances.size()));
+    glBindVertexArray(0);
+
+    // Освобождаем созданные буферы (в реальном приложении их можно кешировать)
+    glDeleteBuffers(1, &quadVBO);
+    glDeleteBuffers(1, &instanceVBO);
+    glDeleteVertexArrays(1, &VAO);
+}
 }
 
 ITextureManager* OpenGLRenderer::getTextureManager() {

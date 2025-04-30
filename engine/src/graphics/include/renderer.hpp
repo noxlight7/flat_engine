@@ -4,6 +4,7 @@
 
 #ifndef RENDERER_H
 #define RENDERER_H
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <ranges>
@@ -21,9 +22,15 @@ struct DrawInfo {
     TextureID tex;
     glm::vec2 position;
     glm::vec2 size;
+    float rotation = 0.0f;
 };
 
 using DrawLayer = std::unordered_map<uint32_t, DrawInfo>;
+
+// using DrawLayout = struct {
+//     std::vector<DrawLayer> layers;
+//     std::chrono::time_point<std::chrono::steady_clock> build_time;
+// };
 
 using DrawLayout = std::vector<DrawLayer>;
 
@@ -50,6 +57,13 @@ public:
         const DrawLayout &current,
         float dt_ratio,
         float camera_height) {
+
+        // auto current_time = std::chrono::steady_clock::now();
+        // float logic_interval_seconds = std::chrono::duration<float>(current.build_time - previous.build_time).count();
+        // float delta_since_logic_update = std::chrono::duration<float>(
+        //     current_time - m_start_frame_processing_time).count();
+        //
+        // float interpolation_alpha = delta_since_logic_update / logic_interval_seconds;
         for (const auto [
             previous_layer,
             current_layer] :

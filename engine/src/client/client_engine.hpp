@@ -8,7 +8,7 @@
 #include <boost/asio.hpp>
 #include <thread>
 #include <array>
-#include <vector>
+#include <physics/physics.hpp>
 
 #include <renderer.hpp>
 #include <utils/scheduler.hpp>
@@ -57,6 +57,8 @@ public:
 
     virtual void initDisplayObjects() = 0;
 
+    TerrainMap& getTerrainMap() { return m_terrain_map; }
+
 protected:
     boost::asio::io_context m_receiving_context;
     boost::asio::io_context m_processing_context;
@@ -71,6 +73,7 @@ protected:
     DisplaySystem m_display_system;
     DisplayObjects m_objects_types_textures;
     std::unique_ptr<IRenderer> m_renderer{};
+    std::unordered_map<TerrainID, Terrain> m_terrain_map;
 
     std::mutex m_renderer_mutex;
 

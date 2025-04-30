@@ -9,7 +9,7 @@
 #include <flatbuffers/flatbuffers.h>
 
 namespace flat_engine::network {
-    class Serializer {
+    class SharedSerializer {
         static std::vector<uint8_t> serializeBuilder(
             const flatbuffers::FlatBufferBuilder &builder) {
             return {

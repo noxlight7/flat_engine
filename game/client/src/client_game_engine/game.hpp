@@ -21,8 +21,11 @@ public:
 	}
 
 	void onInit() final;
+	void initTerrains();
 	void onLogicUpdate() final;
 	void initDisplayObjects() final;
+	void onKeyDown(int key, int scancode, int action, int mods) override;
+	void onRender() override;
 	Vector getPlayerKeyboardSpeedDirection();
 	Vector getPlayer2KeyboardSpeedDirection();
 

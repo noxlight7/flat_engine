@@ -20,6 +20,7 @@ public:
 
     // Перегрузка оператора () для доступа к элементу (с проверкой границ)
     T& operator()(int row, int col);
+    // T get(int row, int col) const;
     const T& operator()(int row, int col) const;
 
     // Методы для получения размеров матрицы

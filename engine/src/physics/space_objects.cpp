@@ -5,9 +5,17 @@
 
 uint32_t LocatableObject::c_next_id = 1;
 
-LocatableObject::LocatableObject(uint32_t id, uint32_t type_id, ObjectForm &&form)
+LocatableObject::LocatableObject(LocatableObject&& lo) noexcept
+	: BaseEntity(std::move(lo)), m_form(std::move(lo.m_form)) {
+	m_position = lo.m_position;
+	m_rotation = lo.m_rotation;
+	m_current_district = lo.m_current_district;
+	m_type_id = lo.m_type_id;
+}
+
+LocatableObject::LocatableObject(uint32_t id, uint32_t type_id, ObjectForm& form)
 	: BaseEntity(id), m_current_district(nullptr), m_form(form), m_position(),
-	  m_type_id(type_id), m_id(nextID()) {
+	  m_type_id(type_id) {
 	/*if (texture != nullptr) {
 		m_entity = new VertexBaseEntity();
 		m_entity->createObject();
@@ -15,19 +23,19 @@ LocatableObject::LocatableObject(uint32_t id, uint32_t type_id, ObjectForm &&for
 	}*/
 }
 
-LocatableObject::LocatableObject(PoolID* pool_id, uint32_t type_id, ObjectForm&& form)
+LocatableObject::LocatableObject(PoolID* pool_id, uint32_t type_id, ObjectForm& form)
 	: BaseEntity(pool_id), m_current_district(nullptr), m_form(form), m_position(),
-	  m_type_id(type_id), m_id(nextID()) {
+	  m_type_id(type_id) {
 }
 
 LocatableObject::LocatableObject(uint32_t id, LocatableObject &obj)
 	: BaseEntity(id), m_position(obj.m_position), m_form(obj.m_form),
-	  m_current_district(obj.m_current_district), m_id(nextID()), m_type_id(obj.m_type_id) {
+	  m_current_district(obj.m_current_district), m_type_id(obj.m_type_id) {
 }
 
 LocatableObject::LocatableObject(PoolID*pool_id, LocatableObject&obj)
 	: BaseEntity(pool_id), m_position(obj.m_position), m_form(obj.m_form),
-	  m_current_district(obj.m_current_district), m_id(nextID()), m_type_id(obj.m_type_id) {
+	  m_current_district(obj.m_current_district), m_type_id(obj.m_type_id) {
 }
 
 LocatableObject::~LocatableObject() = default;
@@ -37,13 +45,13 @@ SpaceObject::SpaceObject(
 	PoolID* pool_id,
 	bool is_moveable,
 	uint32_t type_id,
-	ObjectForm&& form,
+	ObjectForm& form,
 	float rotation,
 	float rotation_speed,
 	float max_rotation_speed,
 	Vector&& speed_direction,
 	float max_speed, float acceleration)
-	: LocatableObject(pool_id, type_id, std::move(form)),
+	: LocatableObject(pool_id, type_id, form),
 	m_is_moveable(is_moveable),
 	m_rotation_speed(rotation_speed), 
 	m_max_rotation_speed(max_rotation_speed),
@@ -59,13 +67,13 @@ SpaceObject::SpaceObject(
 	uint32_t id,
 	bool is_moveable,
 	uint32_t type_id,
-	ObjectForm&& form,
+	ObjectForm& form,
 	float rotation,
 	float rotation_speed,
 	float max_rotation_speed,
 	Vector&& speed_direction,
 	float max_speed, float acceleration)
-	: LocatableObject(id, type_id, std::move(form)),
+	: LocatableObject(id, type_id, form),
 	m_is_moveable(is_moveable),
 	m_rotation_speed(rotation_speed),
 	m_max_rotation_speed(max_rotation_speed),
@@ -108,26 +116,47 @@ SpaceObject::SpaceObject(const uint32_t id, SpaceObject& lo)
 	  m_cell(nullptr){
 }
 
-SpaceObject::~SpaceObject() {
-	removeFromDistrictList();
+SpaceObject::SpaceObject(SpaceObject&& lo) noexcept : LocatableObject(std::move(lo)) {
+	m_cell = lo.m_cell;
+	m_cell_info = lo.m_cell_info;
+	m_acceleration = lo.m_acceleration;
+	m_current_speed = lo.m_current_speed;
+	m_speed_direction = lo.m_speed_direction;
+	m_max_speed = lo.m_max_speed;
+	m_is_moveable = lo.m_is_moveable;
+	m_rotation_speed = lo.m_rotation_speed;
+	m_max_rotation_speed = lo.m_max_rotation_speed;
 }
 
-void SpaceObject::rotate(float da)
+SpaceObject::~SpaceObject() {
+	if (getID())
+		removeFromDistrictList();
+}
+
+void LocatableObject::rotate(float da)
 {
-	m_rotation += da;
-	if (m_rotation > math::g_pi2)
-		m_rotation -= trunc(m_rotation / math::g_pi2) * math::g_pi2;
-	else if (m_rotation < 0)
-		m_rotation -= (trunc(m_rotation / math::g_pi2) - 1) * math::g_pi2;
+	setRotation(m_rotation + da);
+}
+
+void LocatableObject::setRotation(float angle) {
+	float normalizedAngle = std::fmod(angle, math::g_pi2);
+	if (normalizedAngle < 0)
+		normalizedAngle += math::g_pi2;
+
+	if (m_form.m_type == FORM_RECTANGLE) {
+		const float step = math::g_pi2 / 4;
+		normalizedAngle = std::round(normalizedAngle / step) * step;
+
+		if (normalizedAngle >= math::g_pi2)
+			normalizedAngle -= math::g_pi2;
+	}
+
+	m_rotation = normalizedAngle;
 }
 
 void SpaceObject::moveTo(double x, double y)
 {
-	m_position.m_index.x = (int) trunc(x / g_cell_size);
-	m_position.m_index.y = (int) trunc(y / g_cell_size);
-
-	m_position.m_coords.x = x - m_position.m_index.x * g_cell_size;
-	m_position.m_coords.y = y - m_position.m_index.y * g_cell_size;
+	m_position.setFromGlobalCoords(x, y);
 
 	updateCell();
 }
@@ -140,21 +169,24 @@ void SpaceObject::RemoveFromOldDistrict()
 		m_district_moveable_info.remove();
 }
 
-bool SpaceObject::isMoveable() {
+bool SpaceObject::isMoveable() const {
 	return m_is_moveable;
 }
 
 void SpaceObject::moveTo(District* district, double x, double y)
 {
-	if (m_current_district != nullptr &&
-		m_current_district != district) 
-		RemoveFromOldDistrict();
-	
-	m_current_district = district;
+	if (district->isPosInFreeCell(x, y)) {
+		if (m_current_district != nullptr &&
+			m_current_district != district)
+			RemoveFromOldDistrict();
 
-	m_position.setFromGlobalCoords(x, y);
+		m_current_district = district;
 
-	insertToDistrictList();
+		m_position.setFromGlobalCoords(x, y);
+
+		insertToDistrictList();
+		updateCell();
+	}
 }
 
 void SpaceObject::load(FILE* f)
@@ -333,7 +365,11 @@ void SpaceObject::setCurrentSpeed(float current_speed)
 	m_current_speed = current_speed;
 }
 
-glm::vec3 LocatableObject::getRenderOrigin( ) const {
+void SpaceObject::setMaxSpeed(float max_speed) {
+	m_max_speed = max_speed;
+}
+
+glm::dvec3 LocatableObject::getRenderOrigin( ) const {
 	return {m_position.getGlobalCoords(), 0};
 }
 

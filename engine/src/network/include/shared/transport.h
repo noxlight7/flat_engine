@@ -19,7 +19,7 @@ namespace flat_engine::network {
         // Начать асинхронную отправку buffer
         virtual void asyncWrite(const std::vector<uint8_t>& buffer,
             std::function<void (const boost::system::error_code&, size_t)> handler) = 0;
-        // Закрыть транспорт (сокет)
+
         virtual void close() = 0;
     };
 
@@ -28,6 +28,25 @@ namespace flat_engine::network {
 
     public:
         explicit TcpTransport(boost::asio::ip::tcp::socket socket): socket_(std::move(socket)) {}
+
+        TcpTransport(TcpTransport&& transport) noexcept: socket_(std::move(transport.socket_)) {}
+
+        void asyncRead(std::vector<uint8_t>& buffer,
+            std::function<void(const boost::system::error_code&, size_t)> handler) override;
+
+        void asyncWrite(const std::vector<uint8_t>& buffer,
+            std::function<void(const boost::system::error_code&, size_t)> handler) override;
+
+        void close() override;
+    };
+
+    class UdpTransport : public ITransport {
+        boost::asio::ip::udp::socket socket_;
+
+    public:
+        explicit UdpTransport(boost::asio::ip::udp::socket socket): socket_(std::move(socket)) {}
+
+        UdpTransport(UdpTransport&& transport) noexcept: socket_(std::move(transport.socket_)) {}
 
         void asyncRead(std::vector<uint8_t>& buffer,
             std::function<void(const boost::system::error_code&, size_t)> handler) override;

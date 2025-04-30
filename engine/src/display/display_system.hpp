@@ -18,7 +18,7 @@ class DisplaySystem {
     std::unique_ptr<DrawLayout> m_last_layout;
     std::unique_ptr<DrawLayout> m_prev_layout;
     std::unique_ptr<DrawLayout> m_building_layout;
-    std::unique_ptr<DrawLayout> m_temp_layout;
+    // std::unique_ptr<DrawLayout> m_temp_layout;
 
     std::atomic_flag m_is_need_to_shift;
     std::mutex& m_mutex;
@@ -26,11 +26,15 @@ class DisplaySystem {
     IRenderer* m_renderer;
 
     void shiftLayout() {
-        if (m_temp_layout) {
-            m_last_layout = std::move(m_prev_layout);
-            m_prev_layout = std::move(m_temp_layout);
-            m_temp_layout = nullptr;
-        }
+        // if (m_temp_layout) {
+        //     m_last_layout = std::move(m_prev_layout);
+        //     m_prev_layout = std::move(m_temp_layout);
+        //     m_temp_layout = nullptr;
+        // }
+        std::lock_guard lock(m_mutex);
+        m_prev_layout = std::move(m_last_layout);
+        m_last_layout = std::move(m_building_layout);
+        m_building_layout = std::make_unique<DrawLayout>(k_max_layers);
     }
 
 public:
@@ -52,18 +56,20 @@ public:
     [[nodiscard]] DrawLayout &getBuildingLayout() const { return *m_building_layout; }
 
     void nextState() {
-        std::lock_guard lock(m_mutex);
-        m_is_need_to_shift.test_and_set();
-        m_temp_layout = std::move(m_building_layout);
-        m_building_layout = std::make_unique<DrawLayout>(k_max_layers);
+        // std::lock_guard lock(m_mutex);
+        // m_is_need_to_shift.test_and_set();
+        // m_temp_layout = std::move(m_building_layout);
+        // m_building_layout = std::make_unique<DrawLayout>(k_max_layers);
+        shiftLayout();
     }
 
     void draw(const float dt_ratio, const float camera_height) {
-        if (m_is_need_to_shift.test()) {
-            std::lock_guard lock(m_mutex);
-            m_is_need_to_shift.clear();
-            shiftLayout();
-        }
+        // if (m_is_need_to_shift.test()) {
+        //     std::lock_guard lock(m_mutex);
+        //     m_is_need_to_shift.clear();
+        //     shiftLayout();
+        // }
+        std::lock_guard lock(m_mutex);
         m_renderer->drawLayout(*m_prev_layout, *m_last_layout, dt_ratio, camera_height);
     }
 

@@ -28,7 +28,8 @@ namespace flat_engine::network {
         std::unique_ptr<IGameData> game_data)
         : ISession(io_context, std::move(game_data), session_id),
           message_io_(std::make_shared<MessageIO>(
-              std::make_unique<TcpTransport>(TcpTransport(std::move(socket))), getStrand())),
+              std::make_unique<TcpConnection>(std::make_unique<TcpTransport>(
+                  std::move(socket))), getStrand())),
           on_session_remove_(std::move(on_session_remove)) {
         message_io_->setOnPacketReceived([this]
             (MessageRouteType route_id, std::vector<uint8_t>&& data) -> bool {

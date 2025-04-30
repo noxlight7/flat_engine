@@ -92,7 +92,8 @@ namespace flat_engine::network {
                 return handleError(ec);
             };
 
-            message_io_ = std::make_shared<MessageIO>(std::move(transport), getStrand(), onPacket, onError);
+            message_io_ = std::make_shared<MessageIO>(std::make_unique<TcpConnection>(
+                std::move(transport)), getStrand(), onPacket, onError);
             message_io_->startReading();
         }
 

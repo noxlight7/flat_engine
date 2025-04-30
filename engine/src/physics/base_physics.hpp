@@ -20,6 +20,7 @@ typedef struct Position
 	void normalizeCoords();
 
 	[[nodiscard]] DVector getGlobalCoords() const;
+	[[nodiscard]] glm::dvec3 getRenderOrigin() const;
 	void setFromGlobalCoords(double x, double y);
 	void shiftToCoordsSystem(glm::ivec2 cell_index);
 	void shiftToCoordsSystem(Position pos);
@@ -42,7 +43,8 @@ enum CollisionType
 enum ObjectFormType
 {
 	FORM_CIRCLE = COL_CIRCLE,		// Круг
-	FORM_RECTANGLE = COL_RECTANGLE// Прямоугольник
+	FORM_RECTANGLE = COL_RECTANGLE, // Прямоугольник
+	FORM_DELETED
 };
 
 struct CircleFormData
@@ -68,6 +70,7 @@ struct ObjectForm
 	ObjectForm(ObjectForm& form);
 	explicit ObjectForm(float radius);
 	ObjectForm(float width, float height);
+	ObjectForm(ObjectForm&& form);
 	~ObjectForm();
 
 	void setData(float radius);
@@ -108,3 +111,12 @@ struct RectangleArea
 // 	double m_bottom;
 // 	double m_top;
 // };
+
+
+using TerrainID = uint16_t;
+using TextureID = uint16_t;
+struct Terrain {
+	TerrainID m_id;
+	TextureID m_texture_id;
+	float m_step_cost;
+};

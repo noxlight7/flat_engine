@@ -2,7 +2,7 @@
 #include <iostream>
 #include <utility>
 
-#include "../../../game/server/src/game_server/session_controller.hpp"
+#include "session.h"
 #include "display/game_camera.hpp"
 
 void ClientEngine::initTime() {
@@ -22,10 +22,14 @@ void ClientEngine::initThreads() {
 
 	m_processing_thread = std::thread([this] {
 		m_scheduler.schedulePeriodic(k_logic_update_interval, [this] {
-			onLogicUpdate();
 			updateTime();
+			onLogicUpdate();
 			if (m_world)
-				m_world->drawWorld(m_display_system, m_objects_types_textures, m_renderer.get());
+				m_world->drawWorld(
+					m_display_system,
+					m_objects_types_textures,
+					m_terrain_map,
+					m_renderer.get());
 		});
 		m_processing_context.run();
 	});
@@ -49,7 +53,7 @@ void ClientEngine::init(const std::string& title, std::string host, uint16_t por
 	m_width = width;
 	m_height = height;
 	m_session = std::make_shared<flat_engine::network::ClientSession>(
-		m_receiving_context, std::move(host), port, std::make_unique<PlayerData>());
+		m_receiving_context, std::move(host), port, std::make_unique<flat_engine::network::IGameData>());
 	m_session->start();
 	// m_session->sendPacket(flat_engine::network::SHARED_TEST_TEXT_MESSAGE,
     // 	flat_engine::network::Serializer::serializeTextMessage("Игра подключена успешно"));
@@ -62,6 +66,8 @@ void ClientEngine::init(const std::string& title, std::string host, uint16_t por
 
 	initThreads();
 }
+
+
 
 void ClientEngine::initWindow(const std::string& title) {
 	if (!glfwInit()) {
@@ -157,7 +163,7 @@ void ClientEngine::mainLoop() {
 		float logic_interval_seconds = std::chrono::duration<float>(k_logic_update_interval).count();
 		float delta_since_logic_update = std::chrono::duration<float>(
 			current_time - m_start_frame_processing_time).count();
-		float interpolation_alpha = 1 - delta_since_logic_update / logic_interval_seconds;
+		float interpolation_alpha = delta_since_logic_update / logic_interval_seconds;
 		if (m_world)
 			m_display_system.draw(interpolation_alpha, m_renderer->getCurrentCamera()->getHeight());
 		else

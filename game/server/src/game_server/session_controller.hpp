@@ -8,16 +8,7 @@
 #include <string>
 #include <unordered_map>
 
-struct PlayerData : flat_engine::network::IGameData {
-    uint32_t player_id{};
-    uint32_t session_id{};
-    std::string login;
-    PlayerData() = default;
-    PlayerData(int player_id, uint32_t session_id, std::string login)
-        : player_id(player_id), session_id(session_id), login(std::move(login)) {
-
-    }
-};
+#include <player_data.hpp>
 
 class SessionController final : public flat_engine::network::ISessionController {
     std::unordered_map<uint32_t, PlayerData> m_session_id_player_data;

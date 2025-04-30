@@ -10,6 +10,7 @@ class BaseEntity {
 public:
     explicit BaseEntity(uint32_t id);
     explicit BaseEntity(PoolID *pool_id);
+    BaseEntity(BaseEntity &&entity) noexcept ;
     virtual ~BaseEntity();
     [[nodiscard]] uint32_t getID() const { return m_id; }
 };

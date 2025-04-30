@@ -26,6 +26,10 @@ namespace flat_engine::network {
         k_full_queue = 3,
     };
 
+    enum CoreRouteID: MessageRouteType {
+        CORE_CONNECT_UDP = 0xF001
+    };
+
     class Deserializer {
         // static constexpr MessageRouteType max_route_id = 0x1fff;
         std::unordered_map<MessageRouteType, MessageHandler> handlers;

@@ -140,8 +140,14 @@ bool Collisions::Rectangle2Rectangle2(SpaceObject* o1, SpaceObject* o2, float dt
 	Vector o2_future_coords;
 	float height1 = o1->m_form.m_data.m_rectangle->m_height;
 	float width1 = o1->m_form.m_data.m_rectangle->m_width;
+	if (fcompare(o1->m_rotation, k_rotation_left) || fcompare(o1->m_rotation, k_rotation_right)) {
+		std::swap(width1, height1);
+	}
 	float height2 = o2->m_form.m_data.m_rectangle->m_height;
 	float width2 = o2->m_form.m_data.m_rectangle->m_width;
+	if (fcompare(o2->m_rotation, k_rotation_left) || fcompare(o2->m_rotation, k_rotation_right)) {
+		std::swap(width2, height2);
+	}
 
 	SpaceObject* o2_move = nullptr;
 	if (o2->isMoveable()) {

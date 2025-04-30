@@ -8,7 +8,7 @@
 #include <queue>
 
 #include "network_settings.h"
-#include "transport.h"
+#include "connection.h"
 
 namespace flat_engine::network {
     // Функция, которая вызывается при обработке пакета.
@@ -19,7 +19,7 @@ namespace flat_engine::network {
 
     class MessageIO: public std::enable_shared_from_this<MessageIO>{
         boost::asio::strand<boost::asio::any_io_executor> &strand_;
-        std::unique_ptr<ITransport> transport_;
+        std::unique_ptr<IConnection> transport_;
         OnPacketReceived on_packet_;
         OnError on_error_;
         std::vector<uint8_t> header_buffer_;
@@ -33,7 +33,7 @@ namespace flat_engine::network {
 
     public:
         explicit MessageIO(
-            std::unique_ptr<ITransport>&& transport,
+            std::unique_ptr<IConnection>&& transport,
             boost::asio::strand<boost::asio::any_io_executor> &strand,
             OnPacketReceived on_packet_received = nullptr,
             OnError on_error = nullptr);

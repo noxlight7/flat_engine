@@ -31,6 +31,10 @@ DVector Position::getGlobalCoords() const {
 	);
 }
 
+glm::dvec3 Position::getRenderOrigin() const {
+	return { getGlobalCoords(), 0 };
+}
+
 void Position::setFromGlobalCoords(double x, double y) {
 	m_index.x = (int)floor(x / g_cell_size);
 	m_index.y = (int)floor(y / g_cell_size);
@@ -96,6 +100,15 @@ ObjectForm::ObjectForm(float width, float height)
 	m_data.m_rectangle->m_width = width;
 	m_data.m_rectangle->m_height = height;
 }
+
+ObjectForm::ObjectForm(ObjectForm&& form) {
+	m_data = form.m_data;
+	m_type = form.m_type;
+
+	form.m_type = ObjectFormType::FORM_DELETED;
+	form.m_data.m_circle = nullptr;
+}
+
 ObjectForm::ObjectForm()
 {
 	m_data.m_circle = nullptr;
@@ -126,19 +139,20 @@ void ObjectForm::setData(float width, float height)
 
 void ObjectForm::releaseData()
 {
-	switch (m_type)
-	{
-	case FORM_CIRCLE:
-		if (m_data.m_circle != nullptr)
-			delete m_data.m_circle;
-		break;
-	case FORM_RECTANGLE:
-		if (m_data.m_rectangle != nullptr)
-			delete m_data.m_rectangle;
-		break;
-	default:
-		break;
-	}
+	if (m_type != FORM_DELETED && m_data.m_circle != nullptr)
+		switch (m_type)
+		{
+		case FORM_CIRCLE:
+			if (m_data.m_circle != nullptr)
+				delete m_data.m_circle;
+			break;
+		case FORM_RECTANGLE:
+			if (m_data.m_rectangle != nullptr)
+				delete m_data.m_rectangle;
+			break;
+		default:
+			break;
+		}
 }
 
 glm::vec2 ObjectForm::getSize(float angle) const
