@@ -3,6 +3,7 @@
 #include "../entry.hpp"
 #include "physics/base_physics.hpp"
 #include <camera.hpp>
+#include <mutex>
 
 class Camera : public ICamera{
 public:

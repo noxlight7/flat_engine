@@ -5,6 +5,8 @@
 #ifndef DISPLAY_SYSTEM_H
 #define DISPLAY_SYSTEM_H
 #include "renderer.hpp"
+#include <atomic>
+#include <mutex>
 
 enum class Layers {
     Terrain = 0,
@@ -20,7 +22,7 @@ class DisplaySystem {
     std::unique_ptr<DrawLayout> m_building_layout;
     // std::unique_ptr<DrawLayout> m_temp_layout;
 
-    std::atomic_flag m_is_need_to_shift;
+    std::atomic_bool m_is_need_to_shift;
     std::mutex& m_mutex;
 
     IRenderer* m_renderer;

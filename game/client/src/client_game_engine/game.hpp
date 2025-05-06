@@ -6,7 +6,11 @@
 #include "physics/physics.hpp"
 #include "client/client_engine.hpp"
 
+#ifdef _WIN32
+const std::string k_wnd_title = "GameEngine";
+#else
 constexpr std::string k_wnd_title = "GameEngine";
+#endif
 constexpr float k_wnd_width = 1024;
 constexpr float k_wnd_height = 768;
 

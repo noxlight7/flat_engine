@@ -9,6 +9,8 @@
 
 #include "session.h"
 
+void someFunc();
+
 struct PlayerData : flat_engine::network::IGameData {
     uint32_t player_id{};
     uint32_t session_id{};

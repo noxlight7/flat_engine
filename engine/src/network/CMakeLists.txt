@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.25)
 
+if(WIN32)
+set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Путь к vcpkg toolchain")
+
+endif()
+
 project(ogf-network LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -43,7 +48,7 @@ set(OGF_NETWORK_SOURCES
 )
 
 # Создаём статическую библиотеку (можно STATIC или SHARED)
-add_library(ogf-network SHARED
+add_library(ogf-network STATIC
         ${OGF_NETWORK_SOURCES}
         ${GENERATED_HEADERS}  # Чтобы они были видны на этапе компиляции
 )
@@ -64,6 +69,10 @@ target_include_directories(ogf-network PUBLIC
         # Boost
         ${Boost_INCLUDE_DIRS}
 )
+
+if (WIN32)
+  target_link_libraries(ogf-network PRIVATE ws2_32)  # для engine/src/network
+endif()
 
 # Линкуем flatbuffers, Boost
 target_link_libraries(ogf-network

@@ -7,7 +7,18 @@
 #include <cstdint>
 #include <boost/asio/buffer.hpp>
 #include <boost/system/detail/error_code.hpp>
+
+#ifdef _WIN32
+  // минимизируем размер windows.h
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+// для работы с сокетами в Windows
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netinet/in.h>
+#endif
 
 namespace flat_engine::network {
     // константы заголовка сообщения

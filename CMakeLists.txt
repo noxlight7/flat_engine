@@ -1,8 +1,15 @@
 ﻿cmake_minimum_required(VERSION 3.25)
+
+if(WIN32)
+set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Путь к vcpkg toolchain")
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 get_filename_component(solution_name ${CMAKE_CURRENT_LIST_DIR} NAME)
 project(${solution_name})
+
+
 
 add_subdirectory(engine)
 add_subdirectory(game)

@@ -4,7 +4,13 @@
 
 #include <boost/asio.hpp>
 #include <iostream>
-#include <unistd.h>
+
+#ifdef WIN32
+    #include <io.h>
+#else
+    #include <unistd.h>
+#endif
+
 #include <string>
 #include <utility>
 #include <sstream>
@@ -184,8 +190,12 @@ namespace flat_engine::network {
         void stop() {
             is_stopped_ = true;
 
+#ifdef _WIN32
+            timer_.cancel();
+#else
             boost::system::error_code ec;
             timer_.cancel(ec);
+#endif
 
             if (tcp_message_io_) {
                 tcp_message_io_->close();

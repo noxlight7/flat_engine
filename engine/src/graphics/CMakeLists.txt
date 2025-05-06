@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
-
+if(WIN32)
+set(CMAKE_TOOLCHAIN_FILE "C:/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Путь к vcpkg toolchain")
+endif()
 project(flat_graphics)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -44,8 +46,18 @@ target_include_directories(flat_graphics PUBLIC
 # Линковка GLFW
 target_link_libraries(flat_graphics PUBLIC glfw)
 
-# Для Linux: дополнительные зависимости
-if (UNIX AND NOT APPLE)
+if (WIN32)
+    # находит glfw3Config.cmake в vcpkg-пути
+   find_package(glfw3 CONFIG REQUIRED)           # подтянет импортированный target glfw :contentReference[oaicite:5]{index=5}
+   # линковка с импортированным таргетом
+   target_link_libraries(flat_graphics PUBLIC
+       glfw                                    # импортированный target :contentReference[oaicite:6]{index=6}
+   )
+  find_package(OpenGL REQUIRED)            # находит opengl32.lib :contentReference[oaicite:6]{index=6}
+  target_link_libraries(flat_graphics PUBLIC
+      OpenGL::GL                            # импортированный target :contentReference[oaicite:7]{index=7}
+  )
+elseif (UNIX AND NOT APPLE)
     target_link_libraries(flat_graphics PUBLIC
             X11
             pthread

@@ -8,7 +8,11 @@
 
 #include "network_settings.h"
 namespace flat_engine::network {
+#ifdef _WIN32
+    const std::string k_host_name = "localhost";
+#else
     constexpr std::string k_host_name = "localhost";
+#endif
     constexpr uint16_t k_host_tcp_port = 5000;
     constexpr uint16_t k_host_udp_port = 5001;
 
