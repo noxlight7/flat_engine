@@ -47,7 +47,7 @@ void DistrictCell::addFillObject(std::unique_ptr<SpaceObject> fill_object) {
 
 District::District(int cells_x_amount, int cells_y_amount, const TerrainMap& terrain_map)
 	: m_cells(cells_y_amount, cells_x_amount),
-	  m_terrain_matrix(cells_y_amount, cells_x_amount),
+	  m_terrain_matrix(cells_y_amount, cells_x_amount, 0),
 	  m_terrain_map(terrain_map),
 	  m_renderer(nullptr)
 {
