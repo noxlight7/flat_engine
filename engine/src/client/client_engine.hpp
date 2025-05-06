@@ -21,7 +21,7 @@ using tcp = boost::asio::ip::tcp;
 
 class ClientEngine {
 public:
-    void init(const std::string& title, std::string host, uint16_t port,
+    void init(const std::string& title, std::string host, uint16_t port, uint16_t udp_port,
         uint32_t width = 1024, uint32_t height = 768);
     virtual void run();
 

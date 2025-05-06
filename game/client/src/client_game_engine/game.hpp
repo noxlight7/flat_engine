@@ -16,7 +16,8 @@ public:
 	static GameEngine& instance() {
 		static GameEngine engine = GameEngine(
 			flat_engine::network::k_host_name,
-			flat_engine::network::k_host_tcp_port);
+			flat_engine::network::k_host_tcp_port,
+			flat_engine::network::k_host_udp_port);
 		return engine;
 	}
 
@@ -30,7 +31,7 @@ public:
 	Vector getPlayer2KeyboardSpeedDirection();
 
 protected:
-	GameEngine(std::string host, uint16_t port);
+	GameEngine(std::string host, uint16_t port, uint16_t udp_port);
 	~GameEngine() override = default;
 	SpaceObject m_test_obj;
 	SpaceObject m_test_obj2;

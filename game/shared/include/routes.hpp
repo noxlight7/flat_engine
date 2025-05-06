@@ -10,6 +10,7 @@
 namespace flat_engine::network {
     constexpr std::string k_host_name = "localhost";
     constexpr uint16_t k_host_tcp_port = 5000;
+    constexpr uint16_t k_host_udp_port = 5001;
 
     enum ServerRouteID: MessageRouteType {
         SERVER_LOGIN = 0x0001,

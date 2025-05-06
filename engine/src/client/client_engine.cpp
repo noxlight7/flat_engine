@@ -49,11 +49,12 @@ ClientEngine::ClientEngine()
 	  m_world(nullptr), m_window(), m_delta_time(0), m_start_frame_processing_time() {
 }
 
-void ClientEngine::init(const std::string& title, std::string host, uint16_t port, uint32_t width, uint32_t height) {
+void ClientEngine::init(const std::string& title, std::string host, uint16_t port,
+	uint16_t udp_port, uint32_t width, uint32_t height) {
 	m_width = width;
 	m_height = height;
 	m_session = std::make_shared<flat_engine::network::ClientSession>(
-		m_receiving_context, std::move(host), port, std::make_unique<flat_engine::network::IGameData>());
+		m_receiving_context, std::move(host), port, udp_port, std::make_unique<flat_engine::network::IGameData>());
 	m_session->start();
 	// m_session->sendPacket(flat_engine::network::SHARED_TEST_TEXT_MESSAGE,
     // 	flat_engine::network::Serializer::serializeTextMessage("Игра подключена успешно"));

@@ -49,7 +49,7 @@ namespace flat_engine::network {
             }
             auto message = handlers[route_id](std::move(buffer), std::move(session));
             if (message == nullptr)
-                return k_invalid_route;
+                return k_success;
 
             if (!message->isVerified()) {
                 delete message;

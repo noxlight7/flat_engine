@@ -15,10 +15,11 @@
 
 class ServerEngine {
 public:
-    explicit ServerEngine(uint16_t port, std::unique_ptr<flat_engine::network::ISessionController> session_controller)
+    explicit ServerEngine(uint16_t tcp_port, uint16_t udp_port,
+        std::unique_ptr<flat_engine::network::ISessionController> session_controller)
         :
     // m_scheduler(m_io_context),
-    m_network_server(m_io_context, port, std::move(session_controller)) {
+    m_network_server(m_io_context, tcp_port, udp_port, std::move(session_controller)) {
     }
 
     virtual ~ServerEngine() = default;
@@ -62,7 +63,8 @@ private:
     std::vector<std::thread> m_threads;
 
     void initThreads() {
-        unsigned int num_threads = std::thread::hardware_concurrency() / 2;
+        // unsigned int num_threads = std::thread::hardware_concurrency() / 2;
+        unsigned int num_threads = 1;
         if (num_threads < 1)
             num_threads = 1;
 

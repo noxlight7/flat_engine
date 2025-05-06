@@ -12,7 +12,7 @@
 auto form1 = ObjectForm(0.8f, 0.8f);
 auto form2 = ObjectForm(0.8f, 1.2f);
 
-GameEngine::GameEngine(std::string host, uint16_t port)
+GameEngine::GameEngine(std::string host, uint16_t port, uint16_t udp_port)
 	: m_district(100, 100, m_terrain_map),
       m_test_obj(&m_pool_id, true, shared_constants::k_player_object_type_id,
       	form1),
@@ -21,7 +21,7 @@ GameEngine::GameEngine(std::string host, uint16_t port)
 {
 	m_district.setRenderer(k_wnd_width, k_wnd_height);
 	this->setWorld(m_district.getRenderer());
-	ClientEngine::init(k_wnd_title, std::move(host), port, k_wnd_width, k_wnd_height);
+	ClientEngine::init(k_wnd_title, std::move(host), port, udp_port, k_wnd_width, k_wnd_height);
 }
 
 void GameEngine::onInit() {
@@ -68,7 +68,7 @@ void GameEngine::onLogicUpdate() {
 
 	// m_session->sendPacket(flat_engine::network::SHARED_TEST_TEXT_MESSAGE,
 	// 	flat_engine::network::Serializer::serializeTextMessage("123"));
-	m_session->sendPacket(flat_engine::network::SERVER_SEND_PLAYER_AVATAR,
+	m_session->sendReliable(flat_engine::network::SERVER_SEND_PLAYER_AVATAR,
 		flat_engine::network::SharedSerializer::serializePlayerAvatar(
 			m_test_obj.getPosition().m_coords.x, m_test_obj.getPosition().m_coords.y,
 			m_test_obj.getPosition().m_index.x, m_test_obj.getPosition().m_index.y,

@@ -21,23 +21,27 @@ namespace flat_engine::network {
     class ClientSession: public ISession, public std::enable_shared_from_this<ClientSession> {
         boost::asio::io_context& io_context_;
         std::unique_ptr<boost::asio::ip::tcp::socket> socket_;
+        std::unique_ptr<boost::asio::ip::udp::socket> udp_socket_;
         boost::asio::ip::tcp::resolver resolver_;
         boost::asio::steady_timer timer_;
         std::string host_;
         unsigned short port_;
+        unsigned short udp_port_;
         std::atomic<bool> is_stopped_;
 
-        std::shared_ptr<MessageIO> message_io_;
+        std::shared_ptr<MessageIO> tcp_message_io_;
+        std::shared_ptr<MessageIO> udp_message_io_;
         // tcp::socket socket_();
 
     public:
         ClientSession(boost::asio::io_context& io_context,
             std::string  host,
             const unsigned short port,
+            const unsigned short udp_port,
             std::unique_ptr<IGameData> game_data)
             : ISession(io_context, std::move(game_data), 1),
               io_context_(io_context), resolver_(io_context), is_stopped_(false),
-              timer_(io_context), host_(std::move(host)), port_(port) {
+              timer_(io_context), host_(std::move(host)), port_(port), udp_port_(udp_port) {
         }
 
         void start() {
@@ -79,10 +83,46 @@ namespace flat_engine::network {
                 });
         }
 
-        void onConnect(boost::asio::ip::tcp::socket &&socket, const boost::asio::ip::tcp::endpoint& endpoint) {
+        void connectByUdp() {
+            udp_socket_ = make_unique<boost::asio::ip::udp::socket>(io_context_);
+            udp_socket_->open(boost::asio::ip::udp::v4());
+            udp_socket_->bind({ boost::asio::ip::udp::v4(), 0 });
+
+            auto server_address = tcp_message_io_->getConnection()->getTransport()->getAddress();
+            auto udp_server_endpoint = boost::asio::ip::udp::endpoint(server_address, udp_port_);
+            udp_socket_->connect(udp_server_endpoint);
+
+            uint16_t local_udp_port = udp_socket_->local_endpoint().port();
+
+            uint16_t net_port = htons(local_udp_port);
+            std::vector<uint8_t> buf(sizeof(net_port));
+            std::memcpy(buf.data(), &net_port, sizeof(net_port));
+
+            auto udp_tr = std::make_unique<UdpTransport>(*udp_socket_, udp_server_endpoint);
+            auto onPacket = [this](MessageRouteType route, std::vector<uint8_t> &&data)->bool {
+                return handleServerPacket(route, std::move(data));
+            };
+
+            auto onError = [this](const boost::system::error_code& ec) {
+                return handleError(ec);
+            };
+            udp_message_io_ = std::make_shared<MessageIO>(
+                std::make_shared<UdpConnection>(
+                    std::move(udp_tr),
+                    onError,
+                    onPacket
+                ),
+                getStrand()
+            );
+
+            udp_message_io_->startReading();
+            tcp_message_io_->sendPacket(CORE_CONNECT_UDP, std::move(buf));
+        }
+
+        void onConnect(boost::asio::ip::tcp::socket &&tcp_socket, const boost::asio::ip::tcp::endpoint& endpoint) {
             std::cout << "[Client] Клиент успешно подключён к " << endpoint << std::endl;
 
-            auto transport = std::make_unique<TcpTransport>(std::move(socket));
+            auto transport = std::make_unique<TcpTransport>(std::move(tcp_socket));
 
             auto onPacket = [this](MessageRouteType route, std::vector<uint8_t> &&data)->bool {
                 return handleServerPacket(route, std::move(data));
@@ -92,9 +132,11 @@ namespace flat_engine::network {
                 return handleError(ec);
             };
 
-            message_io_ = std::make_shared<MessageIO>(std::make_unique<TcpConnection>(
-                std::move(transport)), getStrand(), onPacket, onError);
-            message_io_->startReading();
+            tcp_message_io_ = std::make_shared<MessageIO>(std::make_shared<TcpConnection>(
+                std::move(transport), onError, onPacket), getStrand());
+            tcp_message_io_->startReading();
+
+            connectByUdp();
         }
 
         void scheduleReconnect() {
@@ -123,9 +165,17 @@ namespace flat_engine::network {
             scheduleReconnect();
         }
 
-        void sendPacket(MessageRouteType route_id, const std::vector<uint8_t>& buffer) {
-            if (message_io_) {
-                message_io_->sendPacket(route_id, buffer);
+        void sendReliable(MessageRouteType route_id, const std::vector<uint8_t>& buffer) {
+            if (tcp_message_io_) {
+                tcp_message_io_->sendPacket(route_id, buffer);
+            } else {
+                std::cerr << "[Client] Невозможно отправить пакет. Нет активного соединения" << std::endl;
+            }
+        }
+
+        void sendFast(MessageRouteType route_id, const std::vector<uint8_t>& buffer) {
+            if (udp_message_io_) {
+                udp_message_io_->sendPacket(route_id, buffer);
             } else {
                 std::cerr << "[Client] Невозможно отправить пакет. Нет активного соединения" << std::endl;
             }
@@ -137,9 +187,14 @@ namespace flat_engine::network {
             boost::system::error_code ec;
             timer_.cancel(ec);
 
-            if (message_io_) {
-                message_io_->close();
-                message_io_.reset();
+            if (tcp_message_io_) {
+                tcp_message_io_->close();
+                tcp_message_io_.reset();
+            }
+
+            if (udp_message_io_) {
+                udp_message_io_->close();
+                udp_message_io_.reset();
             }
         }
 
