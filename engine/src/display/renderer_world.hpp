@@ -11,5 +11,5 @@ public:
 		const DisplayObjects& object_types_textures,
 		const TerrainMap& terrain_map,
 		IRenderer* renderer) = 0;
-	// virtual float getCameraHeight() = 0;
+
 };

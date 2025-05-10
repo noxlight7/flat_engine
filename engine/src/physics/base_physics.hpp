@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <tuple>
 
 using Vector = glm::vec2;
 using DVector = glm::dvec2;

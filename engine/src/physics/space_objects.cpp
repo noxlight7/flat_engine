@@ -201,7 +201,7 @@ void SpaceObject::save(FILE* f)
 
 void SpaceObject::initInCell(DistrictCell* cell) {
 	m_cell_info.remove();
-	m_cell_info.insert(&cell->m_objects, this);
+	m_cell_info.insert(&cell->getObjects(), this);
 	m_cell = cell;
 }
 
@@ -210,18 +210,18 @@ void SpaceObject::insertToDistrictList()
 	District* v_district = m_current_district;
 
 	m_district_info.insert(
-		&v_district->m_space_objects, this);
+		&v_district->getSpaceObjects(), this);
 
 	initInCell(v_district->getCell(m_position.m_index));
 
 	if (m_is_moveable)
 		m_district_moveable_info.insert(
-			&v_district->m_moveable_objects, this);
+			&v_district->getMoveableObjects(), this);
 }
 
 void SpaceObject::removeFromDistrictList() {
 	m_district_info.remove();
-
+	
 	m_cell_info.remove();
 
 	if (m_is_moveable)
@@ -392,9 +392,8 @@ void SpaceObject::updateCell() {
 	DistrictCell* cell = m_cell;
 	m_position.normalizeCoords();
 
-	if (m_cell->m_index_in_district != m_position.m_index)
-		initInCell(&m_current_district->m_cells(m_position.m_index.y,
-			m_position.m_index.x));
+	if (m_cell->getIndexInDistrict() != m_position.m_index)
+		initInCell(m_current_district->getCell(m_position.m_index));
 }
 
 std::list<LocatableObject*> Actor::getAreaInterestObjects() {

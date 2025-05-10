@@ -26,8 +26,8 @@ DistrictCell* District::getCell(glm::ivec2 index) {
 void DistrictCell::init(glm::ivec2 index_in_district) {
 	m_index_in_district = index_in_district;
 	m_is_border = index_in_district.x == 0 || index_in_district.y == 0 ||
-		index_in_district.x == m_owner_district->m_cells.colCount() - 1 ||
-		index_in_district.y == m_owner_district->m_cells.rowCount() - 1;
+		index_in_district.x == m_owner_district->getCellsXAmount() - 1 ||
+		index_in_district.y == m_owner_district->getCellsYAmount() - 1;
 }
 
 std::list<SpaceObject*>& DistrictCell::getInnerObjects() {
@@ -53,15 +53,13 @@ District::District(int cells_x_amount, int cells_y_amount, const TerrainMap& ter
 {
 	for (uint32_t y = 0; y < cells_y_amount; y++) {
 		for (uint32_t x = 0; x < cells_x_amount; x++) {
-			m_cells(y, x).m_owner_district = this;
+			m_cells(y, x).setOwnerDistrict(this);
 			m_cells(y, x).init(glm::ivec2(y, x));
 		}
 	}
 }
 
 District::~District() {
-	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ
-	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 	for (int i = m_space_objects.size(); i; i--)
 		(*m_space_objects.begin())->removeFromDistrictList();
@@ -87,20 +85,16 @@ void District::moveObjects(float dt) {
 	int height = getCellsYAmount();
 
 	for (SpaceObject* m : m_moveable_objects) {
-		if (m->m_current_speed == 0)
+		if (m->getCurrentSpeed() == 0)
 			continue;
 
-		// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ
-		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 
-		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
-
 		bool move_possible = true;
-		glm::ivec2 mo_cell_index = m->m_position.m_index;
+		glm::ivec2 mo_cell_index = m->getPosition().m_index;
 		float step_cost = m_terrain_map.at(m_terrain_matrix(
 			mo_cell_index.y, mo_cell_index.x)).m_step_cost;
-		float max_speed = m->m_max_speed / step_cost;
-		if (m->m_current_speed > max_speed) {
-			m->m_current_speed = max_speed;
+		float max_speed = m->getMaxSpeed() / step_cost;
+		if (m->getCurrentSpeed() > max_speed) {
+			m->setCurrentSpeed(max_speed);
 		}
 		for (int x_cell = std::max(mo_cell_index.x - 2, 0),
 			x_cell_end = std::min(mo_cell_index.x + 3, width);
@@ -109,16 +103,16 @@ void District::moveObjects(float dt) {
 				y_cell_end = std::min(mo_cell_index.y + 3, height);
 				move_possible && y_cell < y_cell_end; y_cell++) {
 				DistrictCell* current_cell = &m_cells(y_cell, x_cell);
-				m->m_position.shiftToCoordsSystem(glm::ivec2(x_cell, y_cell));
+				m->getPosition().shiftToCoordsSystem(glm::ivec2(x_cell, y_cell));
 
-				for (SpaceObject* s : current_cell->m_objects)
+				for (SpaceObject* s : current_cell->getObjects())
 					if (m != s) {
-						if (s->isMoveable() && s->m_current_speed > 0) {
+						if (s->isMoveable() && s->getCurrentSpeed() > 0) {
 							auto s_cell_indices = s->getPosition().m_index;
-							float s_max_speed = s->m_max_speed / m_terrain_matrix(
+							float s_max_speed = s->getMaxSpeed() / m_terrain_matrix(
 								s_cell_indices.y, s_cell_indices.x);
-							if (s->m_current_speed > max_speed) {
-								s->m_current_speed = max_speed;
+							if (s->getCurrentSpeed() > max_speed) {
+								s->setCurrentSpeed(max_speed);
 							}
 						}
 						if (Collisions::Collision(m, s, dt, &col_time)) {
@@ -130,14 +124,14 @@ void District::moveObjects(float dt) {
 						}
 					}
 			}
-		m->m_position.normalizeCoords();
+		m->getPosition().normalizeCoords();
 		if (move_possible) {
-			if (m->m_cell->m_is_border == true) {
+			if (m->getCurrentCell()->isBorder() == true) {
 				Position future_pos = m->getFuturePosition(dt);
 				future_pos.normalizeCoords();
 
 				if (isCellExist(future_pos.m_index)) {
-					m->m_position = future_pos;
+					m->setPosition(future_pos);
 					m->updateCell();
 				}
 				else {
@@ -157,8 +151,8 @@ void District::setRenderer(int width, int height) {
 	if (m_renderer == nullptr)
 		m_renderer = new DistrictRenderer(this, width, height);
 	else {
-		m_renderer->m_height = height;
-		m_renderer->m_width = width;
+		m_renderer->setWidth(width);
+		m_renderer->setHeight(height);
 	}
 }
 
@@ -172,13 +166,13 @@ void District::RectangleAreaRange::Iterator::advanceCell() {
 		}
 	}
 	if (m_current_row <= m_row_end && m_current_col <= m_col_end) {
-		m_list_it = m_district.getCell(m_current_row, m_current_col)->m_objects.begin();
+		m_list_it = m_district.getCell(m_current_row, m_current_col)->getObjects().begin();
 	}
 }
 
 void District::RectangleAreaRange::Iterator::skipEmpty() {
 	while (m_current_row <= m_row_end && m_current_col <= m_col_end &&
-		m_list_it == m_district.getCell(m_current_row, m_current_col)->m_objects.end()) {
+		m_list_it == m_district.getCell(m_current_row, m_current_col)->getObjects().end()) {
 		advanceCell();
 	}
 }
@@ -194,7 +188,7 @@ District::RectangleAreaRange::Iterator::Iterator(District& district,
 		m_current_col = col_end;
 	}
 	if (m_current_row <= m_row_end && m_current_col <= m_col_end) {
-		m_list_it = m_district.getCell(m_current_row, m_current_col)->m_objects.begin();
+		m_list_it = m_district.getCell(m_current_row, m_current_col)->getObjects().begin();
 		skipEmpty();
 	}
 }
@@ -242,7 +236,7 @@ std::list<LocatableObject*> District::getCircleAreaObjects(
 	RectangleArea rect(area);
 	Position center = {area.m_pos.x, area.m_pos.y};
 	for (auto& obj: getRectangleAreaObjects(rect)) {
-		if (obj.m_position.getDistance(center) <= area.m_radius && func(obj)) {
+		if (obj.getPosition().getDistance(center) <= area.m_radius && func(obj)) {
 			objects.push_back(&obj);
 		}
 	}
@@ -256,7 +250,7 @@ std::list<LocatableObject*> District::getCircleAreaObjects(
 	RectangleArea rect(area);
 	Position center = {area.m_pos.x, area.m_pos.y};
 	for (auto& obj: getRectangleAreaObjects(rect)) {
-		if (obj.m_position.getDistance(center) <= area.m_radius && func(subject, obj)) {
+		if (obj.getPosition().getDistance(center) <= area.m_radius && func(subject, obj)) {
 			objects.push_back(&obj);
 		}
 	}

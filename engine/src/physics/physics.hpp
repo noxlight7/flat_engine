@@ -96,7 +96,10 @@ public:
 	[[nodiscard]] float getRotation() const {return m_rotation;}
 
 	Position& getPosition();					// Возвращает вектор позиции
+	void setPosition(Position pos) { this->m_position = pos; }
 	[[nodiscard]] glm::dvec3 getRenderOrigin( ) const;
+
+	float getRotation() { return m_rotation; }
 
 protected:
 	float m_rotation{};				// Угол поворота
@@ -129,8 +132,6 @@ inline bool alwaysTrue1(LocatableObject& obj){ return true; }
 // Объект локации, имеет x, y координаты и размер
 class SpaceObject: public LocatableObject
 {
-	friend class Collisions;
-	friend class District;
 public:
 	SpaceObject() = delete;
 	SpaceObject(SpaceObject&) = delete;
@@ -198,7 +199,10 @@ public:
 	// Обновляет данные о текущей ячейке
 	void updateCell();
 
-	DistrictCell* getCurrentCell(){return m_cell;}
+	DistrictCell* getCurrentCell() { return m_cell; }
+
+	float getCurrentSpeed() const { return m_current_speed; }
+	Vector getSpeedDirection() const { return m_speed_direction; }
 
 protected:
 	void RemoveFromOldDistrict();
@@ -277,8 +281,6 @@ protected:
 // Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
 class DistrictCell
 {
-	friend District;
-	friend SpaceObject;
 public:
 	DistrictCell();
 
@@ -289,14 +291,19 @@ public:
 	void init(glm::ivec2 index_in_district);
 
 	std::list<SpaceObject*>& getInnerObjects();
+	glm::ivec2 getIndexInDistrict() const { return m_index_in_district; }
+	std::list<SpaceObject*>& getObjects() { return m_objects; }
 
 	[[nodiscard]] District* getOwnerDistrict() const {return m_owner_district;}
 
 	District *getOwnerDistrict() {return m_owner_district;}
+	void setOwnerDistrict(District* m_owner_district) { this->m_owner_district = m_owner_district;}
 
 	[[nodiscard]] bool isFill() const { return m_fill_object != nullptr; }
 	[[nodiscard]] SpaceObject &getFillObject() const {return *m_fill_object;}
 	void addFillObject(std::unique_ptr<SpaceObject> fill_object);
+
+	bool isBorder() { return m_is_border; }
 
 protected:
 
@@ -316,9 +323,6 @@ protected:
 	Хранит сеть входящих в неё ячеек */
 class District
 {
-	friend DistrictCell;
-	friend SpaceObject;
-	friend DistrictRenderer;
 public:
 	// Конструктор. Создаёт область
 	District(int width, int height, const TerrainMap& terrain_map);
@@ -329,6 +333,9 @@ public:
 	DistrictCell* getCell(int x, int y);
 	DistrictCell* getCell(glm::ivec2 index);
 	Matrix<TerrainID>& getTerrainMatrix() { return m_terrain_matrix; }
+	list<SpaceObject*>& getSpaceObjects() { return m_space_objects; }
+	list<SpaceObject*>& getMoveableObjects() { return m_moveable_objects; }
+	DistrictCell& getCellWithXY(const int y, const int x) { return m_cells(y, x); }
 
 	[[nodiscard]] int getCellsXAmount() const { return m_cells.colCount(); }
 	[[nodiscard]] int getCellsYAmount() const { return m_cells.rowCount(); }
@@ -393,7 +400,7 @@ private:
 	Matrix<DistrictCell> m_cells;				// Ячейки хранятся по (x, y)
 
 	void f() {
-		for (auto& x : m_cells(0, 0).m_objects) {}
+		for (auto& x : m_cells(0, 0).getObjects()) {}
 	}
 
 	RectangleArea m_borders;
@@ -407,7 +414,6 @@ private:
 };
 
 class DistrictRenderer : public IRendererWorld {
-	friend District;
 public:
 	DistrictRenderer(District* district, int out_width, int out_height);
 	void drawWorld(
@@ -415,6 +421,13 @@ public:
 		const DisplayObjects& object_types_textures,
 		const TerrainMap& terrain_map,
 		IRenderer* renderer) override;
+
+	const int getWidth() { return m_width; }
+	const int getHeight() { return m_height; }
+
+	void setWidth(const int width) { this->m_width = width; }
+	void setHeight(const int height) { this->m_height = height; }
+
 
 private:
 	District* m_district;

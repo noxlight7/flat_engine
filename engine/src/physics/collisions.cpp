@@ -15,7 +15,7 @@ CollisionFunc funcs[3][3] = {
 
 bool Collisions::Collision(SpaceObject* o1, SpaceObject* o2, float dt, float* colTime)
 {
-	bool rv = funcs[o1->m_form.m_type][o2->m_form.m_type](o1, o2, dt, colTime);
+	bool rv = funcs[o1->getForm().m_type][o2->getForm().m_type](o1, o2, dt, colTime);
 	
 	if (rv) {
 		o1->onCollision(o2);
@@ -47,16 +47,16 @@ bool Collisions::Circle1Circle1(SpaceObject* o1, SpaceObject* o2, float dt, floa
 	auto o2_center = o2->getPosition().m_coords;
 	auto o1_future_pos = o1->getFutureCoords(dt);
 	Vector o2_future_pos;
-	float r1 = o1->m_form.m_data.m_circle->m_radius;
-	float r2 = o2->m_form.m_data.m_circle->m_radius;
-	Vector v1 = o1->m_speed_direction * o1->m_current_speed;
+	float r1 = o1->getForm().m_data.m_circle->m_radius;
+	float r2 = o2->getForm().m_data.m_circle->m_radius;
+	Vector v1 = o1->getSpeedDirection() * o1->getCurrentSpeed();
 
 	SpaceObject* o2_move = nullptr;
 	Vector v2;
 	if (o2->isMoveable()) {
 		o2_move = o2;
 		o2_future_pos = o2_move->getFutureCoords(dt);
-		v2 = o2_move->m_speed_direction * o2_move->m_current_speed;
+		v2 = o2_move->getSpeedDirection() * o2_move->getCurrentSpeed();
 	}
 	else {
 		o2_future_pos = o2_center;
@@ -138,14 +138,14 @@ bool Collisions::Rectangle2Rectangle2(SpaceObject* o1, SpaceObject* o2, float dt
 	//auto o2_coords = o2->getPosition();
 	auto o1_future_coords = o1->getFutureCoords(dt);
 	Vector o2_future_coords;
-	float height1 = o1->m_form.m_data.m_rectangle->m_height;
-	float width1 = o1->m_form.m_data.m_rectangle->m_width;
-	if (fcompare(o1->m_rotation, k_rotation_left) || fcompare(o1->m_rotation, k_rotation_right)) {
+	float height1 = o1->getForm().m_data.m_rectangle->m_height;
+	float width1 = o1->getForm().m_data.m_rectangle->m_width;
+	if (fcompare(o1->getRotation(), k_rotation_left) || fcompare(o1->getRotation(), k_rotation_right)) {
 		std::swap(width1, height1);
 	}
-	float height2 = o2->m_form.m_data.m_rectangle->m_height;
-	float width2 = o2->m_form.m_data.m_rectangle->m_width;
-	if (fcompare(o2->m_rotation, k_rotation_left) || fcompare(o2->m_rotation, k_rotation_right)) {
+	float height2 = o2->getForm().m_data.m_rectangle->m_height;
+	float width2 = o2->getForm().m_data.m_rectangle->m_width;
+	if (fcompare(o2->getRotation(), k_rotation_left) || fcompare(o2->getRotation(), k_rotation_right)) {
 		std::swap(width2, height2);
 	}
 
