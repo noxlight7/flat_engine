@@ -420,7 +420,8 @@ public:
 		DisplaySystem& display_system,
 		const DisplayObjects& object_types_textures,
 		const TerrainMap& terrain_map,
-		IRenderer* renderer) override;
+		IRenderer* renderer,
+		uint64_t current_time) override;
 
 	const int getWidth() { return m_width; }
 	const int getHeight() { return m_height; }

@@ -270,7 +270,7 @@ DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_he
 
 void DistrictRenderer::drawWorld(DisplaySystem& display_system,
 	const DisplayObjects& object_types_textures, const TerrainMap& terrain_map,
-	IRenderer* renderer) {
+	IRenderer* renderer, uint64_t current_time) {
 	auto& building_layout = display_system.getBuildingLayout();
 
 
@@ -302,5 +302,5 @@ void DistrictRenderer::drawWorld(DisplaySystem& display_system,
 				// info->draw();
 			}
 		}
-	display_system.nextState();
+	display_system.nextState(current_time);
 }

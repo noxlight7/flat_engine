@@ -10,6 +10,7 @@ public:
 	virtual void drawWorld(DisplaySystem& display_system,
 		const DisplayObjects& object_types_textures,
 		const TerrainMap& terrain_map,
-		IRenderer* renderer) = 0;
+		IRenderer* renderer,
+		uint64_t current_time) = 0;
 
 };

@@ -4,6 +4,7 @@
 
 #include "session.h"
 #include "display/game_camera.hpp"
+#include "utils/int_clock.hpp"
 
 void ClientEngine::initTime() {
 	m_start_frame_processing_time = std::chrono::steady_clock::now();
@@ -29,7 +30,8 @@ void ClientEngine::initThreads() {
 					m_display_system,
 					m_objects_types_textures,
 					m_terrain_map,
-					m_renderer.get());
+					m_renderer.get(),
+					getMicrosecondsSince2025());
 		});
 		m_processing_context.run();
 	});
@@ -45,7 +47,7 @@ void ClientEngine::updateTime() {
 ClientEngine::ClientEngine()
 	: m_scheduler(m_processing_context),
 	  m_pool_id(k_cold_pool_amount, k_pool_shift_period, m_scheduler),
-	  m_width(0), m_height(0), m_display_system(m_renderer_mutex),
+	  m_width(0), m_height(0), m_display_system(m_renderer_mutex, getMicrosecondsSince2025()),
 	  m_world(nullptr), m_window(), m_delta_time(0), m_start_frame_processing_time() {
 }
 
@@ -166,9 +168,9 @@ void ClientEngine::mainLoop() {
 			current_time - m_start_frame_processing_time).count();
 		float interpolation_alpha = delta_since_logic_update / logic_interval_seconds;
 		if (m_world)
-			m_display_system.draw(interpolation_alpha, m_renderer->getCurrentCamera()->getHeight());
+			m_display_system.draw(getMicrosecondsSince2025(), m_renderer->getCurrentCamera()->getHeight());
 		else
-			m_display_system.draw(interpolation_alpha, 0);
+			m_display_system.draw(getMicrosecondsSince2025(), 0);
 
 		m_renderer->endFrame();
 

@@ -19,7 +19,7 @@ enum class Layers {
 class DisplaySystem {
     std::unique_ptr<DrawLayout> m_last_layout;
     std::unique_ptr<DrawLayout> m_prev_layout;
-    std::unique_ptr<DrawLayout> m_building_layout;
+    std::vector<DrawLayer> m_building_layout;
     // std::unique_ptr<DrawLayout> m_temp_layout;
 
     std::atomic_bool m_is_need_to_shift;
@@ -27,7 +27,7 @@ class DisplaySystem {
 
     IRenderer* m_renderer;
 
-    void shiftLayout() {
+    void shiftLayout(uint64_t current_time) {
         // if (m_temp_layout) {
         //     m_last_layout = std::move(m_prev_layout);
         //     m_prev_layout = std::move(m_temp_layout);
@@ -35,18 +35,17 @@ class DisplaySystem {
         // }
         std::lock_guard lock(m_mutex);
         m_prev_layout = std::move(m_last_layout);
-        m_last_layout = std::move(m_building_layout);
-        m_building_layout = std::make_unique<DrawLayout>(k_max_layers);
+        m_last_layout = std::make_unique<DrawLayout>(std::move(m_building_layout), current_time);
+        m_building_layout = std::vector<DrawLayer>(k_max_layers);
     }
 
 public:
     static constexpr uint32_t k_max_layers = static_cast<uint32_t>(Layers::Total);
 
-    explicit DisplaySystem(std::mutex &mutex)
-        : m_is_need_to_shift(false), m_mutex(mutex), m_renderer(nullptr) {
-        m_last_layout = std::make_unique<DrawLayout>(k_max_layers);
-        m_prev_layout = std::make_unique<DrawLayout>(k_max_layers);
-        m_building_layout = std::make_unique<DrawLayout>(k_max_layers);
+    explicit DisplaySystem(std::mutex &mutex, uint64_t current_time)
+        : m_is_need_to_shift(false), m_mutex(mutex), m_renderer(nullptr), m_building_layout(k_max_layers) {
+        m_last_layout = std::make_unique<DrawLayout>(std::vector<DrawLayer>(k_max_layers), current_time);
+        m_prev_layout = std::make_unique<DrawLayout>(std::vector<DrawLayer>(k_max_layers), current_time);
     }
 
     void init(IRenderer *renderer) {
@@ -55,24 +54,24 @@ public:
 
     ~DisplaySystem() = default;
 
-    [[nodiscard]] DrawLayout &getBuildingLayout() const { return *m_building_layout; }
+    [[nodiscard]] std::vector<DrawLayer> &getBuildingLayout() { return m_building_layout; }
 
-    void nextState() {
+    void nextState(uint64_t current_time) {
         // std::lock_guard lock(m_mutex);
         // m_is_need_to_shift.test_and_set();
         // m_temp_layout = std::move(m_building_layout);
         // m_building_layout = std::make_unique<DrawLayout>(k_max_layers);
-        shiftLayout();
+        shiftLayout(current_time);
     }
 
-    void draw(const float dt_ratio, const float camera_height) {
+    void draw(const uint64_t current_time, const float camera_height) {
         // if (m_is_need_to_shift.test()) {
         //     std::lock_guard lock(m_mutex);
         //     m_is_need_to_shift.clear();
         //     shiftLayout();
         // }
         std::lock_guard lock(m_mutex);
-        m_renderer->drawLayout(*m_prev_layout, *m_last_layout, dt_ratio, camera_height);
+        m_renderer->drawLayout(*m_prev_layout, *m_last_layout, current_time, camera_height);
     }
 
 };

@@ -27,12 +27,12 @@ struct DrawInfo {
 
 using DrawLayer = std::unordered_map<uint32_t, DrawInfo>;
 
-// using DrawLayout = struct {
-//     std::vector<DrawLayer> layers;
-//     std::chrono::time_point<std::chrono::steady_clock> build_time;
-// };
+using DrawLayout = struct {
+    std::vector<DrawLayer> layers;
+    uint64_t build_time;
+};
 
-using DrawLayout = std::vector<DrawLayer>;
+// using DrawLayout = std::vector<DrawLayer>;
 
 
 class IRenderer {
@@ -55,7 +55,7 @@ public:
     void drawLayout(
         const DrawLayout &previous,
         const DrawLayout &current,
-        float dt_ratio,
+        uint64_t current_time,
         float camera_height) {
 
         // auto current_time = std::chrono::steady_clock::now();
@@ -64,10 +64,14 @@ public:
         //     current_time - m_start_frame_processing_time).count();
         //
         // float interpolation_alpha = delta_since_logic_update / logic_interval_seconds;
+        const uint64_t delta_time = current.build_time - previous.build_time;
+        const uint64_t time_left = current_time - previous.build_time - delta_time;
+        const float dt_ratio = static_cast<float>(time_left) / static_cast<float>(delta_time);
+
         for (const auto [
             previous_layer,
             current_layer] :
-                std::views::zip(previous, current)) {
+                std::views::zip(previous.layers, current.layers)) {
             drawLayer(previous_layer, current_layer, dt_ratio, camera_height);
         }
     }
