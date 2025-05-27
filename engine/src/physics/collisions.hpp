@@ -5,7 +5,6 @@
 // В переменную colTime записывается время столкновения
 class Collisions
 {
-	friend SpaceObject;
 public:
 	static bool Collision(SpaceObject* o1, SpaceObject* o2, float dt, float* colTime);
 

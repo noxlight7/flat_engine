@@ -1,7 +1,8 @@
-#include "physics.hpp"
 #include "factory/definitions.hpp"
 #include "input/input.hpp"
 #include "base_physics.hpp"
+#include "space_objects.hpp"
+#include "district_net.hpp"
 
 uint32_t LocatableObject::c_next_id = 1;
 

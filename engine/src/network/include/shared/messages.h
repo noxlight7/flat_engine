@@ -19,7 +19,7 @@ namespace flat_engine::network {
             : data_(std::move(data)), session_(std::move(session)) {}
 
 
-        friend class Deserializer;
+        
     public:
         IMessage() = delete;
         IMessage(const IMessage&) = delete;
