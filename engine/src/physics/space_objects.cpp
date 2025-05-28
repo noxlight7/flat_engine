@@ -157,7 +157,7 @@ void LocatableObject::setRotation(float angle) {
 
 void SpaceObject::moveTo(double x, double y)
 {
-	m_position.setFromGlobalCoords(x, y);
+	getPosition().setFromGlobalCoords(x, y);
 
 	updateCell();
 }
@@ -177,13 +177,13 @@ bool SpaceObject::isMoveable() const {
 void SpaceObject::moveTo(District* district, double x, double y)
 {
 	if (district->isPosInFreeCell(x, y)) {
-		if (m_current_district != nullptr &&
-			m_current_district != district)
+		if (getCurrentDistrict() != nullptr &&
+			getCurrentDistrict() != district)
 			RemoveFromOldDistrict();
 
-		m_current_district = district;
+		setCurrentDistrict(district);
 
-		m_position.setFromGlobalCoords(x, y);
+		getPosition().setFromGlobalCoords(x, y);
 
 		insertToDistrictList();
 		updateCell();
@@ -208,12 +208,12 @@ void SpaceObject::initInCell(DistrictCell* cell) {
 
 void SpaceObject::insertToDistrictList()
 {
-	District* v_district = m_current_district;
+	District* v_district = getCurrentDistrict();
 
 	m_district_info.insert(
 		&v_district->getSpaceObjects(), this);
 
-	initInCell(v_district->getCell(m_position.m_index));
+	initInCell(v_district->getCell(getPosition().m_index));
 
 	if (m_is_moveable)
 		m_district_moveable_info.insert(
@@ -345,7 +345,7 @@ Type* ListPElementInfo<Type>::getElement()
 
 void SpaceObject::move(float dt)
 {
-	m_position.m_coords += dt * m_current_speed * m_speed_direction;
+	getPosition().m_coords += dt * m_current_speed * m_speed_direction;
 }
 
 void SpaceObject::setSpeedDirection(Vector& speed_direction)
@@ -381,20 +381,20 @@ Position& LocatableObject::getPosition()
 
 Vector SpaceObject::getFutureCoords(float dt)
 {
-	return m_position.m_coords + dt * m_current_speed * m_speed_direction;
+	return getPosition().m_coords + dt * m_current_speed * m_speed_direction;
 }
 
 Position SpaceObject::getFuturePosition(float dt) {
-	Position fpos(getFutureCoords(dt), m_position.m_index);
+	Position fpos(getFutureCoords(dt), getPosition().m_index);
 	return fpos;
 }
 
 void SpaceObject::updateCell() {
 	DistrictCell* cell = m_cell;
-	m_position.normalizeCoords();
+	getPosition().normalizeCoords();
 
-	if (m_cell->getIndexInDistrict() != m_position.m_index)
-		initInCell(m_current_district->getCell(m_position.m_index));
+	if (m_cell->getIndexInDistrict() != getPosition().m_index)
+		initInCell(getCurrentDistrict()->getCell(getPosition().m_index));
 }
 
 std::list<LocatableObject*> Actor::getAreaInterestObjects() {

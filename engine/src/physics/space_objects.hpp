@@ -92,15 +92,15 @@ public:
 	[[nodiscard]] glm::dvec3 getRenderOrigin() const;
 
 	float getRotation() { return m_rotation; }
+	[[nodiscard]] District* getCurrentDistrict() { return m_current_district; }
+	void setCurrentDistrict(District* district) { m_current_district = district; }
 
-protected:
+private:
 	float m_rotation{};				// Угол поворота
 	Position m_position{};			// Позиция объекта
 	ObjectForm m_form{};				// Данные о форме объекта
 	District* m_current_district{};	// Область, в которой находится объект
 	uint32_t m_type_id{};				// Идентификатор типа объекта
-
-private:
 	static uint32_t c_next_id;	// Следующий идентификатор объекта
 	static uint32_t nextID() { return c_next_id++; }
 };
@@ -187,7 +187,7 @@ public:
 	float getCurrentSpeed() const { return m_current_speed; }
 	Vector getSpeedDirection() const { return m_speed_direction; }
 
-protected:
+private:
 	void RemoveFromOldDistrict();
 
 	bool m_is_moveable{};					// Является ли движущимся объектом

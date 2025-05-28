@@ -6,6 +6,16 @@
 // Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
 class DistrictCell
 {
+	bool m_is_border;
+	glm::ivec2 m_index_in_district;
+
+	// Область, в которой содержится ячейка
+	District* m_owner_district;
+
+	// Список содержащихся в ячейке объектов
+	std::list<SpaceObject*> m_objects;
+
+	std::unique_ptr<SpaceObject> m_fill_object;
 public:
 	DistrictCell();
 
@@ -30,24 +40,27 @@ public:
 
 	bool isBorder() { return m_is_border; }
 
-protected:
-
-	bool m_is_border;
-	glm::ivec2 m_index_in_district;
-
-	// Область, в которой содержится ячейка
-	District* m_owner_district;
-
-	// Список содержащихся в ячейке объектов
-	std::list<SpaceObject*> m_objects;
-
-	std::unique_ptr<SpaceObject> m_fill_object;
 };
 
 /*	Область(может подгружаться и выгружаться из / в файл по необходимости для игрока
 	Хранит сеть входящих в неё ячеек */
 class District
 {
+	Matrix<TerrainID> m_terrain_matrix;
+	// Хранит ссылки на все пространственные объекты
+	list<SpaceObject*> m_space_objects;
+	// Хранит ссылки на все способные двигаться объекты
+	list<SpaceObject*> m_moveable_objects;
+
+	Matrix<DistrictCell> m_cells;				// Ячейки хранятся по (x, y)
+
+	void f() {
+		for (auto& x : m_cells(0, 0).getObjects()) {}
+	}
+
+	RectangleArea m_borders;
+
+	const PhysicTerrainMap& m_terrain_map;
 public:
 	// Конструктор. Создаёт область
 	District(int width, int height, const PhysicTerrainMap& terrain_map);
@@ -111,23 +124,6 @@ public:
 		const LocatableObject2Predict& func = alwaysTrue2);
 
 	bool isPosInFreeCell(double x, double y);
-
-private:
-	Matrix<TerrainID> m_terrain_matrix;
-	// Хранит ссылки на все пространственные объекты
-	list<SpaceObject*> m_space_objects;
-	// Хранит ссылки на все способные двигаться объекты
-	list<SpaceObject*> m_moveable_objects;
-
-	Matrix<DistrictCell> m_cells;				// Ячейки хранятся по (x, y)
-
-	void f() {
-		for (auto& x : m_cells(0, 0).getObjects()) {}
-	}
-
-	RectangleArea m_borders;
-
-	const PhysicTerrainMap& m_terrain_map;
 
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;			// Имена сетей, в которые возможно перейти из текущей области
