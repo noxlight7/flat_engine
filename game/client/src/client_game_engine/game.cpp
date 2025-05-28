@@ -13,10 +13,10 @@ auto form1 = ObjectForm(0.8f, 0.8f);
 auto form2 = ObjectForm(0.8f, 1.2f);
 
 GameEngine::GameEngine(std::string host, uint16_t port, uint16_t udp_port)
-	: m_district(100, 100, m_physic_terrain_map),
-      m_test_obj(&m_pool_id, true, shared_constants::k_player_object_type_id,
+	: m_district(100, 100, getPhysicTerrainMap()),
+      m_test_obj(&getPoolID(), true, shared_constants::k_player_object_type_id,
       	form1),
-      m_test_obj2(&m_pool_id, true, shared_constants::k_player_object_type_id,
+      m_test_obj2(&getPoolID(), true, shared_constants::k_player_object_type_id,
       	form2),
 	  m_district_renderer(&m_district)
 {
@@ -29,9 +29,9 @@ void GameEngine::onInit() {
 	m_test_obj.setMaxSpeed(8.0f);
 	m_test_obj2.moveTo(&m_district, 4.5, 4.5);
 	m_test_obj2.setMaxSpeed(5.27f);
-	m_renderer->getCurrentCamera()->setHeight(10.f);
+	getRenderer()->getCurrentCamera()->setHeight(10.f);
 	SpaceObjectGenerator::generateSpaceObjects(&m_district, 0.123f,
-		shared_constants::k_wall_object_type_id, m_pool_id);
+		shared_constants::k_wall_object_type_id, getPoolID());
 	TerrainGenerator::generateTerrains(&m_district, 0.3f);
 }
 
@@ -64,11 +64,11 @@ void GameEngine::onLogicUpdate() {
 	m_test_obj2.setCurrentSpeed(v2.x != 0 || v2.y != 0 ? m_test_obj2.getMaxSpeed() : 0.f);
 
 	m_district.moveObjects(dt);
-	dynamic_cast<Camera*>(m_renderer->getCurrentCamera().get())->setOrigin(m_test_obj.getPosition());
+	dynamic_cast<Camera*>(getRenderer()->getCurrentCamera().get())->setOrigin(m_test_obj.getPosition());
 
 	// m_session->sendPacket(flat_engine::network::SHARED_TEST_TEXT_MESSAGE,
 	// 	flat_engine::network::Serializer::serializeTextMessage("123"));
-	m_session->sendReliable(flat_engine::network::SERVER_SEND_PLAYER_AVATAR,
+	getSession()->sendReliable(flat_engine::network::SERVER_SEND_PLAYER_AVATAR,
 		flat_engine::network::SharedSerializer::serializePlayerAvatar(
 			m_test_obj.getPosition().m_coords.x, m_test_obj.getPosition().m_coords.y,
 			m_test_obj.getPosition().m_index.x, m_test_obj.getPosition().m_index.y,
@@ -78,12 +78,12 @@ void GameEngine::onLogicUpdate() {
 void GameEngine::initDisplayObjects() {
 	constexpr uint32_t k_main_object_type_id = 0;
 
-	auto texture_buffer = m_renderer->getTextureManager();
-	m_objects_types_textures.add(
+	auto texture_buffer = getRenderer()->getTextureManager();
+	getObjectsTypesTextures().add(
 		shared_constants::k_player_object_type_id,
 		texture_buffer->loadTexture("assets/sprites/warrior.png"));
 
-	m_objects_types_textures.add(
+	getObjectsTypesTextures().add(
 		shared_constants::k_wall_object_type_id,
 		texture_buffer->loadTexture("assets/sprites/wall.jpg"));
 

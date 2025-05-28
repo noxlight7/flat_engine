@@ -20,6 +20,44 @@
 using tcp = boost::asio::ip::tcp;
 
 class ClientEngine {
+    boost::asio::io_context m_receiving_context;
+    boost::asio::io_context m_processing_context;
+    Scheduler m_scheduler;
+    PoolID m_pool_id;
+    thread m_message_receiving_thread;
+    thread m_processing_thread;
+    uint32_t m_width, m_height;
+    bool m_button_state[KEYS_AMOUNT]{};
+    bool m_vsync{ true };
+    std::shared_ptr<flat_engine::network::ClientSession> m_session;
+    DisplaySystem m_display_system;
+    DisplayObjects m_objects_types_textures;
+    std::unique_ptr<IRenderer> m_renderer{};
+    PhysicTerrainMap m_physic_terrain_map;
+    DisplayTerrainMap m_display_terrain_map;
+
+    std::mutex m_renderer_mutex;
+
+    IRendererWorld* m_world;
+    GLFWwindow* m_window;
+    float m_delta_time;
+    std::chrono::steady_clock::time_point m_start_frame_processing_time;
+
+    void drawInterface();
+    void initThreads();
+    void initTime();
+    void updateTime();
+    void initWindow(const std::string& title);
+    void mainLoop();
+    void setCallbacks();
+    static void windowResizeCallback(GLFWwindow* window, int width, int height);
+    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    static void windowCloseCallback(GLFWwindow* window);
+
+protected:
+    virtual ~ClientEngine();
+    ClientEngine();
+
 public:
     void init(const std::string& title, std::string host, uint16_t port, uint16_t udp_port,
         uint32_t width = 1024, uint32_t height = 768);
@@ -60,42 +98,9 @@ public:
     DisplayTerrainMap& getDisplayTerrainMap() { return m_display_terrain_map; }
     PhysicTerrainMap& getPhysicTerrainMap() { return m_physic_terrain_map; }
 
-protected:
-    boost::asio::io_context m_receiving_context;
-    boost::asio::io_context m_processing_context;
-    Scheduler m_scheduler;
-    PoolID m_pool_id;
-    thread m_message_receiving_thread;
-    thread m_processing_thread;
-    uint32_t m_width, m_height;
-    bool m_button_state[KEYS_AMOUNT]{};
-    bool m_vsync{ true };
-    std::shared_ptr<flat_engine::network::ClientSession> m_session;
-    DisplaySystem m_display_system;
-    DisplayObjects m_objects_types_textures;
-    std::unique_ptr<IRenderer> m_renderer{};
-    PhysicTerrainMap m_physic_terrain_map;
-    DisplayTerrainMap m_display_terrain_map;
+    IRenderer* getRenderer() const { return m_renderer.get(); }
+    PoolID& getPoolID() { return m_pool_id; }
+    std::shared_ptr<flat_engine::network::ClientSession>& getSession() { return m_session; }
+    DisplayObjects& getObjectsTypesTextures() { return m_objects_types_textures; }
 
-    std::mutex m_renderer_mutex;
-
-    virtual ~ClientEngine();
-    ClientEngine();
-
-private:
-    IRendererWorld* m_world;
-    GLFWwindow* m_window;
-    float m_delta_time;
-    std::chrono::steady_clock::time_point m_start_frame_processing_time;
-
-    void drawInterface();
-    void initThreads();
-    void initTime();
-    void updateTime();
-    void initWindow(const std::string& title);
-    void mainLoop();
-    void setCallbacks();
-    static void windowResizeCallback(GLFWwindow* window, int width, int height);
-    static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-    static void windowCloseCallback(GLFWwindow* window);
 };

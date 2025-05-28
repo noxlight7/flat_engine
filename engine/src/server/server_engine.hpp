@@ -14,6 +14,30 @@
 #include "deserializer.h"
 
 class ServerEngine {
+    boost::asio::io_context m_io_context;
+    // Scheduler m_scheduler;
+    flat_engine::network::NetworkServer m_network_server;
+
+    float m_delta_time = 0;
+    std::chrono::steady_clock::time_point m_last_update;
+
+    std::vector<std::thread> m_threads;
+
+    void initThreads() {
+        unsigned int num_threads = std::thread::hardware_concurrency() / 2;
+        // unsigned int num_threads = 1;
+        if (num_threads < 1)
+            num_threads = 1;
+
+        for (unsigned int i = 0; i < num_threads; i++) {
+            m_threads.emplace_back([this, i] {
+                const unsigned int thread_index = i + 1;
+                m_io_context.run();
+                std::cout << "[Server] thread " + std::to_string(thread_index) +
+                    "completed\n";
+            });
+        }
+    }
 public:
     explicit ServerEngine(uint16_t tcp_port, uint16_t udp_port,
         std::unique_ptr<flat_engine::network::ISessionController> session_controller)
@@ -48,33 +72,6 @@ public:
 
         for (auto &t : m_threads) {
             t.join();
-        }
-    }
-
-protected:
-    boost::asio::io_context m_io_context;
-    // Scheduler m_scheduler;
-    flat_engine::network::NetworkServer m_network_server;
-    
-    float m_delta_time = 0;
-    std::chrono::steady_clock::time_point m_last_update;
-
-private:
-    std::vector<std::thread> m_threads;
-
-    void initThreads() {
-        // unsigned int num_threads = std::thread::hardware_concurrency() / 2;
-        unsigned int num_threads = 1;
-        if (num_threads < 1)
-            num_threads = 1;
-
-        for (unsigned int i = 0; i < num_threads; i++) {
-            m_threads.emplace_back([this, i] {
-                const unsigned int thread_index = i + 1;
-                m_io_context.run();
-                std::cout << "[Server] thread " + std::to_string(thread_index) +
-                    "completed\n";
-            });
         }
     }
 };
