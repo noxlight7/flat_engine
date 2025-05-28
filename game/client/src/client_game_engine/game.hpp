@@ -5,6 +5,7 @@
 #include "input/input.hpp"
 #include "physics/physics.hpp"
 #include "client/client_engine.hpp"
+#include "display/district_renderer.hpp"
 
 #ifdef _WIN32
 const std::string k_wnd_title = "GameEngine";
@@ -40,5 +41,6 @@ protected:
 	SpaceObject m_test_obj;
 	SpaceObject m_test_obj2;
 	District m_district;
+	DistrictRenderer m_district_renderer;
 	void init();
 };

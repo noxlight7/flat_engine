@@ -35,7 +35,7 @@ public:
     [[nodiscard]] ITextureManager* getTextureManager() override;
 
     void setViewPortSize(int width, int height) override;
-    glm::vec2 getViewPortSize() override;
+    glm::ivec2 getViewPortSize() override;
 
     void updateViewPortSize() override;
 

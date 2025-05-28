@@ -35,7 +35,7 @@ set(src_files
         src/entry.hpp
 )
 
-add_library(engine STATIC ${src_files} "src/physics/district_net.hpp" "src/physics/space_objects.hpp")
+add_library(engine STATIC ${src_files})
 target_link_libraries(engine PUBLIC ogf-network)
 
 target_include_directories(engine PUBLIC

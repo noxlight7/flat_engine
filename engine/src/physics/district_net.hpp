@@ -1,9 +1,6 @@
 #pragma once
 
 #include "space_objects.hpp"
-#include "display/game_camera.hpp"
-#include "display/display_system.hpp"
-#include "display/renderer_world.hpp"
 #include <glm/glm.hpp>
 
 // Сеть Ячейки области. Хранит указатели на объекты, частично или полностью находящиеся на её территории
@@ -53,7 +50,7 @@ class District
 {
 public:
 	// Конструктор. Создаёт область
-	District(int width, int height, const TerrainMap& terrain_map);
+	District(int width, int height, const PhysicTerrainMap& terrain_map);
 	~District();
 
 	//void addObject(SpaceObject* obj, float x, float y);
@@ -74,9 +71,6 @@ public:
 	void moveObjects(float dt);
 
 	bool isCellExist(glm::ivec2 index) const;
-
-	DistrictRenderer* getRenderer() { return m_renderer; }
-	void setRenderer(int width, int height);
 
 	class RectangleAreaRange {
 		District& m_district;
@@ -133,33 +127,8 @@ private:
 
 	RectangleArea m_borders;
 
-	DistrictRenderer* m_renderer;
-
-	const TerrainMap& m_terrain_map;
+	const PhysicTerrainMap& m_terrain_map;
 
 	//vector<District*> m_near_districts;	// Массив указателей на области, в которые можно попасть из этой (не включая соседние)
 	//vector<string> m_portal_nets;			// Имена сетей, в которые возможно перейти из текущей области
-};
-
-class DistrictRenderer : public IRendererWorld {
-public:
-	DistrictRenderer(District* district, int out_width, int out_height);
-	void drawWorld(
-		DisplaySystem& display_system,
-		const DisplayObjects& object_types_textures,
-		const TerrainMap& terrain_map,
-		IRenderer* renderer,
-		uint64_t current_time) override;
-
-	const int getWidth() { return m_width; }
-	const int getHeight() { return m_height; }
-
-	void setWidth(const int width) { this->m_width = width; }
-	void setHeight(const int height) { this->m_height = height; }
-
-
-private:
-	District* m_district;
-	int m_width;
-	int m_height;
 };

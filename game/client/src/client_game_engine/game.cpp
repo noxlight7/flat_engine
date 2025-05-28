@@ -13,14 +13,14 @@ auto form1 = ObjectForm(0.8f, 0.8f);
 auto form2 = ObjectForm(0.8f, 1.2f);
 
 GameEngine::GameEngine(std::string host, uint16_t port, uint16_t udp_port)
-	: m_district(100, 100, m_terrain_map),
+	: m_district(100, 100, m_physic_terrain_map),
       m_test_obj(&m_pool_id, true, shared_constants::k_player_object_type_id,
       	form1),
       m_test_obj2(&m_pool_id, true, shared_constants::k_player_object_type_id,
-      	form2)
+      	form2),
+	  m_district_renderer(&m_district)
 {
-	m_district.setRenderer(k_wnd_width, k_wnd_height);
-	this->setWorld(m_district.getRenderer());
+	setWorld(&m_district_renderer);
 	ClientEngine::init(k_wnd_title, std::move(host), port, udp_port, k_wnd_width, k_wnd_height);
 }
 
@@ -87,10 +87,15 @@ void GameEngine::initDisplayObjects() {
 		shared_constants::k_wall_object_type_id,
 		texture_buffer->loadTexture("assets/sprites/wall.jpg"));
 
-	auto& terrain_map = getTerrainMap();
-	terrain_map[0] = Terrain(0, texture_buffer->loadTexture("assets/sprites/grass.png"), 2.f);
-	terrain_map[1] = Terrain(1, texture_buffer->loadTexture("assets/sprites/swamp.png"), 3.f);
-	terrain_map[2] = Terrain(2, texture_buffer->loadTexture("assets/sprites/sea.png"), 4.f);
+	auto& display_terrain_map = getDisplayTerrainMap();
+	display_terrain_map[0] = texture_buffer->loadTexture("assets/sprites/grass.png");
+	display_terrain_map[1] = texture_buffer->loadTexture("assets/sprites/swamp.png");
+	display_terrain_map[2] = texture_buffer->loadTexture("assets/sprites/sea.png");
+
+	auto& physic_terrain_map = getPhysicTerrainMap();
+	physic_terrain_map[0] = 2.f;
+	physic_terrain_map[1] = 3.f;
+	physic_terrain_map[2] = 4.f;
 }
 
 void GameEngine::onKeyDown(int key, int scancode, int action, int mods) {

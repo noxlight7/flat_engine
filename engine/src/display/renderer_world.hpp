@@ -3,14 +3,15 @@
 #include "display_system.hpp"
 #include "physics/base_physics.hpp"
 
-using TerrainMap = std::unordered_map<TerrainID, Terrain>;
 class IRendererWorld {
 public:
 	virtual ~IRendererWorld() = default;
 	virtual void drawWorld(DisplaySystem& display_system,
 		const DisplayObjects& object_types_textures,
-		const TerrainMap& terrain_map,
+		const std::unordered_map<TerrainID, TextureID>& terrain_map,
 		IRenderer* renderer,
-		uint64_t current_time) = 0;
+		uint64_t current_time,
+		int screen_width,
+		int screen_height) = 0;
 
 };

@@ -57,7 +57,8 @@ public:
 
     virtual void initDisplayObjects() = 0;
 
-    TerrainMap& getTerrainMap() { return m_terrain_map; }
+    DisplayTerrainMap& getDisplayTerrainMap() { return m_display_terrain_map; }
+    PhysicTerrainMap& getPhysicTerrainMap() { return m_physic_terrain_map; }
 
 protected:
     boost::asio::io_context m_receiving_context;
@@ -73,7 +74,8 @@ protected:
     DisplaySystem m_display_system;
     DisplayObjects m_objects_types_textures;
     std::unique_ptr<IRenderer> m_renderer{};
-    std::unordered_map<TerrainID, Terrain> m_terrain_map;
+    PhysicTerrainMap m_physic_terrain_map;
+    DisplayTerrainMap m_display_terrain_map;
 
     std::mutex m_renderer_mutex;
 
@@ -96,6 +98,4 @@ private:
     static void windowResizeCallback(GLFWwindow* window, int width, int height);
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void windowCloseCallback(GLFWwindow* window);
-
-    // void startReceive();
 };

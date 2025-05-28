@@ -198,7 +198,7 @@ void OpenGLRenderer::setViewPortSize(int width, int height) {
     glViewport(0, 0, width, height);
 }
 
-glm::vec2 OpenGLRenderer::getViewPortSize() {
+glm::ivec2 OpenGLRenderer::getViewPortSize() {
     return {m_width, m_height};
 }
 

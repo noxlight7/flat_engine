@@ -25,13 +25,18 @@ void ClientEngine::initThreads() {
 		m_scheduler.schedulePeriodic(k_logic_update_interval, [this] {
 			updateTime();
 			onLogicUpdate();
-			if (m_world)
+
+			if (m_world) {
+				auto screen_sizes = m_renderer->getViewPortSize();
 				m_world->drawWorld(
 					m_display_system,
 					m_objects_types_textures,
-					m_terrain_map,
+					m_display_terrain_map,
 					m_renderer.get(),
-					getMicrosecondsSince2025());
+					getMicrosecondsSince2025(),
+					screen_sizes.x,
+					screen_sizes.y);
+			}
 		});
 		m_processing_context.run();
 	});

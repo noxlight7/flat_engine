@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <tuple>
+#include <unordered_map>
 
 using Vector = glm::vec2;
 using DVector = glm::dvec2;
@@ -113,11 +114,5 @@ struct RectangleArea
 // 	double m_top;
 // };
 
-
 using TerrainID = uint16_t;
-using TextureID = uint16_t;
-struct Terrain {
-	TerrainID m_id;
-	TextureID m_texture_id;
-	float m_step_cost;
-};
+using PhysicTerrainMap = std::unordered_map<TerrainID, float>;

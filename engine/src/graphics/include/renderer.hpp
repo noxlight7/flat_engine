@@ -82,7 +82,7 @@ public:
 
     virtual void setViewPortSize(int width, int height) = 0;
     virtual void updateViewPortSize() = 0;
-    virtual glm::vec2 getViewPortSize() = 0;
+    virtual glm::ivec2 getViewPortSize() = 0;
 
     virtual void setCurrentCamera(std::shared_ptr<ICamera> camera) { m_current_camera = std::move(camera); }
     virtual std::shared_ptr<ICamera> getCurrentCamera() { return m_current_camera; }

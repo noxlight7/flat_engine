@@ -7,6 +7,15 @@
 #include <unordered_map>
 
 #include "texture_manager.hpp"
+#include "physics/base_physics.hpp"
+
+// struct Terrain {
+//     TerrainID m_id;
+//     TextureID m_texture_id;
+//     float m_step_cost;
+// };
+
+using DisplayTerrainMap = std::unordered_map<TerrainID, TextureID>;
 
 class DisplayObjects {
     std::unordered_map<uint32_t, TextureID> buffer;

@@ -1,7 +1,5 @@
 #include "collisions.hpp"
 #include "client/client_engine.hpp"
-#include "display/display_objects.hpp"
-#include "display/draw_info_factory.hpp"
 #include "factory/definitions.hpp"
 #include "district_net.hpp"
 
@@ -45,30 +43,26 @@ void DistrictCell::addFillObject(std::unique_ptr<SpaceObject> fill_object) {
 	m_fill_object->moveTo(m_owner_district, coords.x + 0.5f, coords.y + 0.5f);
 }
 
-District::District(int cells_x_amount, int cells_y_amount, const TerrainMap& terrain_map)
-	: m_cells(cells_y_amount, cells_x_amount),
-	  m_terrain_matrix(cells_y_amount, cells_x_amount, 0),
-	  m_terrain_map(terrain_map),
-	  m_renderer(nullptr)
+District::District(int cells_x_amount, int cells_y_amount, const std::unordered_map<TextureID, float>& terrain_map)
+	: m_terrain_matrix(cells_y_amount, cells_x_amount, 0),
+	  m_cells(cells_y_amount, cells_x_amount),
+	  m_terrain_map(terrain_map)
 {
 	for (uint32_t y = 0; y < cells_y_amount; y++) {
 		for (uint32_t x = 0; x < cells_x_amount; x++) {
 			m_cells(y, x).setOwnerDistrict(this);
-			m_cells(y, x).init(glm::ivec2(y, x));
+			m_cells(y, x).init({y, x});
 		}
 	}
 }
 
 District::~District() {
 
-	for (int i = m_space_objects.size(); i; i--)
+	for (int i = static_cast<int>(m_space_objects.size()); i; i--)
 		(*m_space_objects.begin())->removeFromDistrictList();
 
-	for (int i = m_moveable_objects.size(); i; i--)
+	for (int i = static_cast<int>(m_moveable_objects.size()); i; i--)
 		(*m_moveable_objects.begin())->removeFromDistrictList();
-
-	if (m_renderer)
-		delete m_renderer;
 }
 
 bool District::isCellExist(glm::ivec2 index) const{
@@ -91,7 +85,7 @@ void District::moveObjects(float dt) {
 		bool move_possible = true;
 		glm::ivec2 mo_cell_index = m->getPosition().m_index;
 		float step_cost = m_terrain_map.at(m_terrain_matrix(
-			mo_cell_index.y, mo_cell_index.x)).m_step_cost;
+			mo_cell_index.y, mo_cell_index.x));
 		float max_speed = m->getMaxSpeed() / step_cost;
 		if (m->getCurrentSpeed() > max_speed) {
 			m->setCurrentSpeed(max_speed);
@@ -144,15 +138,6 @@ void District::moveObjects(float dt) {
 
 			m->updateCell();
 		}
-	}
-}
-
-void District::setRenderer(int width, int height) {
-	if (m_renderer == nullptr)
-		m_renderer = new DistrictRenderer(this, width, height);
-	else {
-		m_renderer->setWidth(width);
-		m_renderer->setHeight(height);
 	}
 }
 
@@ -262,45 +247,4 @@ bool District::isPosInFreeCell(double x, double y) {
 	Position new_position;
 	new_position.setFromGlobalCoords(x, y);
 	return !getCell(new_position.m_index)->isFill();
-}
-
-DistrictRenderer::DistrictRenderer(District* district, int out_width, int out_height)
-	: IRendererWorld(), m_district(district), m_width(out_width), m_height(out_height) {
-}
-
-void DistrictRenderer::drawWorld(DisplaySystem& display_system,
-	const DisplayObjects& object_types_textures, const TerrainMap& terrain_map,
-	IRenderer* renderer, uint64_t current_time) {
-	auto& building_layout = display_system.getBuildingLayout();
-
-
-	auto &old_camera = *dynamic_cast<Camera*>(renderer->getCurrentCamera().get());
-	Camera camera(old_camera);
-
-	auto& land_layer = building_layout[static_cast<int>(Layers::Land)];
-	auto& terrain_layer = building_layout[static_cast<int>(Layers::Terrain)];
-	auto render_area = camera.getVisibleRect(m_width, m_height);
-	Position left_bottom = Position(render_area.m_left, render_area.m_bottom);
-	Position right_top = Position(render_area.m_right, render_area.m_top);
-	int x_start = std::max(0, left_bottom.m_index.x);
-	int y_start = std::max(0, left_bottom.m_index.y);
-	int x_end = std::min(right_top.m_index.x + 1, m_district->getCellsXAmount());
-	int y_end = std::min(right_top.m_index.y + 1, m_district->getCellsYAmount());
-	auto& terrain_matrix = m_district->getTerrainMatrix();
-	for (int x_index = x_start; x_index < x_end; x_index++)
-		for (int y_index = y_start; y_index < y_end; y_index++) {
-			terrain_layer[x_index * m_district->getCellsYAmount() + y_index] = DrawInfoFactory::getTerrainDrawInfo(
-				terrain_map.at(terrain_matrix(y_index, x_index)), x_index, y_index, camera);
-			for (auto &draw_obj : m_district->getCell(x_index, y_index)->getInnerObjects()) {
-				auto draw_info = DrawInfoFactory::getSpaceObjectDrawInfo(
-					*draw_obj, camera, object_types_textures);
-				auto id = draw_obj->getID();
-				land_layer[id] = draw_info;
-				// auto info = draw_obj->getDrawInfo();
-				// info->setOrigin(vec3(g_camera->getOrigin().getShift(
-				// 	draw_obj->getPosition()), 0.0f));
-				// info->draw();
-			}
-		}
-	display_system.nextState(current_time);
 }
